@@ -1,4 +1,5 @@
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
+import { parseObjectClipboard, serializeObjectClipboard } from "./object-clipboard.js";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { workspaceReadIsCurrent, remoteContentChanged } from "./workspace-read-guard.js";
@@ -11529,7 +11530,7 @@ function App({ initialProtectedShare = null }) {
   const duplicateSelected = useCallback(() => duplicateObjects(selectedIdsRef.current), [duplicateObjects]);
   const duplicateLayerObject = useCallback((objectId) => duplicateObjects([objectId]), [duplicateObjects]);
 
-  const copySelectedObjects = useCallback(() => {
+  const copySelectedObjects = useCallback((clipboardData = null) => {
     const selected = new Set(selectedIdsRef.current);
     const objects = boardRef.current.objects.filter((object) => selected.has(object.id));
     if (!objects.length) return false;
@@ -11538,21 +11539,38 @@ function App({ initialProtectedShare = null }) {
       objects: objects.map((object) => ({ ...object, markers: object.markers.map((marker) => ({ ...marker })) })),
       groups: groups.map((group) => ({ ...group, memberIds: [...group.memberIds] })),
     };
-    announce(`已複製 ${objects.length} 個物件到內部剪貼簿`, "success");
+    if (clipboardData) {
+      try {
+        if (objects.some((object) => String(object.src || "").startsWith("blob:"))) throw new Error("temporary media");
+        clipboardData.setData("text/plain", serializeObjectClipboard(objectClipboardRef.current));
+        announce(`已複製 ${objects.length} 個物件，可貼到其他分頁`, "success");
+      } catch {
+        announce("無法複製物件，請重試或下載 .studio 備份。", "warning");
+        return false;
+      }
+    } else announce(`已複製 ${objects.length} 個物件到內部剪貼簿`, "success");
     return true;
   }, [announce]);
 
-  const pasteCopiedObjects = useCallback(() => {
-    const clipboard = objectClipboardRef.current;
+  const pasteCopiedObjects = useCallback((value = null) => {
+    const clipboard = value || objectClipboardRef.current;
     if (!clipboard?.objects?.length) return false;
     const idMap = new Map(clipboard.objects.map((object) => [object.id, createId("object")]));
     const groupMap = new Map((clipboard.groups || []).map((group) => [group.id, createId("group")]));
+    const flowMap = new Map(clipboard.objects.filter((object) => object.textFlowId).map((object) => [object.textFlowId, createId("text-flow")]));
     const copies = clipboard.objects.map((object) => createObjectDuplicate(object, {
       id: idMap.get(object.id),
       groupId: groupMap.get(object.groupId) || null,
-    })).map((object) => ({
-      ...object,
-      annotationTargetIds: object.annotationTargetIds.map((id) => idMap.get(id) || id),
+    })).map((copy, index) => ({
+      ...copy,
+      artboardId: idMap.get(clipboard.objects[index].artboardId) || null,
+      annotationTargetIds: copy.annotationTargetIds.map((id) => idMap.get(id)).filter(Boolean),
+      ...(clipboard.objects[index].textFlowId ? {
+        textFlowId: flowMap.get(clipboard.objects[index].textFlowId),
+        textFlowOrder: clipboard.objects[index].textFlowOrder,
+        flowText: clipboard.objects[index].flowText,
+        textFlowOverflow: clipboard.objects[index].textFlowOverflow,
+      } : {}),
     }));
     const groups = (clipboard.groups || []).map((group) => createGroup(
       group.memberIds.map((id) => idMap.get(id)).filter(Boolean),
@@ -11607,9 +11625,10 @@ function App({ initialProtectedShare = null }) {
     requestDeleteObjects(selectedIdsRef.current);
   }, [deleteGuides, requestDeleteObjects]);
   const deleteLayerObject = useCallback((objectId) => requestDeleteObjects([objectId]), [requestDeleteObjects]);
-  const cutSelectedObjects = useCallback(() => {
-    if (!copySelectedObjects()) return;
+  const cutSelectedObjects = useCallback((clipboardData) => {
+    if (!clipboardData || !copySelectedObjects(clipboardData)) return false;
     requestDeleteObjects(selectedIdsRef.current);
+    return true;
   }, [copySelectedObjects, requestDeleteObjects]);
 
   const selectGroup = useCallback((groupId, additive = false) => {
@@ -13325,7 +13344,26 @@ function App({ initialProtectedShare = null }) {
   }, [announce, finishZoomWindowTool, registerPointerGesture, screenToWorld, spaceDown, tool]);
 
   useEffect(() => {
+    const copy = (event) => {
+      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources") return;
+      if (!event.clipboardData) return;
+      if (copySelectedObjects(event.clipboardData)) event.preventDefault();
+    };
+    const cut = (event) => {
+      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources") return;
+      if (cloudReadOnly) return;
+      if (cutSelectedObjects(event.clipboardData)) event.preventDefault();
+    };
     const paste = (event) => {
+      if (isEditableShortcutEvent(event, document.activeElement)) return;
+      const text = event.clipboardData?.getData("text/plain") || "";
+      const objects = parseObjectClipboard(text, ensureBoard);
+      if (objects && leftTab !== "sources") {
+        event.preventDefault();
+        if (cloudReadOnly) { announce("目前是僅檢視模式，無法貼上物件。", "warning"); return; }
+        pasteCopiedObjects(objects);
+        return;
+      }
       const files = [...(event.clipboardData?.files || [])].filter((file) => file.type.startsWith("image/") || file.type.startsWith("video/") || isSvgFile(file));
       if (files.length) {
         event.preventDefault();
@@ -13336,9 +13374,11 @@ function App({ initialProtectedShare = null }) {
         addMediaFiles(files, canvasCenterWorld());
       }
     };
+    window.addEventListener("copy", copy);
+    window.addEventListener("cut", cut);
     window.addEventListener("paste", paste);
-    return () => window.removeEventListener("paste", paste);
-  }, [addMediaFiles, announce, canvasCenterWorld, leftTab]);
+    return () => { window.removeEventListener("copy", copy); window.removeEventListener("cut", cut); window.removeEventListener("paste", paste); };
+  }, [addMediaFiles, announce, canvasCenterWorld, cloudReadOnly, copySelectedObjects, cutSelectedObjects, leftTab, pasteCopiedObjects]);
 
   useEffect(() => {
     const selectAllVisibleObjects = () => {
@@ -13500,9 +13540,6 @@ function App({ initialProtectedShare = null }) {
         if (key === "o") { event.preventDefault(); openBoardFile(); return; }
         if (key === "f") { event.preventDefault(); openCurrentListSearch(); return; }
         if (key === "a") { event.preventDefault(); selectAllVisibleObjects(); return; }
-        if (key === "c") { event.preventDefault(); copySelectedObjects(); return; }
-        if (key === "x") { event.preventDefault(); cutSelectedObjects(); return; }
-        if (key === "v" && objectClipboardRef.current?.objects?.length) { event.preventDefault(); pasteCopiedObjects(); return; }
         if (key === "z" && event.shiftKey) { event.preventDefault(); redo(); return; }
         if (key === "z") { event.preventDefault(); undo(); return; }
       }

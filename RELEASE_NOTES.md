@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.4](./public/release-notes/v0.56.4.html) — copy layers and groups across Studio workspaces and domains.
+
 - [v0.56.3](./public/release-notes/v0.56.3.html) — show cloud save status inside the save button.
 
 - [v0.56.2](./public/release-notes/v0.56.2.html) — more readable account and settings typography.

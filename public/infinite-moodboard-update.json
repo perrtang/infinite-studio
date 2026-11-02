@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.3",
-  "releasedAt": "2026-10-30",
-  "summary": "將雲端儲存狀態整合到更新至雲端按鈕。",
-  "notesUrl": "release-notes/v0.56.3.html",
+  "version": "0.56.4",
+  "releasedAt": "2026-11-02",
+  "summary": "支援不同工作區與新舊網址之間複製貼上圖層和群組。",
+  "notesUrl": "release-notes/v0.56.4.html",
   "url": "https://moodboard.petfashion.tw/"
 }
