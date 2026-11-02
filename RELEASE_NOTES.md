@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.7](./public/release-notes/v0.56.7.html) — local MCP connection for canvas and project files.
+
 - [v0.56.6](./public/release-notes/v0.56.6.html) — update interface naming and preserve shared-file context.
 
 - [v0.56.5](./public/release-notes/v0.56.5.html) — redirect legacy share links while retaining the old local workspace.

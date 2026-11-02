@@ -1,4 +1,5 @@
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
+import { connectCanvasAgent } from "./mcp-live-client.js";
 import { parseObjectClipboard, serializeObjectClipboard } from "./object-clipboard.js";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -1954,6 +1955,7 @@ function FileMenu({
   canExportObjects,
   canOutputComposition,
   onOpenCollaboration,
+  onOpenAgent,
   onToggleGuidesLocked,
   onOpenVersions,
   onOpenAbout,
@@ -2074,6 +2076,9 @@ function FileMenu({
             <span className="file-menu-section-label">管理</span>
             <button type="button" role="menuitem" onClick={() => activate(onOpenCollaboration)}>
               <Share2 size={17} /><span><strong>分享與共同編輯</strong><small>建立連結與管理權限</small></span>{collaborationCount > 0 ? <b>{collaborationCount}</b> : null}
+            </button>
+            <button type="button" role="menuitem" onClick={() => activate(onOpenAgent)}>
+              <Box size={17} /><span><strong>AI 連線</strong><small>連接本機 Codex 或 Claude</small></span>
             </button>
             <button
               type="button"
@@ -5227,6 +5232,9 @@ function Modal({ title, description, onClose, children, wide = false, dialogRole
   );
 }
 
+const AGENT_FIELD_LABELS = {type:"類型", text:"文字內容", shapeKind:"形狀", x:"水平位置", y:"垂直位置", name:"名稱", textAlign:"水平對齊", textVerticalAlign:"垂直對齊", fontSize:"文字大小", color:"文字色彩", fill:"填滿色彩", pivotX:"水平位置", pivotY:"垂直位置", width:"寬度", height:"高度", rotation:"旋轉角度", visible:"顯示", locked:"鎖定"};
+const AGENT_VALUE_LABELS = { text:"文字", shape:"形狀", rectangle:"矩形", triangle:"三角形", polygon:"多邊形", star:"星形", left:"靠左", center:"置中", right:"靠右", justify:"左右對齊", top:"靠上", middle:"置中", bottom:"靠下", true:"是", false:"否" };
+
 function ShortcutReferenceModal({ onClose }) {
   const search = useListSearch("shortcuts");
   const totalCount = SHORTCUT_SECTIONS.reduce((count, section) => count + section.items.length, 0);
@@ -7375,6 +7383,14 @@ function App({ initialProtectedShare = null }) {
   const [showAnnotationBuilder, setShowAnnotationBuilder] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
   const [showCollaboration, setShowCollaboration] = useState(false);
+  const [showAgent, setShowAgent] = useState(false);
+  const [agentAddress, setAgentAddress] = useState("");
+  const [agentStatus, setAgentStatus] = useState("disconnected");
+  const [agentError, setAgentError] = useState("");
+  const [agentRequest, setAgentRequest] = useState(null);
+  const agentSocketRef = useRef(null);
+  const agentPendingRef = useRef(null);
+  const agentBlockingRef = useRef(false);
   const [showEditPermissionRequest, setShowEditPermissionRequest] = useState(false);
   const [showDriveLibrary, setShowDriveLibrary] = useState(false);
   const [driveSaveConfirmation, setDriveSaveConfirmation] = useState(null);
@@ -9289,6 +9305,75 @@ function App({ initialProtectedShare = null }) {
     if (broadcast) publishBoard(next);
     return next;
   }, [cloudReadOnly, publishBoard, pushUndo]);
+
+  const finishAgentRequest = useCallback((approved) => {
+    const pending = agentPendingRef.current;
+    agentPendingRef.current = null;
+    setAgentRequest(null);
+    if (pending?.timer) clearTimeout(pending.timer);
+    pending?.resolve(approved);
+  }, []);
+
+  const disconnectAgent = useCallback(() => {
+    finishAgentRequest(false);
+    agentSocketRef.current?.close();
+    agentSocketRef.current = null;
+    setAgentStatus("disconnected");
+    setAgentAddress("");
+  }, [finishAgentRequest]);
+
+  const closeAgent = useCallback(() => {
+    if (agentStatus === "connecting") disconnectAgent();
+    setShowAgent(false);
+  }, [agentStatus, disconnectAgent]);
+
+  useEffect(() => () => { disconnectAgent(); }, [board.id, disconnectAgent]);
+
+  const connectAgent = useCallback(() => {
+    if (agentSocketRef.current) return;
+    setAgentError("");
+    try {
+      setAgentStatus("connecting");
+      let socket;
+      socket = connectCanvasAgent(agentAddress.trim(), {
+        getBoard: () => boardRef.current,
+        isReadOnly: () => cloudReadOnlyRef.current,
+        approveEdit: (request) => {
+          if (agentPendingRef.current || agentBlockingRef.current) throw new Error("請先關閉目前的對話框，再重新提出修改。");
+          return new Promise((resolve) => {
+            const timer = setTimeout(() => finishAgentRequest(false), 110000);
+            agentPendingRef.current = { resolve, timer };
+            setAgentRequest(request);
+          });
+        },
+        applyEdit: (id, patch) => {
+          const current = boardRef.current.objects.find((object) => object.id === id);
+          if (!current || current.locked || cloudReadOnlyRef.current) throw new Error("目前沒有這個物件的編輯權限。");
+          const next = applyBoard((boardValue) => ({ ...boardValue, objects: boardValue.objects.map((object) => object.id === id ? { ...object, ...patch, updatedAt: new Date().toISOString() } : object) }));
+          return { id, revision: next.revision };
+        },
+        applyCreate: ({type, text, shapeKind, x, y}) => {
+          if (cloudReadOnlyRef.current) throw new Error("目前沒有工作檔的編輯權限。");
+          const object = type === "text" ? { ...createTextObject({x, y}), text } : createShapeObject(shapeKind, {x, y});
+          const next = applyBoard((boardValue) => ({ ...boardValue, objects: [...boardValue.objects, object] }));
+          selectedIdsRef.current = [object.id];
+          setSelectedIds([object.id]);
+          return { id: object.id, revision: next.revision };
+        },
+        onStatus: (status) => {
+          if (agentSocketRef.current !== socket) return;
+          setAgentStatus(status);
+          if (status === "connected") { setAgentAddress(""); setShowAgent(false); announce("已連接本機 AI；修改須經確認。", "success"); }
+          if (status === "error") setAgentError("無法連接本機 Agent；請確認它仍在執行，並重新取得連線資訊。");
+          if (status === "disconnected") { agentSocketRef.current = null; finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
+        },
+      });
+      agentSocketRef.current = socket;
+    } catch (error) {
+      setAgentStatus("disconnected");
+      setAgentError(error.message || "無法連接本機 Agent。");
+    }
+  }, [agentAddress, announce, applyBoard, finishAgentRequest]);
 
   useLayoutEffect(() => {
     if (textFrameGesture || resizeGesture || groupGesture) return;
@@ -13571,6 +13656,8 @@ function App({ initialProtectedShare = null }) {
         if (shapeMenuOpen) setShapeMenuOpen(false);
         else if (dragActive) setDragActive(false);
         else if (preparedDownloads.length) closePreparedDownloads();
+        else if (agentRequest) finishAgentRequest(false);
+        else if (showAgent) closeAgent();
         else if (showVersions) setShowVersions(false);
         else if (showCollaboration) closeDriveSharing();
         else if (mobilePanel) setMobilePanel(null);
@@ -13624,7 +13711,7 @@ function App({ initialProtectedShare = null }) {
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
+  }, [agentRequest, finishAgentRequest, showAgent, closeAgent, announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
 
   const exportObjects = useCallback(async (scopeOverride) => {
     const scope = typeof scopeOverride === "string" ? scopeOverride : exportScope;
@@ -14066,9 +14153,12 @@ function App({ initialProtectedShare = null }) {
     || driveSaveConfirmation
     || localSwitchConfirmation
     || showCollaboration
+    || showAgent
+    || agentRequest
     || showEditPermissionRequest
     || preparedDownloads.length,
   );
+  agentBlockingRef.current = hasBlockingDialog;
 
   return (
     <main
@@ -14143,6 +14233,7 @@ function App({ initialProtectedShare = null }) {
               canExportObjects={!sourceModeActive && selectedObjects.length > 0}
               canOutputComposition={!sourceModeActive && selectedObjects.length > 0}
               onOpenCollaboration={() => requestAdvancedFeature("collaboration")}
+              onOpenAgent={() => setShowAgent(true)}
               onToggleGuidesLocked={toggleGuidesLocked}
               onOpenVersions={openVersionModal}
               onOpenAbout={openAboutSettings}
@@ -14922,6 +15013,20 @@ function App({ initialProtectedShare = null }) {
           onClose={closeDriveSharing}
         />
       ) : null}
+      {showAgent ? <Modal title="AI 連線" description="連接此分頁的目前工作檔。" onClose={closeAgent}>
+        <div className="drive-save-confirmation">
+          {agentStatus === "connected" ? <><p>已連接本機 AI。它可以讀取目前工作檔的物件名稱、位置與文字內容；每次修改都需經你確認。</p><div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={disconnectAgent}>中斷連線</button><button className="primary-button" type="button" onClick={() => setShowAgent(false)}>完成</button></div></> : <>
+            <p>請先啟動 Infinite Studio 本機 Agent，從 Codex 或 Claude 取得連線資訊並貼在這裡。只連接你信任的 Agent。連線後可讀取物件名稱、位置與文字內容。</p>
+            <p><a href="https://github.com/perrtang/infinite-studio/blob/main/mcp/README.md" target="_blank" rel="noreferrer">安裝與連線說明</a></p>
+            <label className="agent-pairing-field">本機連線資訊<input type="text" autoComplete="off" spellCheck={false} value={agentAddress} onChange={(event) => setAgentAddress(event.target.value)} placeholder="ws://127.0.0.1:…" /></label>
+            {agentError ? <p role="alert">{agentError}</p> : null}
+            <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={closeAgent}>取消</button><button className="primary-button" type="button" disabled={!agentAddress.trim() || agentStatus === "connecting"} onClick={connectAgent}>{agentStatus === "connecting" ? "正在連線…" : "連線"}</button></div>
+          </>}
+        </div>
+      </Modal> : null}
+      {agentRequest ? <Modal title={agentRequest.action === "create" ? "AI 請求新增物件" : "AI 請求修改物件"} description="確認後會修改目前畫布，可以使用復原。" onClose={() => finishAgentRequest(false)}>
+        <div className="drive-save-confirmation"><p>物件：<span data-l10n-ignore>{agentRequest.name}</span></p><dl className="agent-request-preview">{Object.entries(agentRequest.patch).map(([key, value]) => <div key={key}><dt>{AGENT_FIELD_LABELS[key] || key}</dt><dd data-l10n-ignore={key === "text" || key === "name" || undefined}>{["type", "shapeKind", "textAlign", "textVerticalAlign", "visible", "locked"].includes(key) ? AGENT_VALUE_LABELS[String(value)] || String(value) : String(value)}</dd></div>)}</dl><div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={() => finishAgentRequest(false)}>拒絕</button><button className="primary-button" type="button" onClick={() => finishAgentRequest(true)}>套用修改</button></div></div>
+      </Modal> : null}
       {showEditPermissionRequest && cloudReadOnly ? <DriveEditPermissionModal sharing={driveSharing} onClose={() => setShowEditPermissionRequest(false)} /> : null}
       {preparedDownloads.length ? (
         <ExportDownloadModal

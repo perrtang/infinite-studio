@@ -41,6 +41,10 @@ VITE_BASE_PATH=./ npm run build
 
 cp -R dist/. "$package_dir/"
 cp SELF_HOSTING.md PRIVACY.md SECURITY.md "$package_dir/"
+mkdir -p "$package_dir/mcp"
+cp mcp/*.mjs mcp/package.json mcp/package-lock.json mcp/README.md "$package_dir/mcp/"
+cp model.js "$package_dir/"
+printf '%s\n' '{"type":"module"}' > "$package_dir/package.json"
 cp "public/release-notes/v$version.html" "$notes_path"
 
 cd "$staging_dir"

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.6",
+  "version": "0.56.7",
   "releasedAt": "2026-11-03",
-  "summary": "更新工作檔與分享介面名稱，改善分享連結的登入與開啟流程。",
-  "notesUrl": "release-notes/v0.56.6.html",
+  "summary": "新增本機 MCP 連線，讓 Codex 與 Claude 經確認後操作畫布與工作檔。",
+  "notesUrl": "release-notes/v0.56.7.html",
   "url": "https://infinite.petfashion.tw/"
 }

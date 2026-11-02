@@ -29,6 +29,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Install MCP test dependencies
+        run: npm ci --prefix mcp
       - name: Read release version
         id: release-version
         run: |

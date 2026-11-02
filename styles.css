@@ -8247,6 +8247,12 @@ html[lang="en"] .sidebar-tabs button svg {
 .drive-save-feedback p { overflow-wrap: anywhere; margin-top: 4px; }
 .drive-save-confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .drive-save-confirmation-actions button { min-height: 44px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
+.agent-pairing-field { display: grid; gap: 8px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
+.agent-pairing-field input { width: 100%; min-width: 0; }
+.agent-request-preview { max-height: 260px; overflow: auto; margin: 0; padding: 12px; background: var(--surface-strong); border-radius: 6px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
+.agent-request-preview > div { display: grid; grid-template-columns: minmax(76px, 0.3fr) minmax(0, 1fr); gap: 12px; padding: 4px 0; }
+.agent-request-preview dt { color: var(--text-muted); }
+.agent-request-preview dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 @media (max-width: 620px) {
   .drive-save-confirmation-actions { display: flex; flex-direction: column; }

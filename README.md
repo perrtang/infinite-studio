@@ -15,6 +15,7 @@ Infinite Studio runs the canvas, imported media, transforms, exports, and versio
 - **Recommended:** [open the web app](https://moodboard.petfashion.tw/). On first use, choose this device or Google Drive as that Moodboard's one primary storage location; a local recovery copy remains available in either mode.
 - **Editable files:** download a `.studio` file from the app and reopen it at any time. Existing `.moodboard` files remain supported.
 - **Self-hosting:** download the latest `self-hosted.zip` from [GitHub Releases](https://github.com/perrtang/infinite-studio/releases/latest). It is a static web build, not a native desktop installer; follow the included `SELF_HOSTING.md` instead of double-clicking `index.html`.
+- **Codex and Claude:** connect a local MCP agent to an open canvas or a `.studio` file. Setup, available operations, and safety limits are in [the MCP guide](./mcp/README.md).
 
 ## Highlights
 
