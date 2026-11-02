@@ -18,12 +18,13 @@ export function validateCanvasPairingUrl(value) {
   return url.href;
 }
 
-export function connectCanvasAgent(address, { getBoard, isReadOnly, approveEdit, applyEdit, applyCreate, onStatus }, WebSocketType = WebSocket) {
+export function connectCanvasAgent(address, { getBoard, isReadOnly, approveEdit, applyEdit, applyCreate, onStatus, timeoutMs = 30000 }, WebSocketType = WebSocket) {
   const socket = new WebSocketType(validateCanvasPairingUrl(address));
   const boardId = getBoard().id;
-  socket.onopen = () => onStatus('connected');
-  socket.onerror = () => onStatus('error');
-  socket.onclose = () => onStatus('disconnected');
+  const connectionTimer = setTimeout(() => { onStatus('error'); socket.close(); }, timeoutMs);
+  socket.onopen = () => { clearTimeout(connectionTimer); onStatus('connected'); };
+  socket.onerror = () => { clearTimeout(connectionTimer); onStatus('error'); };
+  socket.onclose = () => { clearTimeout(connectionTimer); onStatus('disconnected'); };
   socket.onmessage = async (event) => {
     let request;
     try {

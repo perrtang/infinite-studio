@@ -5,7 +5,7 @@ import { translateInterfaceText } from './i18n.js';
 
 const url = `ws://127.0.0.1:12345/${'a'.repeat(64)}`;
 class FakeSocket {
-  constructor(address) { this.address = address; this.readyState = 1; this.sent = []; }
+  constructor(address) { this.address = address; this.readyState = 1; this.sent = []; queueMicrotask(() => this.onopen?.()); }
   send(value) { this.sent.push(JSON.parse(value)); }
 }
 test('AI pairing and approval controls are available in English and Simplified Chinese', () => {
@@ -16,6 +16,15 @@ test('AI pairing and approval controls are available in English and Simplified C
 test('canvas agent accepts only a loopback pairing address with a random token', () => {
   assert.equal(validateCanvasPairingUrl(url), url);
   for (const bad of ['ws://example.com:1234/' + 'a'.repeat(64), 'ws://127.0.0.1:1234/x', url + '?extra=1']) assert.throws(() => validateCanvasPairingUrl(bad));
+});
+
+test('a stalled connection times out instead of remaining indefinitely in progress', async () => {
+  class StalledSocket { constructor() { this.readyState = 0; } close() { this.closed = true; this.onclose?.(); } }
+  const statuses=[];
+  const socket=connectCanvasAgent(url,{getBoard:()=>({id:'b'}),onStatus:(value)=>statuses.push(value),timeoutMs:5},StalledSocket);
+  await new Promise((resolve)=>setTimeout(resolve,20));
+  assert.equal(socket.closed,true);
+  assert.deepEqual(statuses,['error','disconnected']);
 });
 
 test('canvas agent requires approval and refuses stale, invalid, or read-only edits', async () => {

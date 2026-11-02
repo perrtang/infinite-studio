@@ -96,6 +96,7 @@ const EN_EXACT = Object.freeze({
   "確認後會修改目前畫布，可以使用復原。": "Approving changes the current canvas. You can undo it.",
   "套用修改": "Apply changes",
   "無法連接本機 Agent；請確認它仍在執行，並重新取得連線資訊。": "Could not connect to the local agent. Check that it is running and request new connection details.",
+  "無法連接本機 Agent。請確認它仍在執行、重新取得連線資訊，並檢查瀏覽器是否允許此網站連接本機網路。": "Could not connect to the local agent. Check that it is running, request new connection details, and allow this site to access the local network in your browser.",
   "開啟編輯": "Open editor",
   "我的工作檔…": "My projects…",
   "我的工作檔": "My projects",

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.7",
+  "version": "0.56.8",
   "releasedAt": "2026-11-03",
-  "summary": "新增本機 MCP 連線，讓 Codex 與 Claude 經確認後操作畫布與工作檔。",
-  "notesUrl": "release-notes/v0.56.7.html",
+  "summary": "修正 AI 本機連線等待逾時，提供檢查瀏覽器本機網路權限的提示。",
+  "notesUrl": "release-notes/v0.56.8.html",
   "url": "https://infinite.petfashion.tw/"
 }

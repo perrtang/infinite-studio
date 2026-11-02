@@ -9364,7 +9364,7 @@ function App({ initialProtectedShare = null }) {
           if (agentSocketRef.current !== socket) return;
           setAgentStatus(status);
           if (status === "connected") { setAgentAddress(""); setShowAgent(false); announce("已連接本機 AI；修改須經確認。", "success"); }
-          if (status === "error") setAgentError("無法連接本機 Agent；請確認它仍在執行，並重新取得連線資訊。");
+          if (status === "error") setAgentError("無法連接本機 Agent。請確認它仍在執行、重新取得連線資訊，並檢查瀏覽器是否允許此網站連接本機網路。");
           if (status === "disconnected") { agentSocketRef.current = null; finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
         },
       });
