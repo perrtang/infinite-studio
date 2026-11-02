@@ -57,7 +57,7 @@ test("portable object color libraries round-trip and unrelated JSON fails closed
   assert.deepEqual(parseObjectColorLibraryFile(JSON.stringify(colors)), colors);
   assert.throws(
     () => parseObjectColorLibraryFile(JSON.stringify({ kind: "other-library", colors })),
-    /不是 Infinite Moodboard/,
+    /不是 Infinite Studio/,
   );
 });
 
@@ -147,7 +147,7 @@ test("v2 import does not duplicate the protected built-in set", () => {
 
 test("color set import rejects unrelated, invalid, oversized, and over-limit payloads", () => {
   assert.throws(() => parseObjectColorSetsFile("not json"), /不是有效的 JSON/);
-  assert.throws(() => parseObjectColorSetsFile(JSON.stringify({ kind: "other", sets: [] })), /不是 Infinite Moodboard/);
+  assert.throws(() => parseObjectColorSetsFile(JSON.stringify({ kind: "other", sets: [] })), /不是 Infinite Studio/);
   assert.throws(() => parseObjectColorSetsFile(JSON.stringify({
     kind: "infinite-moodboard-object-colors",
     version: 99,

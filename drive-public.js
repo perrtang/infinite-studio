@@ -36,5 +36,5 @@ export async function readPublicSharedBoard({ fileId, resourceKey = "", apiKey, 
   const content = await request({ alt: "media", supportsAllDrives: "true" }, "text", mediaTimeoutMs);
   const after = await request(params, "json", metadataTimeoutMs);
   if (after.id !== id || !after.version || after.version !== before.version) throw new Error("檔案在讀取期間已變更，請重新開啟連結。");
-  return { content, name: String(after.name || "分享的 Moodboard") };
+  return { content, name: String(after.name || "分享的工作檔") };
 }

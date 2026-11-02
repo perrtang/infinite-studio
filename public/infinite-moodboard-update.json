@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.5",
+  "version": "0.56.6",
   "releasedAt": "2026-11-03",
-  "summary": "舊網址的分享連結自動開啟於 Infinite Studio 新網址。",
-  "notesUrl": "release-notes/v0.56.5.html",
-  "url": "https://moodboard.petfashion.tw/"
+  "summary": "更新工作檔與分享介面名稱，改善分享連結的登入與開啟流程。",
+  "notesUrl": "release-notes/v0.56.6.html",
+  "url": "https://infinite.petfashion.tw/"
 }

@@ -93,7 +93,7 @@ export function saveMoodboardMarketingPreference(storage, user, enabled, changed
   const receipts = readReceipts(storage);
   const current = receipts[user.uid];
   if (!current || current.version !== MOODBOARD_ACCESS_CONSENT_VERSION) {
-    throw new Error("請先完成 Infinite Moodboard 帳號授權。");
+    throw new Error("請先完成 Infinite Studio 帳號授權。");
   }
   const next = {
     ...current,
@@ -158,9 +158,9 @@ export function moodboardAuthErrorMessage(error, online = true) {
     "auth/account-exists-with-different-credential": "這個 Email 已有 PETFASHION 帳號。請先使用原本方式登入，再到設定連結新的登入方式。",
     "auth/provider-already-linked": "這個登入方式已經連結目前帳號。",
     "auth/requires-recent-login": "為了保護帳號，請重新登入後再連結登入方式。",
-    "auth/provider-link-uid-mismatch": "登入方式沒有連結到原本帳號，已停止處理；原 Moodboard 不受影響。",
+    "auth/provider-link-uid-mismatch": "登入方式沒有連結到原本帳號，已停止處理；原工作檔不受影響。",
     "auth/unverified-email": "這個帳號的 Email 尚未完成驗證，暫時不能使用進階功能。",
-    "auth/provider-not-allowed": "這個登入方式尚未獲准用於 Infinite Moodboard。",
+    "auth/provider-not-allowed": "這個登入方式尚未獲准用於 Infinite Studio。",
   };
   return messages[code] || error?.message || "登入未完成，請稍後再試。";
 }

@@ -3,8 +3,8 @@
 > A free, local-first infinite canvas for visual research, references, layouts, and moodboards — built by PETFASHION.
 
 [![Open the app](https://img.shields.io/badge/Open-Infinite_Studio-111111?style=for-the-badge)](https://moodboard.petfashion.tw/)
-[![Latest release](https://img.shields.io/github/v/release/perrtang/infinite-moodboard?display_name=tag&style=for-the-badge)](https://github.com/perrtang/infinite-moodboard/releases/latest)
-[![Test and deploy](https://github.com/perrtang/infinite-moodboard/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/perrtang/infinite-moodboard/actions/workflows/deploy-pages.yml)
+[![Latest release](https://img.shields.io/github/v/release/perrtang/infinite-studio?display_name=tag&style=for-the-badge)](https://github.com/perrtang/infinite-studio/releases/latest)
+[![Test and deploy](https://github.com/perrtang/infinite-studio/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/perrtang/infinite-studio/actions/workflows/deploy-pages.yml)
 
 **English** · [繁體中文](#繁體中文) · [简体中文](#简体中文)
 
@@ -14,7 +14,7 @@ Infinite Studio runs the canvas, imported media, transforms, exports, and versio
 
 - **Recommended:** [open the web app](https://moodboard.petfashion.tw/). On first use, choose this device or Google Drive as that Moodboard's one primary storage location; a local recovery copy remains available in either mode.
 - **Editable files:** download a `.studio` file from the app and reopen it at any time. Existing `.moodboard` files remain supported.
-- **Self-hosting:** download the latest `self-hosted.zip` from [GitHub Releases](https://github.com/perrtang/infinite-moodboard/releases/latest). It is a static web build, not a native desktop installer; follow the included `SELF_HOSTING.md` instead of double-clicking `index.html`.
+- **Self-hosting:** download the latest `self-hosted.zip` from [GitHub Releases](https://github.com/perrtang/infinite-studio/releases/latest). It is a static web build, not a native desktop installer; follow the included `SELF_HOSTING.md` instead of double-clicking `index.html`.
 
 ## Highlights
 

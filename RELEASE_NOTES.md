@@ -1,8 +1,10 @@
-# Infinite Moodboard release notes
+# Infinite Studio release notes
 
 Every stable release from v0.51.0 onward must include a version-matched public release-notes file. The update manifest links to that file, and both checkpoint and package scripts stop if it is missing or inconsistent.
 
 ## Releases
+
+- [v0.56.6](./public/release-notes/v0.56.6.html) — update interface naming and preserve shared-file context.
 
 - [v0.56.5](./public/release-notes/v0.56.5.html) — redirect legacy share links while retaining the old local workspace.
 

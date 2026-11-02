@@ -411,7 +411,7 @@ test("local persistence failures are classified into actionable messages", () =>
   assert.match(describeLocalPersistenceError(new Error("There is not enough remaining storage space.")), /空間不足/);
   assert.match(describeLocalPersistenceError(new Error("No space left on device")), /空間不足/);
   assert.match(describeLocalPersistenceError(new DOMException("clone", "DataCloneError")), /無法寫入/);
-  assert.match(describeLocalPersistenceError(new DOMException("transaction inactive", "InvalidStateError")), /其他 Infinite Moodboard 分頁/);
+  assert.match(describeLocalPersistenceError(new DOMException("transaction inactive", "InvalidStateError")), /其他 Infinite Studio 分頁/);
   assert.match(describeLocalPersistenceError(new Error("Storage is disabled")), /未能更新/);
   assert.match(describeLocalPersistenceError(new Error("Storage access failure")), /未能更新/);
   assert.match(describeLocalPersistenceError(new Error("unknown")), /未能更新/);

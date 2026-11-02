@@ -62,7 +62,7 @@ export function normalizeGoogleDrivePickerDocument(document = {}) {
   const source = document && typeof document === "object" ? document : {};
   return {
     id: String(source.id || source.fileId || ""),
-    name: String(source.name || source.title || "分享的 Moodboard"),
+    name: String(source.name || source.title || "分享的工作檔"),
     mimeType: String(source.mimeType || source.type || DRIVE_FILE_MIME_TYPE),
     resourceKey: String(source.resourceKey || source.resource_key || ""),
   };
@@ -253,7 +253,7 @@ export async function openGoogleDriveMoodboardPicker({
         .setDeveloperKey(configuration.apiKey)
         .setAppId(configuration.projectNumber)
         .setOrigin(configuration.origin)
-        .setTitle("選取此分享連結指定的 Moodboard")
+        .setTitle("選取此分享連結指定的工作檔")
         .setCallback((response = {}) => {
           const action = response.action || response[pickerNamespace.Response?.ACTION];
           if (action === pickerNamespace.Action.CANCEL) {

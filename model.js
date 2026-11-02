@@ -645,7 +645,7 @@ export function parseBoardFile(text, filename = "") {
 
 export function ensureBoard(value) {
   if (!value || typeof value !== "object" || !Array.isArray(value.objects)) {
-    throw new Error("這不是有效的 Infinite Moodboard 檔案。");
+    throw new Error("這不是有效的 Infinite Studio 檔案。");
   }
 
   if (Number(value.schemaVersion || 1) > BOARD_SCHEMA_VERSION) {

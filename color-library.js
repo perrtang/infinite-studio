@@ -269,7 +269,7 @@ export function parseObjectColorSetsFile(text) {
       sets: [{ id: "imported-colors", name: "匯入色彩", colors: values }],
     });
   }
-  if (parsed?.kind !== OBJECT_COLOR_SETS_FILE_KIND) throw new Error("這不是 Infinite Moodboard 的 Color Set 檔案。");
+  if (parsed?.kind !== OBJECT_COLOR_SETS_FILE_KIND) throw new Error("這不是 Infinite Studio 的 Color Set 檔案。");
   if (Number(parsed?.version) !== OBJECT_COLOR_SETS_FILE_VERSION) throw new Error("這個 Color Set 版本目前不支援。");
   if (!Array.isArray(parsed?.sets) || !parsed.sets.length) throw new Error("Color Set 檔案缺少 sets 清單。");
   if (parsed.sets.length > OBJECT_COLOR_SET_LIMIT) throw new Error(`Color Set 檔案超過 ${OBJECT_COLOR_SET_LIMIT} 組上限。`);

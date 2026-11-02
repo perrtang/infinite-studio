@@ -7,7 +7,7 @@ const source = fs.readFileSync(new URL("./main.jsx", import.meta.url), "utf8");
 test("Drive conflict keeps upload primary and uses one target-bound confirmation", () => {
   assert.match(source, /!driveSession\.conflict \? \(\s*<section className=\{`drive-status-panel/);
   assert.match(source, /雲端與目前內容不同/);
-  assert.match(source, /將 Drive 版本開成新 Moodboard/);
+  assert.match(source, /將 Drive 版本開成新工作檔/);
   assert.match(source, /將目前內容另存新檔/);
   assert.match(source, /<details className="drive-conflict-more"/);
   assert.match(source, /更多處理方式/);

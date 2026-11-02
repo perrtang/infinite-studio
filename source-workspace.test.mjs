@@ -16,7 +16,7 @@ test("source workspace fully replaces the Moodboard surface with source-specific
   assert.match(source, /disabled=\{cloudReadOnly \|\| sourceModeActive \|\| !undoRef\.current\.length\}/);
   assert.match(source, /disabled=\{cloudReadOnly \|\| sourceModeActive \|\| !redoRef\.current\.length\}/);
   assert.match(source, /disabled=\{cloudReadOnly \|\| sourceModeActive\}/);
-  assert.match(source, /sourceModeActive \? "素材檢視中 · Moodboard 名稱唯讀" : topbarSaveState/);
+  assert.match(source, /sourceModeActive \? "素材檢視中 · 工作檔名稱唯讀" : topbarSaveState/);
 });
 
 test("source workspace blocks hidden canvas mutation shortcuts and media paste", () => {

@@ -65,6 +65,21 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "開啟編輯": "Open editor",
+  "我的工作檔…": "My projects…",
+  "我的工作檔": "My projects",
+  "搜尋我的工作檔": "Search my projects",
+  "新增工作檔": "New project",
+  "還沒有工作檔": "No projects yet",
+  "建立第一份本機工作檔；需要跨裝置時再連結 Google Drive。": "Create your first local project. Connect Google Drive when you need access across devices.",
+  "登入後分享 Google Drive 工作檔": "Sign in to share a Google Drive project",
+  "登入後可把同一份 Drive 工作檔分享給指定帳號；本機編輯與輸出仍不需登入。": "Sign in to share this Drive project with specific accounts. Local editing and export do not require sign-in.",
+  "分享 Google Drive 工作檔": "Share Google Drive project",
+  "工作檔分享連結": "Project share link",
+  "支援 .studio 與舊版工作檔": "Supports .studio and legacy project files",
+  "工作檔狀態": "Project status",
+  "直接開啟這份工作檔": "Open this project directly",
+  "無法確認 Google Drive 檔案版本，更新已停止。請重試或先下載工作檔備份。": "Could not confirm the Google Drive file version, so the update was stopped. Retry or download a project backup first.",
   "密碼": "Password",
   "請先輸入分享密碼，再繼續完成電子郵件登入。": "Enter the share password first, then continue your email sign-in.",
   "這不是有效的 Infinite Studio 工作檔。": "This is not a valid Infinite Studio project file.",
@@ -2193,8 +2208,25 @@ function toSimplified(value) {
   return traditionalToSimplified(result);
 }
 
+// Keep translations for old UI wording as aliases, without changing project names
+// or the legacy file-format and storage identifiers.
+function studioInterfaceWording(value) {
+  return value.replaceAll('支援 .studio 與舊版 .moodboard', '支援 .studio 與舊版工作檔')
+    .replaceAll('回到 Moodboard', '回到畫布').replaceAll('在 Moodboard', '在畫布')
+    .replaceAll('Infinite Moodboard', 'Infinite Studio')
+    .replaceAll('Moodboards', '工作檔').replaceAll('Moodboard', '工作檔')
+    .replace(/(?<=[\u3400-\u9fff]) (?=工作檔|畫布)/g, '')
+    .replace(/(?<=工作檔|畫布) (?=[\u3400-\u9fff])/g, '');
+}
+const EN_STUDIO_WORDING = Object.fromEntries(Object.entries(EN_EXACT)
+  .filter(([key]) => /Moodboard/.test(key))
+  .map(([key, translation]) => [studioInterfaceWording(key), translation
+    .replaceAll('Infinite Moodboard', 'Infinite Studio')
+    .replaceAll('Moodboards', 'projects').replaceAll('Moodboard', 'project')]));
+
 function translateEnglishCore(value) {
   if (EN_EXACT[value]) return EN_EXACT[value];
+  if (EN_STUDIO_WORDING[value]) return EN_STUDIO_WORDING[value];
   for (const [pattern, replacement] of EN_PATTERNS) {
     if (pattern.test(value)) return value.replace(pattern, replacement);
   }

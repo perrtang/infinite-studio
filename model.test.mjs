@@ -494,7 +494,7 @@ test("custom interface themes round-trip through moodtheme files", () => {
 
   assert.equal(parsed.name, "我的配色");
   assert.deepEqual(parsed.colors, custom.colors);
-  assert.throws(() => parseInterfaceThemeFile('{"type":"unknown"}'), /不是 Infinite Moodboard/);
+  assert.throws(() => parseInterfaceThemeFile('{"type":"unknown"}'), /不是 Infinite Studio/);
   assert.throws(() => parseInterfaceThemeFile(JSON.stringify({
     type: "infinite-moodboard-interface-theme",
     version: 1,

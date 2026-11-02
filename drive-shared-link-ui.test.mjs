@@ -33,3 +33,20 @@ test("a viewer requesting editing is prompted even if that file is already open"
   assert.match(source, /pendingSharedEditRef\.current = false;\s*if \(role === "viewer"\)/);
   assert.match(source, /requestEdit", "1"/);
 });
+
+test("closing the sharing dialog preserves the incoming file and resource key", () => {
+  const close = source.match(/const closeDriveSharing = useCallback\(\(\) => \{[\s\S]*?\}, \[cancelDriveRead\]\);/)?.[0] || "";
+  assert.ok(close);
+  assert.doesNotMatch(close, /delete\("(?:driveFile|resourceKey|lockedShare)"\)|initialDriveShareRef\.current\s*=\s*null/);
+});
+
+test("successfully opened share is no longer the target of later board sharing actions", () => {
+  const open = source.match(/const openIncomingDirectly = useCallback\(async \(\) => \{[\s\S]*?\}, \[currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing\]\);/)?.[0] || "";
+  assert.match(open, /if \(!opened\) return false;[\s\S]*initialDriveShareRef\.current === incoming\) initialDriveShareRef\.current = null/);
+});
+
+test("the public viewer observes an existing session before labeling its editor action", () => {
+  const viewer = source.slice(source.indexOf("function PublicSharedViewer"), source.indexOf("function DriveSharingPreview"));
+  assert.match(viewer, /observeMoodboardSession/);
+  assert.match(viewer, /viewerSignedIn\s*\?\s*"開啟編輯"/);
+});

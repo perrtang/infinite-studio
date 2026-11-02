@@ -591,8 +591,8 @@ const SHORTCUT_SECTIONS = [
   {
     title: "檔案與編輯",
     items: [
-      ["mod+S", "儲存 Moodboard"],
-      ["mod+O", "開啟 Moodboard"],
+      ["mod+S", "儲存工作檔"],
+      ["mod+O", "開啟工作檔"],
       ["mod+Z", "復原"],
       ["mod+shift+Z", "重做"],
       ["mod+A", "選取全部可見物件"],
@@ -2046,10 +2046,10 @@ function FileMenu({
           <div className="file-menu-section" aria-label="檔案操作">
             <span className="file-menu-section-label">檔案</span>
             <button type="button" role="menuitem" onClick={() => activate(onOpenLibrary)}>
-              <FolderOpen size={17} /><span><strong>我的 Moodboards…</strong><small>本機與 Google Drive 檔案</small></span>
+              <FolderOpen size={17} /><span><strong>我的工作檔…</strong><small>本機與 Google Drive 檔案</small></span>
             </button>
             <button type="button" role="menuitem" onClick={() => activate(onOpenFile)}>
-              <FileUp size={17} /><span><strong>開啟工作檔…</strong><small>支援 .studio 與舊版 .moodboard</small></span><kbd>{platformShortcutLabel("mod+o")}</kbd>
+              <FileUp size={17} /><span><strong>開啟工作檔…</strong><small>支援 .studio 與舊版工作檔</small></span><kbd>{platformShortcutLabel("mod+o")}</kbd>
             </button>
             <button type="button" role="menuitem" title={saveTitle} onClick={() => activate(onSave)}>
               <Save size={17} /><span><strong>{saveLabel}</strong><small>{saveTitle}</small></span><kbd>{platformShortcutLabel("mod+s")}</kbd>
@@ -2085,7 +2085,7 @@ function FileMenu({
               {guidesLocked ? <Unlock size={17} /> : <Lock size={17} />}
               <span>
                 <strong>{guidesLocked ? "解除鎖定所有輔助導引線" : "鎖定所有輔助導引線"}</strong>
-                <small>{guideControlsDisabled ? "回到 Moodboard 後調整" : guidesLocked ? "允許新增、移動與刪除" : "防止新增、移動與刪除"}</small>
+                <small>{guideControlsDisabled ? "回到畫布後調整" : guidesLocked ? "允許新增、移動與刪除" : "防止新增、移動與刪除"}</small>
               </span>
             </button>
             <button type="button" role="menuitem" onClick={() => activate(onOpenVersions)}>
@@ -4835,7 +4835,7 @@ function FilterStage({ objects, selectedIds, onSelect, onClear, filters }) {
             <button type="button" className={viewMode === "grid" ? "is-active" : ""} aria-pressed={viewMode === "grid"} onClick={() => setViewMode("grid")}><LayoutGrid size={15} /> 縮圖</button>
             <button type="button" className={viewMode === "original" ? "is-active" : ""} aria-pressed={viewMode === "original"} onClick={() => setViewMode("original")}><Square size={15} /> 原圖</button>
           </div>
-          <button className="secondary-button" type="button" onClick={onClear}><ArrowLeft size={16} /> 回到 Moodboard</button>
+          <button className="secondary-button" type="button" onClick={onClear}><ArrowLeft size={16} /> 回到畫布</button>
         </div>
       </header>
       <ListSearchField search={search} placeholder="搜尋物件或圖層" />
@@ -5051,7 +5051,7 @@ function SourceStage({ sourceAssets, activeSourceId, onSelectSource, onExit, spa
     <div className={`filter-stage source-stage ${search.open ? "has-list-search" : ""}`} aria-label="來源素材檢視">
       <header>
         <div>
-          <button className="source-stage-back" type="button" onClick={onExit} aria-label="回到 Moodboard"><ArrowLeft size={16} /><span>回到 Moodboard</span></button>
+          <button className="source-stage-back" type="button" onClick={onExit} aria-label="回到畫布"><ArrowLeft size={16} /><span>回到畫布</span></button>
           <span className="source-stage-separator" aria-hidden="true" />
           <ImageIcon size={18} />
           <span>來源素材</span>
@@ -5190,7 +5190,7 @@ function SourceInspector({ source, visibleInstanceCount = 0, readOnly = false, b
             </section>
             <section className="inspector-section source-inspector-actions" aria-label="素材操作">
               <button className="primary-button full-width" type="button" onClick={() => onAddInstance(source.sourceId)} disabled={readOnly || busy}>
-                <ImagePlus size={16} /> 新增到 Moodboard
+                <ImagePlus size={16} /> 新增到工作檔
               </button>
               <button className="secondary-button full-width" type="button" onClick={() => onShowInstances(source.sourceId)}>
                 <LocateFixed size={16} /> {`定位 ${visibleInstanceCount} 個可見畫布實例`}
@@ -5205,7 +5205,7 @@ function SourceInspector({ source, visibleInstanceCount = 0, readOnly = false, b
           <div className="inspector-empty source-inspector-empty">
             <ImageIcon size={27} />
             <strong>還沒有可操作的來源素材</strong>
-            <p>回到 Moodboard 加入圖片、影片或 SVG 後，就能在這裡檢視與下載原始素材。</p>
+            <p>回到畫布加入圖片、影片或 SVG 後，就能在這裡檢視與下載原始素材。</p>
           </div>
         )}
       </div>
@@ -5392,7 +5392,7 @@ function AuthGate({
     }
     : feature === "collaboration"
     ? {
-      title: "登入後分享 Google Drive Moodboard",
+      title: "登入後分享 Google Drive 工作檔",
       description: "登入後可把同一份 Drive 工作檔分享給指定帳號；本機編輯與輸出仍不需登入。",
     }
     : feature === "shared-moodboard"
@@ -5413,7 +5413,7 @@ function AuthGate({
     : feature === "3d"
       ? {
         title: "登入後使用進階 3D",
-        description: "進階 3D 操作需要登入；你目前的選取與本機 Moodboard 不會被改動。",
+        description: "進階 3D 操作需要登入；你目前的選取與本機工作檔不會被改動。",
       }
       : {
         title: "登入以使用進階功能",
@@ -5484,8 +5484,8 @@ function AuthGate({
           <span>
             <strong>{isDriveOnboarding ? "同意登入並連結 Google Drive" : "同意使用 PETFASHION 帳號登入"} <em>必填</em></strong>
             <small>{isDriveOnboarding
-              ? "登入只使用名稱、頭像與 Email；Drive 僅要求 drive.file。完成連結不會自動上傳 Moodboard。"
-              : "只使用名稱、頭像與 Email；Moodboard 不會因登入自動上傳。"}</small>
+              ? "登入只使用名稱、頭像與 Email；Drive 僅要求 drive.file。完成連結不會自動上傳工作檔。"
+              : "只使用名稱、頭像與 Email；工作檔不會因登入自動上傳。"}</small>
           </span>
         </label>
 
@@ -5572,7 +5572,7 @@ function AuthGate({
               <li>會員由 PETFASHION 統一管理，並記錄 Infinite Studio 啟用來源。</li>
               <li>作品、素材與版本預設保存在這台裝置，不會自動上傳。</li>
             </ul>
-            <p><Info size={14} />共用電腦用畢請登出，並在設定清除本機 Moodboard。</p>
+            <p><Info size={14} />共用電腦用畢請登出，並在設定清除本機工作檔。</p>
           </div>
         </details>
 
@@ -5663,7 +5663,7 @@ function DeleteLocalDataModal({ onCancel, onConfirm, isBusy }) {
   const [confirmed, setConfirmed] = useState(false);
   return (
     <Modal
-      title="清除這台裝置的 Moodboard 資料"
+      title="清除這台裝置的工作檔資料"
       description="這是永久刪除，無法用復原功能取回。"
       onClose={onCancel}
       dialogRole="alertdialog"
@@ -5678,7 +5678,7 @@ function DeleteLocalDataModal({ onCancel, onConfirm, isBusy }) {
         </div>
         <label className="delete-local-confirmation">
           <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
-          <span>我已確認需要永久清除這台裝置上的 Moodboard 資料。</span>
+          <span>我已確認需要永久清除這台裝置上的工作檔資料。</span>
         </label>
         <div className="delete-warning-actions">
           <button className="secondary-button" type="button" onClick={onCancel} autoFocus>取消</button>
@@ -5766,13 +5766,13 @@ function VersionModal({
         <div className="modal-empty"><History size={24} /><strong>尚未建立版本</strong><p>目前畫布仍會自動存到這台裝置；手動版本適合重要節點。</p></div>
       )}
       <div className="version-section-heading is-drive">
-        <div><strong>Google Drive 版本</strong><small>復原時會開成新的本機 Moodboard，不會覆蓋目前工作。</small></div>
+        <div><strong>Google Drive 版本</strong><small>復原時會開成新的本機工作檔，不會覆蓋目前工作。</small></div>
         {driveLinked ? <button className="quiet-button" type="button" onClick={onRefreshDrive} disabled={driveVersions.status === "loading" || isBusy}><RefreshCw size={15} className={driveVersions.status === "loading" ? "is-spinning" : ""} />重新整理</button> : null}
       </div>
       {!driveLinked ? (
-        <div className="version-cloud-state"><CloudOff size={19} /><span><strong>尚未連結 Drive 檔案</strong><small>先把目前 Moodboard 儲存到 Drive，之後同步會自動保留舊版本。</small></span></div>
+        <div className="version-cloud-state"><CloudOff size={19} /><span><strong>尚未連結 Drive 檔案</strong><small>先把目前工作檔儲存到 Drive，之後同步會自動保留舊版本。</small></span></div>
       ) : driveVersions.status === "loading" ? (
-        <div className="version-cloud-state"><RefreshCw size={19} className="is-spinning" /><span><strong>正在讀取 Drive 版本…</strong><small>目前 Moodboard 不會受影響。</small></span></div>
+        <div className="version-cloud-state"><RefreshCw size={19} className="is-spinning" /><span><strong>正在讀取 Drive 版本…</strong><small>目前工作檔不會受影響。</small></span></div>
       ) : driveVersions.status === "error" || driveVersions.status === "authorization-required" ? (
         <div className="version-cloud-state is-error"><AlertTriangle size={19} /><span><strong>無法讀取 Drive 版本</strong><small>{driveVersions.message}</small></span></div>
       ) : listedDriveVersions.length ? (
@@ -5784,7 +5784,7 @@ function VersionModal({
               <article key={revision.id}>
                 <div><strong>{isHead ? "目前 Drive 版本" : `Drive 版本 ${revision.id}`}</strong><small>{`${formatStorageSize(revision.size)} · ${formatTime(revision.modifiedTime)}${revision.lastModifyingUser?.displayName ? ` · ${revision.lastModifyingUser.displayName}` : ""}`}</small></div>
                 <span className={`version-kind ${recoverable ? "kind-manual" : ""}`}>{isHead ? "目前" : revision.keepForever ? "已保留" : "暫存"}</span>
-                <button className="quiet-button" type="button" onClick={() => onRecoverDrive(revision)} disabled={isBusy || !recoverable} title={recoverable ? "開成新的本機 Moodboard" : "這個 Drive 暫存版本無法下載"}>開成新副本</button>
+                <button className="quiet-button" type="button" onClick={() => onRecoverDrive(revision)} disabled={isBusy || !recoverable} title={recoverable ? "開成新的本機工作檔" : "這個 Drive 暫存版本無法下載"}>開成新副本</button>
               </article>
             );
           })}
@@ -5840,7 +5840,7 @@ function StorageLocationModal({ currentTarget, onChoose, onClose }) {
   return (
     <Modal
       title="選擇主要儲存位置"
-      description="每份 Moodboard 只有一個主要位置，之後可在設定中更改。"
+      description="每份工作檔只有一個主要位置，之後可在設定中更改。"
       onClose={onClose}
     >
       <div className="storage-location-options" role="radiogroup" aria-label="主要儲存位置">
@@ -6023,7 +6023,7 @@ function DriveLibraryModal({
       : "連結後會在儲存前檢查可用空間。";
 
   return (
-    <Modal title="我的 Moodboards" description="在同一個檔案庫開啟這台裝置與 Infinite Studio 可存取的 Drive 檔案。" onClose={onClose} wide>
+    <Modal title="我的工作檔" description="在同一個檔案庫開啟這台裝置與 Infinite Studio 可存取的 Drive 檔案。" onClose={onClose} wide>
       <div className="drive-library">
         <section className="library-primary-location" aria-label="目前主要儲存位置">
           {primaryStorageTarget === "drive" ? <Cloud size={19} /> : primaryStorageTarget === "local" ? <HardDrive size={19} /> : <Info size={19} />}
@@ -6095,7 +6095,7 @@ function DriveLibraryModal({
                     <summary><Ellipsis size={15} aria-hidden="true" />更多處理方式</summary>
                     <div className="drive-conflict-more-panel">
                       <button className="quiet-button" type="button" onClick={() => onOpenFile(driveSession.conflict)} disabled={busy}>載入雲端版本</button>
-                      <button className="quiet-button" type="button" onClick={() => onRecoverRemote(driveSession.conflict)} disabled={busy}>將 Drive 版本開成新 Moodboard</button>
+                      <button className="quiet-button" type="button" onClick={() => onRecoverRemote(driveSession.conflict)} disabled={busy}>將 Drive 版本開成新工作檔</button>
                       <button className="quiet-button" type="button" onClick={onSaveCopy} disabled={busy}>將目前內容另存新檔</button>
                     </div>
                   </details>
@@ -6111,15 +6111,15 @@ function DriveLibraryModal({
         )}
 
         <div className="modal-list-toolbar moodboard-library-toolbar">
-          <strong>{`${listedItems.length} / ${libraryItems.length} 份 Moodboard`}</strong>
+          <strong>{`${listedItems.length} / ${libraryItems.length} 份工作檔`}</strong>
           <div className="drive-library-list-actions">
-            <ListSearchToggle search={search} resultCount={listedItems.length} totalCount={libraryItems.length} label="搜尋我的 Moodboards" />
+            <ListSearchToggle search={search} resultCount={listedItems.length} totalCount={libraryItems.length} label="搜尋我的工作檔" />
             <button className="quiet-button" type="button" onClick={onOpenDeviceFile}><FileUp size={15} />從檔案開啟</button>
             <button className="quiet-button" type="button" onClick={onDownloadBackup}><Download size={15} />下載 `.studio` 備份</button>
-            <button className="quiet-button" type="button" onClick={onCreateLocal}><Plus size={15} />新增 Moodboard</button>
+            <button className="quiet-button" type="button" onClick={onCreateLocal}><Plus size={15} />新增工作檔</button>
           </div>
         </div>
-        <ListSearchField search={search} placeholder="搜尋 Moodboard 名稱、位置或同步狀態" />
+        <ListSearchField search={search} placeholder="搜尋工作檔名稱、位置或同步狀態" />
         {listedItems.length ? (
           <div className="drive-file-list">
             {listedItems.map((item) => {
@@ -6133,7 +6133,7 @@ function DriveLibraryModal({
               return (
                 <article className={isCurrent ? "is-current" : ""} key={item.key}>
                   <span className="drive-file-icon" aria-hidden="true">{item.local ? <HardDrive size={19} /> : <FileArchive size={19} />}</span>
-                  <div>{renameKey === item.key ? <form className="drive-rename-form" onSubmit={async (event) => { event.preventDefault(); const name = renameValue.trim(); if (!name) { setRenameError("請輸入名稱。"); return; } setRenameBusy(true); setRenameError(""); try { const result = await onRename(item, name); if (result) setRenameKey(""); else setRenameError("名稱尚未完成儲存；請查看同步狀態並重試。"); } catch (error) { setRenameError(error?.message || "無法更新名稱，請重試。"); } finally { setRenameBusy(false); } }}><input aria-label="Moodboard 名稱" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus disabled={renameBusy} /><button type="submit" className="quiet-button" disabled={renameBusy}>{renameBusy ? "儲存中…" : "儲存"}</button><button type="button" className="quiet-button" disabled={renameBusy} onClick={() => setRenameKey("")}>取消</button>{renameError ? <small role="alert">{renameError}</small> : null}</form> : <strong data-l10n-ignore title={item.name}>{item.name}</strong>}<small>{detail}</small></div>
+                  <div>{renameKey === item.key ? <form className="drive-rename-form" onSubmit={async (event) => { event.preventDefault(); const name = renameValue.trim(); if (!name) { setRenameError("請輸入名稱。"); return; } setRenameBusy(true); setRenameError(""); try { const result = await onRename(item, name); if (result) setRenameKey(""); else setRenameError("名稱尚未完成儲存；請查看同步狀態並重試。"); } catch (error) { setRenameError(error?.message || "無法更新名稱，請重試。"); } finally { setRenameBusy(false); } }}><input aria-label="工作檔名稱" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus disabled={renameBusy} /><button type="submit" className="quiet-button" disabled={renameBusy}>{renameBusy ? "儲存中…" : "儲存"}</button><button type="button" className="quiet-button" disabled={renameBusy} onClick={() => setRenameKey("")}>取消</button>{renameError ? <small role="alert">{renameError}</small> : null}</form> : <strong data-l10n-ignore title={item.name}>{item.name}</strong>}<small>{detail}</small></div>
                   <span className={`drive-file-badge is-${itemStatus.tone}`}>{itemStatus.tone === "success" ? <Check size={13} /> : itemStatus.tone === "error" ? <AlertTriangle size={13} /> : item.remote ? <Cloud size={13} /> : <HardDrive size={13} />}{isCurrent ? "目前檔案" : itemStatus.label}</span>
                   <button className="icon-button" type="button" title="重新命名" aria-label={`重新命名 ${item.name}`} disabled={busy || renameBusy} onClick={() => { setRenameValue(item.name); setRenameError(""); setRenameKey(item.key); }}><Pencil size={15} /></button>
                   {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy}>開啟</button> : null}
@@ -6143,9 +6143,9 @@ function DriveLibraryModal({
             })}
           </div>
         ) : libraryItems.length ? (
-          <div className="modal-empty"><Search size={24} /><strong>找不到符合的 Moodboard</strong><p>搜尋條件會保留，可以調整或清除。</p><button className="text-button" type="button" onClick={() => search.setQuery("")}>清除搜尋</button></div>
+          <div className="modal-empty"><Search size={24} /><strong>找不到符合的工作檔</strong><p>搜尋條件會保留，可以調整或清除。</p><button className="text-button" type="button" onClick={() => search.setQuery("")}>清除搜尋</button></div>
         ) : (
-          <div className="modal-empty"><HardDrive size={25} /><strong>還沒有 Moodboard</strong><p>建立第一份本機 Moodboard；需要跨裝置時再連結 Google Drive。</p><button className="primary-button" type="button" onClick={onCreateLocal}><Plus size={15} />新增 Moodboard</button></div>
+          <div className="modal-empty"><HardDrive size={25} /><strong>還沒有工作檔</strong><p>建立第一份本機工作檔；需要跨裝置時再連結 Google Drive。</p><button className="primary-button" type="button" onClick={onCreateLocal}><Plus size={15} />新增工作檔</button></div>
         )}
       </div>
     </Modal>
@@ -6188,7 +6188,7 @@ function DriveSharingModal({
     "authorization-required": "連結 Google Drive",
     "needs-picker-access": "授權並開啟共享檔案",
     "picker-authorizing": "正在開啟 Google 檔案選擇器…",
-    "opening-shared-file": "正在讀取共享 Moodboard…",
+    "opening-shared-file": "正在讀取共享工作檔…",
     "picker-unconfigured": "網站尚未完成共享檔案設定",
     "shared-file-denied": "共享檔案尚未開啟",
     "needs-drive": "先儲存到 Google Drive",
@@ -6208,7 +6208,7 @@ function DriveSharingModal({
 
   return (
     <Modal
-      title="分享 Google Drive Moodboard"
+      title="分享 Google Drive 工作檔"
       description="分享的是目前這一份 Google Drive 工作檔；連結、成員與權限都由檔案擁有者的 Google Drive 管理。"
       onClose={onClose}
       wide
@@ -6234,18 +6234,18 @@ function DriveSharingModal({
               <div className="collaboration-share-summary">
                 <span className="collaboration-permission-icon" aria-hidden="true"><Share2 size={18} /></span>
                 <div>
-                  <strong id="drive-share-link-title">{restrictedLink ? "受限的分享連結" : "Moodboard 分享連結"}</strong>
+                  <strong id="drive-share-link-title">{restrictedLink ? "受限的分享連結" : "工作檔分享連結"}</strong>
                   <small>{!sharing.permissionsVisible ? "存取權由 Google Drive 管理；目前帳號只能確認自己的權限。" : publicCanEdit ? "目前知道連結的人可編輯；擁有者可改為僅檢視。" : sharing.generalAccess.enabled ? "知道連結的人可檢視；編輯仍需個別授權。" : "目前是受限連結；只有已獲 Drive 授權的帳號能開啟。"}</small>
                 </div>
               </div>
               <label className="collaboration-invite-field">
-                <span>直接開啟這份 Moodboard</span>
+                <span>直接開啟這份工作檔</span>
                 <div>
                   <input
                     value={sharing.shareUrl || ""}
                     readOnly
                     data-l10n-ignore
-                    aria-label="目前 Google Drive Moodboard 的分享連結"
+                    aria-label="目前 Google Drive 工作檔的分享連結"
                     onFocus={(event) => event.currentTarget.select()}
                   />
                   <button className="primary-button" type="button" onClick={() => restrictedLink && sharing.canShare ? runPermissionAction("enable-viewer-link", async () => (await onSetGeneralAccess(true)) && onCopyLink("viewer")) : onCopyLink()} disabled={!sharing.shareUrl || Boolean(permissionAction)}>
@@ -6435,7 +6435,7 @@ function DriveSharingModal({
 
 function DriveEditPermissionModal({ sharing, onClose }) {
   const accessUrl = googleDriveFileAccessUrl(sharing);
-  return <Modal title="需要編輯權限" description="你目前可以檢視這份 Moodboard；編輯與儲存需要檔案擁有者授權。" onClose={onClose}>
+  return <Modal title="需要編輯權限" description="你目前可以檢視這份工作檔；編輯與儲存需要檔案擁有者授權。" onClose={onClose}>
     <div className="drive-save-confirmation">
       <p>前往 Google Drive 申請編輯權限；擁有者核准後，請回到分享面板重新整理權限。</p>
       <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={onClose}>稍後</button>{accessUrl ? <a className="primary-button" href={accessUrl} target="_blank" rel="noreferrer">前往 Google Drive 申請</a> : null}</div>
@@ -6633,7 +6633,7 @@ function SettingsModal({
               </div>
               <div className="settings-account-boundary">
                 <ShieldCheck size={20} />
-                <div><strong>Drive 授權由你另外決定</strong><p>登入、登出或切換帳號都不會刪除目前瀏覽器中的 Moodboard。只有另外連結 Google Drive 並啟用同步後，作品才會上傳。</p></div>
+                <div><strong>Drive 授權由你另外決定</strong><p>登入、登出或切換帳號都不會刪除目前瀏覽器中的工作檔。只有另外連結 Google Drive 並啟用同步後，作品才會上傳。</p></div>
               </div>
               {accountSignedIn ? (
                 <div className="settings-login-methods">
@@ -6689,18 +6689,18 @@ function SettingsModal({
                 {accountSignedIn ? <button className="quiet-button" type="button" onClick={onSignOut}><LogOut size={15} />登出</button> : null}
               </div>
               <div className="settings-danger-zone">
-                <div><strong>這台裝置的 Moodboard 資料</strong><small>永久清除目前自動儲存與所有本機版本；已下載的檔案不受影響。</small></div>
+                <div><strong>這台裝置的工作檔資料</strong><small>永久清除目前自動儲存與所有本機版本；已下載的檔案不受影響。</small></div>
                 <button className="danger-button" type="button" onClick={onClearLocalData}><Trash2 size={15} />清除本機資料</button>
               </div>
             </section>
           ) : section === "storage" ? (
             <section className="settings-section" aria-labelledby="settings-storage-title">
               <div className="settings-section-heading">
-                <div><h3 id="settings-storage-title">儲存與同步</h3><p>每份 Moodboard 只有一個主要儲存位置；本機安全副本不會變成第二份競爭的主檔。</p></div>
+                <div><h3 id="settings-storage-title">儲存與同步</h3><p>每份工作檔只有一個主要儲存位置；本機安全副本不會變成第二份競爭的主檔。</p></div>
               </div>
               <div className="settings-subsection-heading">
                 <Save size={17} />
-                <div><strong>目前 Moodboard 的主要儲存位置</strong><small>改用本機會另開獨立副本；原雲端檔案與分享連結保留。下載備份不會切換位置。</small></div>
+                <div><strong>目前工作檔的主要儲存位置</strong><small>改用本機會另開獨立副本；原雲端檔案與分享連結保留。下載備份不會切換位置。</small></div>
               </div>
               <div className="settings-storage-targets" role="radiogroup" aria-label="主要儲存位置">
                 <button className={primaryStorageTarget === "local" ? "is-active" : ""} type="button" role="radio" aria-checked={primaryStorageTarget === "local"} onClick={() => onSetStorageTarget("local")}>
@@ -6722,7 +6722,7 @@ function SettingsModal({
                 <HardDrive size={18} />
                 <div>
                   <strong>本機安全暫存</strong>
-                  <small><span>本機 Moodboards</span>{`: ${localLibrarySummary.boardCount} · `}<span>等待同步</span>{`: ${localLibrarySummary.pendingSyncCount}`}{localLibrarySummary.storage.persisted === false ? <><span aria-hidden="true"> · </span><span>瀏覽器可能自動清理</span></> : null}</small>
+                  <small><span>本機工作檔</span>{`: ${localLibrarySummary.boardCount} · `}<span>等待同步</span>{`: ${localLibrarySummary.pendingSyncCount}`}{localLibrarySummary.storage.persisted === false ? <><span aria-hidden="true"> · </span><span>瀏覽器可能自動清理</span></> : null}</small>
                 </div>
                 <span>{localLibrarySummary.storage.usage !== null ? formatStorageSize(localLibrarySummary.storage.usage) : formatStorageSize(localLibrarySummary.estimatedBoardBytes)}</span>
               </div>
@@ -6765,7 +6765,7 @@ function SettingsModal({
                 </div>
               )}
               <div className="settings-account-links settings-storage-file-actions">
-                <button className="secondary-button" type="button" onClick={onOpenDriveLibrary}><FolderOpen size={15} />我的 Moodboards</button>
+                <button className="secondary-button" type="button" onClick={onOpenDriveLibrary}><FolderOpen size={15} />我的工作檔</button>
                 <button className="quiet-button" type="button" onClick={onDownloadBackup}><Download size={15} />下載 `.studio` 備份</button>
               </div>
               <p className="settings-update-note">若離線、容量不足或授權失效，編輯不會中斷；畫布會標示等待同步，並可隨時下載 `.studio` 備份。</p>
@@ -6773,7 +6773,7 @@ function SettingsModal({
           ) : section === "general" ? (
             <section className="settings-section" aria-labelledby="settings-general-title">
               <div className="settings-section-heading">
-                <div><h3 id="settings-general-title">一般設定</h3><p>選擇操作介面使用的語言；不會翻譯 Moodboard 內的文字內容。</p></div>
+                <div><h3 id="settings-general-title">一般設定</h3><p>選擇操作介面使用的語言；不會翻譯工作檔內的文字內容。</p></div>
               </div>
               <div className="settings-subsection-heading">
                 <Languages size={17} />
@@ -6829,7 +6829,7 @@ function SettingsModal({
               </div>
               <div className="settings-subsection-heading">
                 <Type size={17} />
-                <div><strong>介面文字</strong><small>只調整操作介面，不會改變 Moodboard 裡的文字物件。</small></div>
+                <div><strong>介面文字</strong><small>只調整操作介面，不會改變工作檔裡的文字物件。</small></div>
               </div>
               <div className="settings-row settings-type-size-row">
                 <div><strong>字體大小</strong><small>選擇預設，或用滑桿精細調整。</small></div>
@@ -6905,7 +6905,7 @@ function SettingsModal({
               <div className="settings-row"><div><strong>側欄寬度</strong><small>可拖曳側欄圓點把手調整；雙擊把手可恢復單側寬度。</small></div><button className="secondary-button" type="button" onClick={onResetPanelWidths}>恢復預設寬度</button></div>
               <div className="settings-subsection-heading settings-canvas-heading">
                 <LayoutGrid size={17} />
-                <div><strong>畫布背景</strong><small>只影響這台裝置的工作區，不會寫入 Moodboard 或輸出成品。</small></div>
+                <div><strong>畫布背景</strong><small>只影響這台裝置的工作區，不會寫入工作檔或輸出成品。</small></div>
               </div>
               <div className="settings-canvas-background-options" role="radiogroup" aria-label="畫布背景樣式">
                 {[
@@ -7049,7 +7049,7 @@ function SettingsModal({
                 ) : null}
               </div>
               {updateAction.message ? <p className={`settings-update-action-message is-${updateAction.status}`} role="status">{updateAction.message}</p> : null}
-              <p className="settings-update-note">版本檢查不會上傳 Moodboard、素材或使用紀錄；若目前離線，可以繼續編輯並稍後重試。</p>
+              <p className="settings-update-note">版本檢查不會上傳工作檔、素材或使用紀錄；若目前離線，可以繼續編輯並稍後重試。</p>
             </section>
           )}
         </div>
@@ -7123,7 +7123,7 @@ function InterfaceThemeModal({
   return (
     <Modal
       title="介面配色"
-      description="點選會先在整個介面預覽；只有按下套用才會儲存。配色屬於這台裝置，不會改變 Moodboard 內容。"
+      description="點選會先在整個介面預覽；只有按下套用才會儲存。配色屬於這台裝置，不會改變工作檔內容。"
       onClose={onClose}
       wide
     >
@@ -8652,7 +8652,7 @@ function App({ initialProtectedShare = null }) {
         });
         if (!result) setAuthMessage("帳號已登入，但 Google Drive 尚未連結。請重試；本機內容仍安全保留。");
       } else {
-        announce("帳號授權完成；Moodboard 仍保存在這台裝置。", "success");
+        announce("帳號授權完成；工作檔仍保存在這台裝置。", "success");
       }
     } catch (error) {
       setAuthMessage(error.message || "無法保存帳號授權，請再試一次。");
@@ -8901,7 +8901,7 @@ function App({ initialProtectedShare = null }) {
       setTool("select");
       setShowSettings(false);
       setShowInterfaceThemes(false);
-      announce("已登出；這台裝置上的 Moodboard 沒有被刪除。", "success");
+      announce("已登出；這台裝置上的工作檔沒有被刪除。", "success");
     } catch (error) {
       setAuthMessage(moodboardAuthErrorMessage(error, navigator.onLine !== false));
     } finally {
@@ -8942,13 +8942,13 @@ function App({ initialProtectedShare = null }) {
       setKeyObjectId(null);
       setVersions([]);
       setDirty(false);
-      setSaveState("已建立空白本機 Moodboard");
+      setSaveState("已建立空白本機工作檔");
       setLocalFileBinding({ status: canUseFileSystemPicker ? "unlinked" : "unsupported", name: "" });
       setShowLocalFileLocation(false);
       setBoardPrimaryStorage(freshBoard.id, "pending");
       await refreshLocalLibrarySummary();
       setShowDeleteLocalData(false);
-      announce("這台裝置上的 Moodboard、版本與 Drive 連結資料已清除；雲端檔案未刪除。", "success");
+      announce("這台裝置上的工作檔、版本與 Drive 連結資料已清除；雲端檔案未刪除。", "success");
     } catch {
       announce("本機資料無法清除，請關閉其他 Infinite Studio 分頁後再試。", "error");
     } finally {
@@ -10036,10 +10036,10 @@ function App({ initialProtectedShare = null }) {
     try {
       await persistBoardLocally(current);
       if (dirty || current.objects.length) {
-        await saveVersion(current, translateInterfaceText("切換 Moodboard 前"), "automatic");
+        await saveVersion(current, translateInterfaceText("切換工作檔前"), "automatic");
       }
     } catch (error) {
-      announce(error?.message || "目前 Moodboard 無法先建立復原副本，因此未開啟另一份檔案。", "error");
+      announce(error?.message || "目前工作檔無法先建立復原副本，因此未開啟另一份檔案。", "error");
       return null;
     }
     if (!shouldCommit()) return null;
@@ -10141,7 +10141,7 @@ function App({ initialProtectedShare = null }) {
     try {
       await persistBoardLocally(current);
       if (dirty || current.objects.length) {
-        await saveVersion(current, translateInterfaceText("切換 Moodboard 前"), "automatic");
+        await saveVersion(current, translateInterfaceText("切換工作檔前"), "automatic");
       }
       if (boardRef.current !== startingBoard || operationEpoch !== driveOperationEpochRef.current) {
         announce("目前內容已變更；未切換檔案，請再試一次。", "info");
@@ -10184,14 +10184,14 @@ function App({ initialProtectedShare = null }) {
       announce(message || `已開啟「${next.name}」。`, "success");
       return next;
     } catch (error) {
-      announce(error?.message || "無法切換 Moodboard；目前畫布未受影響。", "error");
+      announce(error?.message || "無法切換工作檔；目前畫布未受影響。", "error");
       return null;
     }
   }, [announce, boardSnapshot, cancelDriveOperations, dirty, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, setBoardPrimaryStorage, storagePreferences]);
 
   const openLocalMoodboard = useCallback((record) => {
     if (!record?.board) {
-      announce("找不到這份本機 Moodboard 的內容。", "error");
+      announce("找不到這份本機工作檔的內容。", "error");
       return;
     }
     if (record.id === boardRef.current.id) {
@@ -10203,7 +10203,7 @@ function App({ initialProtectedShare = null }) {
 
   const createLocalMoodboard = useCallback(() => {
     const next = createBoard({ name: localizedDefaultBoardName(interfaceLocale) });
-    activateLocalMoodboard(next, "已建立新的 Moodboard；原本的 Moodboard 已安全保留。", { newBoard: true });
+    activateLocalMoodboard(next, "已建立新的工作檔；原本的工作檔已安全保留。", { newBoard: true });
   }, [activateLocalMoodboard, interfaceLocale]);
 
   const currentDriveContentBytes = useMemo(
@@ -10836,7 +10836,7 @@ function App({ initialProtectedShare = null }) {
       setDriveSharing({
         ...EMPTY_DRIVE_SHARING,
         status: "needs-drive",
-        message: "先把目前 Moodboard 儲存成你 Google Drive 裡的 `.studio` 檔案，才能建立同一份檔案的分享連結。",
+        message: "先把目前工作檔儲存成你 Google Drive 裡的 `.studio` 檔案，才能建立同一份檔案的分享連結。",
       });
       return false;
     }
@@ -10923,10 +10923,13 @@ function App({ initialProtectedShare = null }) {
     const previous = directShareAttemptRef.current;
     if (previous?.fileId === incoming.fileId && previous?.resourceKey === incoming.resourceKey && previous?.accessToken === accessToken) return false;
     directShareAttemptRef.current = { fileId: incoming.fileId, resourceKey: incoming.resourceKey, accessToken };
-    setDriveSharing((current) => ({ ...current, status: "opening-shared-file", fileId: incoming.fileId, resourceKey: incoming.resourceKey, message: "正在開啟分享的 Moodboard…" }));
-    const opened = await openGoogleDriveFile({ id: incoming.fileId, resourceKey: incoming.resourceKey, name: "分享的 Moodboard" }, { sharedLink: true });
+    setDriveSharing((current) => ({ ...current, status: "opening-shared-file", fileId: incoming.fileId, resourceKey: incoming.resourceKey, message: "正在開啟分享的工作檔…" }));
+    const opened = await openGoogleDriveFile({ id: incoming.fileId, resourceKey: incoming.resourceKey, name: "分享的工作檔" }, { sharedLink: true });
     if (!opened) return false;
     await refreshDriveSharing({ fileId: opened.metadata.id, resourceKey: opened.metadata.resourceKey || incoming.resourceKey });
+    // The URL remains shareable, but subsequent sharing actions must follow the
+    // currently open board instead of this already-consumed incoming link.
+    if (initialDriveShareRef.current === incoming) initialDriveShareRef.current = null;
     setShowCollaboration(false);
     promptForPendingSharedEdit(driveFileRole(opened.metadata));
     return true;
@@ -10986,7 +10989,7 @@ function App({ initialProtectedShare = null }) {
       setDriveSharing((current) => ({
         ...current,
         status: "opening-shared-file",
-        message: "正在驗證並讀取共享 Moodboard 的原始內容…",
+        message: "正在驗證並讀取共享工作檔的原始內容…",
       }));
       const opened = await openGoogleDriveFile(selection.file, { sharedLink: true });
       if (!opened) return false;
@@ -11036,13 +11039,13 @@ function App({ initialProtectedShare = null }) {
     try {
       await navigator.clipboard.writeText(driveSharing.shareUrl);
       announce(
-        newRole === "restricted" ? "受限的 Moodboard 連結已複製；只有已獲 Drive 授權的帳號能開啟。"
-          : newRole === "viewer" ? "Moodboard 檢視連結已複製；知道連結的人可檢視。"
+        newRole === "restricted" ? "受限的工作檔連結已複製；只有已獲 Drive 授權的帳號能開啟。"
+          : newRole === "viewer" ? "工作檔檢視連結已複製；知道連結的人可檢視。"
           : driveSharing.generalAccess.enabled && driveSharing.generalAccess.role === "editor"
-          ? "可編輯的 Moodboard 連結已複製；知道連結的人可依 Drive 權限編輯。"
+          ? "可編輯的工作檔連結已複製；知道連結的人可依 Drive 權限編輯。"
           : driveSharing.generalAccess.enabled
-          ? "Moodboard 檢視連結已複製；知道連結的人可依 Drive 權限開啟。"
-          : "受限的 Moodboard 連結已複製；只有已獲 Drive 授權的帳號能開啟。",
+          ? "工作檔檢視連結已複製；知道連結的人可依 Drive 權限開啟。"
+          : "受限的工作檔連結已複製；只有已獲 Drive 授權的帳號能開啟。",
         "success",
       );
       return true;
@@ -11170,19 +11173,8 @@ function App({ initialProtectedShare = null }) {
       legacyCollaborationLinkRef.current = false;
       setDriveSharing(EMPTY_DRIVE_SHARING);
     }
-    const incoming = initialDriveShareRef.current;
-    if (incoming?.fileId) {
-      const currentLink = loadDriveState(localStorage).links[boardRef.current.id];
-      if (currentLink?.fileId !== incoming.fileId) {
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.delete("driveFile");
-        nextUrl.searchParams.delete("resourceKey");
-        nextUrl.searchParams.delete("lockedShare");
-        window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
-        initialDriveShareRef.current = null;
-        setDriveSharing(EMPTY_DRIVE_SHARING);
-      }
-    }
+    // Closing a dialog must not discard an unopened shared-file link. The
+    // recipient may reconnect Drive and retry without losing the target file.
     setShowCollaboration(false);
   }, [cancelDriveRead]);
 
@@ -11250,7 +11242,7 @@ function App({ initialProtectedShare = null }) {
       const metadata = await getGoogleDriveFile(accessToken, file.id, { resourceKey });
       const isHead = !revision || revision.id === metadata.headRevisionId;
       if (!isHead && !revision.keepForever) {
-        throw new DriveApiError("這個 Drive 暫存版本無法下載；目前 Moodboard 未受影響。", { code: "drive/revision" });
+        throw new DriveApiError("這個 Drive 暫存版本無法下載；目前工作檔未受影響。", { code: "drive/revision" });
       }
       const content = await downloadGoogleDriveMoodboard(accessToken, file.id, {
         revisionId: isHead ? "" : revision.id,
@@ -11259,7 +11251,7 @@ function App({ initialProtectedShare = null }) {
       const parsed = ensureBoard(JSON.parse(content));
       const versionTime = revision?.modifiedTime || metadata.modifiedTime || new Date().toISOString();
       const recovered = createRecoveredMoodboard(parsed, { label: `Drive 復原 ${formatTime(versionTime)}` });
-      const activated = await activateLocalMoodboard(recovered, `已將 Drive 版本開成新的本機 Moodboard；原本內容仍安全保留。`);
+      const activated = await activateLocalMoodboard(recovered, `已將 Drive 版本開成新的本機工作檔；原本內容仍安全保留。`);
       if (!activated) return null;
       setDriveVersions({ status: "idle", items: [], fileId: "", headRevisionId: "", message: "" });
       setShowVersions(false);
@@ -11363,7 +11355,7 @@ function App({ initialProtectedShare = null }) {
     }
     if (!currentDriveAccessToken() && !driveSettings.enabled) {
       setShowDriveLibrary(true);
-      setDriveSession((current) => ({ ...current, status: driveSettings.enabled ? "authorization-required" : "disconnected", connected: false, busy: false, message: driveSettings.enabled ? "請重新連結後繼續同步。" : "連結 Drive 後即可把目前 Moodboard 保存到雲端。" }));
+      setDriveSession((current) => ({ ...current, status: driveSettings.enabled ? "authorization-required" : "disconnected", connected: false, busy: false, message: driveSettings.enabled ? "請重新連結後繼續同步。" : "連結 Drive 後即可把目前工作檔保存到雲端。" }));
       return;
     }
     saveBoardToGoogleDrive();
@@ -13368,7 +13360,7 @@ function App({ initialProtectedShare = null }) {
       if (files.length) {
         event.preventDefault();
         if (leftTab === "sources") {
-          announce("素材檢視不會新增或改動畫布物件；請先回到 Moodboard。", "warning");
+          announce("素材檢視不會新增或改動畫布物件；請先回到畫布。", "warning");
           return;
         }
         addMediaFiles(files, canvasCenterWorld());
@@ -13839,7 +13831,7 @@ function App({ initialProtectedShare = null }) {
   const onSourceModeDrop = useCallback((event) => {
     event.preventDefault();
     setDragActive(false);
-    announce("素材檢視不會新增或改動畫布物件；請先回到 Moodboard。", "warning");
+    announce("素材檢視不會新增或改動畫布物件；請先回到畫布。", "warning");
   }, [announce]);
 
   const filteredObjects = useMemo(() => board.objects.filter((object) => object.visible && matchesFilters(object, filters)), [board.objects, filters]);
@@ -13959,7 +13951,7 @@ function App({ initialProtectedShare = null }) {
       viewRef.current = nextView;
       setView(nextView);
     }
-    announce(`已在 Moodboard 顯示並選取 ${targets.length} 個畫布實例`, "success");
+    announce(`已在畫布顯示並選取 ${targets.length} 個畫布實例`, "success");
   }, [announce, changeLeftTab]);
 
   const exportSourceAsset = useCallback(async (sourceId) => {
@@ -14001,7 +13993,7 @@ function App({ initialProtectedShare = null }) {
       if (!item.local?.board) throw new Error("找不到本機檔案內容。");
       await upsertLocalBoard(stampBoard({ ...item.local.board, name }, sessionIdRef.current));
       await refreshLocalLibrarySummary();
-      announce("本機 Moodboard 名稱已更新。", "success");
+      announce("本機工作檔名稱已更新。", "success");
       return true;
     }
     const accessToken = currentDriveAccessToken();
@@ -14100,14 +14092,14 @@ function App({ initialProtectedShare = null }) {
         </div>
 
         <label className="board-title-field">
-          <span className="sr-only">{sourceModeActive ? "回到 Moodboard 後修改名稱" : "Infinite Studio 名稱"}</span>
+          <span className="sr-only">{sourceModeActive ? "回到畫布後修改名稱" : "Infinite Studio 名稱"}</span>
           <input
             value={board.name}
             onChange={(event) => applyBoard((current) => ({ ...current, name: event.target.value }))}
             disabled={cloudReadOnly || sourceModeActive}
-            title={`${board.name} · ${sourceModeActive ? "素材檢視中；回到 Moodboard 後才能修改名稱" : topbarSaveState}`}
+            title={`${board.name} · ${sourceModeActive ? "素材檢視中；回到畫布後才能修改名稱" : topbarSaveState}`}
           />
-          <small className="sr-only" aria-live="polite">{sourceModeActive ? "素材檢視中 · Moodboard 名稱唯讀" : topbarSaveState}</small>
+          <small className="sr-only" aria-live="polite">{sourceModeActive ? "素材檢視中 · 工作檔名稱唯讀" : topbarSaveState}</small>
         </label>
 
         <div className="topbar-secondary">
@@ -14120,12 +14112,12 @@ function App({ initialProtectedShare = null }) {
           </button>
           {currentPrimaryStorageTarget === "drive" ? <span className="sr-only" role="status" aria-live="polite">{drivePresentation.label}</span> : null}
           <IconButton
-            label={sourceModeActive ? "回到 Moodboard 後復原 ⌘Z" : "復原 ⌘Z"}
+            label={sourceModeActive ? "回到畫布後復原 ⌘Z" : "復原 ⌘Z"}
             onClick={undo}
             disabled={cloudReadOnly || sourceModeActive || !undoRef.current.length}
           ><Undo2 size={18} /></IconButton>
           <IconButton
-            label={sourceModeActive ? "回到 Moodboard 後重做 ⇧⌘Z" : "重做 ⇧⌘Z"}
+            label={sourceModeActive ? "回到畫布後重做 ⇧⌘Z" : "重做 ⇧⌘Z"}
             onClick={redo}
             disabled={cloudReadOnly || sourceModeActive || !redoRef.current.length}
           ><Redo2 size={18} /></IconButton>
@@ -14295,8 +14287,8 @@ function App({ initialProtectedShare = null }) {
             </button>
             {sourceModeActive ? (
               <div className="source-toolbar-context">
-                <button className="source-toolbar-action source-toolbar-back" type="button" onClick={() => changeLeftTab("layers")} aria-label="回到 Moodboard" title="回到 Moodboard">
-                  <ArrowLeft size={17} /><span>回到 Moodboard</span>
+                <button className="source-toolbar-action source-toolbar-back" type="button" onClick={() => changeLeftTab("layers")} aria-label="回到畫布" title="回到畫布">
+                  <ArrowLeft size={17} /><span>回到畫布</span>
                 </button>
                 <div className="tool-divider" />
                 <div className="source-toolbar-target" title={activeSourceAsset?.representative.originalFilename || activeSourceAsset?.representative.name || "尚無來源素材"}>
@@ -14307,7 +14299,7 @@ function App({ initialProtectedShare = null }) {
                 <button className="source-toolbar-action" type="button" onClick={() => addSourceInstanceToBoard(resolvedActiveSourceId)} disabled={!activeSourceAsset || cloudReadOnly} aria-label="從目前素材新增畫布實例" title="從目前素材新增畫布實例">
                   <ImagePlus size={17} /><span>新增實例</span>
                 </button>
-                <button className="source-toolbar-action" type="button" onClick={() => showSourceInstances(resolvedActiveSourceId)} disabled={!activeSourceAsset} aria-label="在 Moodboard 定位目前素材的可見畫布實例" title="在 Moodboard 定位目前素材的可見畫布實例">
+                <button className="source-toolbar-action" type="button" onClick={() => showSourceInstances(resolvedActiveSourceId)} disabled={!activeSourceAsset} aria-label="在畫布定位目前素材的可見畫布實例" title="在畫布定位目前素材的可見畫布實例">
                   <LocateFixed size={17} /><span>定位實例</span>
                 </button>
                 <button className="source-toolbar-action" type="button" onClick={() => exportSourceAsset(resolvedActiveSourceId)} disabled={!activeSourceAsset || isExporting} aria-label="下載目前的原始素材" title="下載目前的原始素材">
@@ -14529,10 +14521,10 @@ function App({ initialProtectedShare = null }) {
             {dragActive && !sourceModeActive ? <div className="drop-overlay"><ImagePlus size={34} /><strong>放開以加入圖片、影片或 SVG</strong><span>原始檔不會上傳到伺服器</span></div> : null}
 
             <div className={`canvas-bottom-hud ${rulersVisible && !inspectionActive ? "has-rulers" : ""}`}>
-              <div className="canvas-status" aria-label="Moodboard 狀態">
+              <div className="canvas-status" aria-label="工作檔狀態">
                 <span className="canvas-status-primary">{sourceModeActive ? `${sourceAssets.length} 個來源素材` : `${board.objects.length} 個物件`}</span>
                 {sourceModeActive && activeSourceAsset ? <span className="canvas-status-source" data-l10n-ignore>{activeSourceAsset.representative.originalFilename || activeSourceAsset.representative.name}</span> : null}
-                <span className="canvas-status-revision" title="目前 Moodboard 內容版本">內容 r{board.revision}</span>
+                <span className="canvas-status-revision" title="目前工作檔內容版本">內容 r{board.revision}</span>
                 <span className="canvas-status-save">{saveState}</span>
                 <span className="app-version" aria-label={`Infinite Studio 應用程式版本 ${APP_VERSION}`} title={`Infinite Studio ${APP_VERSION_LABEL}`}>{APP_VERSION_LABEL}</span>
               </div>
@@ -14960,7 +14952,18 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
     return localizeInterfaceDom(viewerRef.current, locale);
   }, [locale]);
   const [state, setState] = useState({ status: "loading", html: "", name: "" });
+  const [viewerSignedIn, setViewerSignedIn] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  useEffect(() => {
+    let active = true;
+    let unsubscribe = () => {};
+    observeMoodboardSession((session) => {
+      if (active) setViewerSignedIn(session.status === "signed-in" && isMoodboardIdentityEligible(session.user));
+    }).then((stop) => { if (active) unsubscribe = stop; else stop(); }).catch(() => {
+      if (active) setViewerSignedIn(false);
+    });
+    return () => { active = false; unsubscribe(); };
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     setState({ status: "loading", html: "", name: "" });
@@ -14969,7 +14972,7 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
         const { createPortableHtml } = await loadPortableRuntime();
         let data;
         if (preview) {
-          data = { name: "分享的 Moodboard（模擬資料）", objects: [{ id: "preview-text", type: "text", text: "無須登入即可檢視", pivotX: 140, pivotY: 100, width: 420, height: 100, fontSize: 30, color: "#ffffff", visible: true }] };
+          data = { name: "分享的工作檔（模擬資料）", objects: [{ id: "preview-text", type: "text", text: "無須登入即可檢視", pivotX: 140, pivotY: 100, width: 420, height: 100, fontSize: 30, color: "#ffffff", visible: true }] };
         } else {
           const { readPublicSharedBoard } = await import("./drive-public.js");
           const result = await readPublicSharedBoard({ ...incoming, apiKey: import.meta.env.VITE_GOOGLE_DRIVE_PICKER_API_KEY, signal: controller.signal });
@@ -14978,7 +14981,7 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
         const board = ensureBoard(data);
         if (!controller.signal.aborted) setState({ status: "ready", html: createPortableHtml(board, { shared: true, locale }), name: board.name });
       } catch (error) {
-        if (!controller.signal.aborted) setState({ status: "error", message: error?.message || "目前無法開啟這份 Moodboard。" });
+        if (!controller.signal.aborted) setState({ status: "error", message: error?.message || "目前無法開啟這份工作檔。" });
       }
     })();
     return () => controller.abort();
@@ -14994,10 +14997,10 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
   return <main ref={viewerRef} className="public-share-viewer">
     <header>
       <div className="public-share-brand" aria-label="Infinite Studio"><span className="brand-mark" aria-hidden="true">∞</span></div>
-      <strong className="public-share-title" title={state.name || "分享的 Moodboard"} data-l10n-ignore={state.name ? true : undefined}>{state.name || "分享的 Moodboard"}</strong>
-      <div className="public-share-actions"><span><span>僅檢視</span>{preview ? <span> · 模擬資料</span> : null}</span><button className="primary-button" type="button" onClick={openEditor}>{state.status === "error" ? "登入以開啟" : "登入後編輯"}</button></div>
+      <strong className="public-share-title" title={state.name || "分享的工作檔"} data-l10n-ignore={state.name ? true : undefined}>{state.name || "分享的工作檔"}</strong>
+      <div className="public-share-actions"><span><span>僅檢視</span>{preview ? <span> · 模擬資料</span> : null}</span><button className="primary-button" type="button" onClick={openEditor}>{viewerSignedIn ? "開啟編輯" : state.status === "error" ? "登入以開啟" : "登入後編輯"}</button></div>
     </header>
-    {state.status === "ready" ? <iframe title="Moodboard 檢視畫面" sandbox="allow-scripts" srcDoc={state.html} /> : <div className="public-share-message" role="status"><strong>{state.status === "loading" ? "正在開啟分享內容…" : "無法免登入開啟"}</strong>{state.status === "error" ? <><p>{state.message}</p><button className="secondary-button" type="button" onClick={() => setRetryCount((count) => count + 1)}>重新嘗試</button></> : null}{state.status === "error" && googleDriveFileAccessUrl(incoming || {}) ? <p><a href={googleDriveFileAccessUrl(incoming)} target="_blank" rel="noreferrer">在 Google Drive 檢查或申請存取權</a></p> : null}</div>}
+    {state.status === "ready" ? <iframe title="工作檔檢視畫面" sandbox="allow-scripts" srcDoc={state.html} /> : <div className="public-share-message" role="status"><strong>{state.status === "loading" ? "正在開啟分享內容…" : "無法免登入開啟"}</strong>{state.status === "error" ? <><p>{state.message}</p><button className="secondary-button" type="button" onClick={() => setRetryCount((count) => count + 1)}>重新嘗試</button></> : null}{state.status === "error" && googleDriveFileAccessUrl(incoming || {}) ? <p><a href={googleDriveFileAccessUrl(incoming)} target="_blank" rel="noreferrer">在 Google Drive 檢查或申請存取權</a></p> : null}</div>}
   </main>;
 }
 
@@ -15014,7 +15017,7 @@ function DriveSharingPreview({ initialMode }) {
     ...EMPTY_DRIVE_SHARING,
     status: denied ? "shared-file-denied" : pickerError ? "needs-picker-access" : "ready",
     fileId,
-    fileName: "團隊研究 Moodboard（模擬資料）",
+    fileName: "團隊研究工作檔（模擬資料）",
     shareUrl: createGoogleDriveMoodboardUrl({ fileId }),
     webViewLink: googleDriveFileAccessUrl({ fileId }),
     role: owner ? "owner" : "viewer",

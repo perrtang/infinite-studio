@@ -7,7 +7,7 @@ const main = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("./styles.css", import.meta.url), "utf8");
 
 test("cloud status remains inside the existing save button", () => {
-  const header = main.slice(main.indexOf('<div className="topbar-secondary">'), main.indexOf('label={sourceModeActive ? "回到 Moodboard 後復原'));
+  const header = main.slice(main.indexOf('<div className="topbar-secondary">'), main.indexOf('label={sourceModeActive ? "回到畫布後復原'));
   assert.doesNotMatch(header, /topbar-cloud-status/);
   assert.match(header, /topbar-save-status/);
   assert.match(header, /DriveStatusIcon/);

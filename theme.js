@@ -434,7 +434,7 @@ export function parseInterfaceThemeFile(text) {
     throw new Error("這不是有效的介面配色檔案。");
   }
   if (payload?.type !== INTERFACE_THEME_FILE_TYPE || payload?.version !== 1 || !payload?.theme) {
-    throw new Error("這個檔案不是 Infinite Moodboard 介面配色。");
+    throw new Error("這個檔案不是 Infinite Studio 介面配色。");
   }
   if (typeof payload.theme.name !== "string" || !payload.theme.name.trim()) {
     throw new Error("介面配色缺少名稱。");

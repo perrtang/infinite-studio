@@ -108,8 +108,8 @@ test("shared collaboration links start as view only and access request states ar
 });
 
 test("shared Moodboard links open one exact Google Drive file after verified sign-in", () => {
-  assert.match(appSource, /title="分享 Google Drive Moodboard"/);
-  assert.match(appSource, /直接開啟這份 Moodboard/);
+  assert.match(appSource, /title="分享 Google Drive 工作檔"/);
+  assert.match(appSource, /直接開啟這份工作檔/);
   assert.match(appSource, /實際存取權仍以 Google Drive 為準/);
   assert.match(appSource, /requestAdvancedFeature\("shared-moodboard"\)/);
   assert.match(appSource, /openGoogleDriveMoodboardPicker\(\{[\s\S]*?expectedFileId: incoming\.fileId/);

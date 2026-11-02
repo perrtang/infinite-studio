@@ -83,7 +83,7 @@ export function collaborationErrorMessage(error) {
   if (error?.code === "collaboration/request-not-allowed") return error.message;
   if (error?.code === "collaboration/request-not-found") return "這筆編輯權限申請已處理；成員狀態會自動更新。";
   if (error?.code === "collaboration/update-too-large") return error.message;
-  return error?.message || "即時共編暫時無法使用；本機 Moodboard 未受影響。";
+  return error?.message || "即時共編暫時無法使用；本機工作檔未受影響。";
 }
 
 function roomReferences(database, roomId) {
@@ -577,7 +577,7 @@ export async function createMoodboardCollaborationRoom(options) {
   batch.set(refs.room, {
     schemaVersion: 1,
     boardId: String(board.id),
-    boardName: String(board.name || "未命名 Infinite Moodboard").slice(0, 120),
+    boardName: String(board.name || "未命名 Infinite Studio").slice(0, 120),
     ownerUid: user.uid,
     initialized: false,
     createdAt: serverTimestamp(),

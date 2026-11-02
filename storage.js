@@ -37,10 +37,10 @@ function textByteLength(value) {
 }
 
 function localBoardRecord(board, savedAt = new Date().toISOString()) {
-  if (!board?.id) throw new Error("Moodboard 缺少可辨識的 ID。");
+  if (!board?.id) throw new Error("工作檔缺少可辨識的 ID。");
   return {
     id: String(board.id),
-    name: String(board.name || "未命名 Infinite Moodboard"),
+    name: String(board.name || "未命名 Infinite Studio"),
     nameNormalized: String(board.name || "").trim().toLocaleLowerCase(),
     createdAt: String(board.createdAt || savedAt),
     updatedAt: String(board.updatedAt || savedAt),
@@ -56,7 +56,7 @@ function compactSyncJobRecord(job, fallbackBoard = null) {
   const snapshot = job?.board || fallbackBoard;
   const compacted = {
     ...job,
-    name: String(job?.name || snapshot?.name || "未命名 Infinite Moodboard"),
+    name: String(job?.name || snapshot?.name || "未命名 Infinite Studio"),
     snapshotRevision: Number.isFinite(Number(job?.snapshotRevision))
       ? Number(job.snapshotRevision)
       : Number(snapshot?.revision || 0),
@@ -90,7 +90,7 @@ export function describeLocalPersistenceError(error) {
     return "目前內容含有瀏覽器無法寫入本機復原副本的資料。";
   }
   if (name === "InvalidStateError" || /blocked|transaction|database|indexeddb/i.test(message)) {
-    return "本機資料庫暫時無法寫入，可能有其他 Infinite Moodboard 分頁正在使用。";
+    return "本機資料庫暫時無法寫入，可能有其他 Infinite Studio 分頁正在使用。";
   }
   return "這個瀏覽器的本機復原副本未能更新。";
 }
@@ -151,7 +151,7 @@ function openDatabase() {
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error("無法開啟本機資料庫。"));
-    request.onblocked = () => reject(new Error("另一個分頁正在更新本機 Moodboard 資料庫，請關閉舊分頁後重試。"));
+    request.onblocked = () => reject(new Error("另一個分頁正在更新本機工作檔資料庫，請關閉舊分頁後重試。"));
   });
 }
 
@@ -351,7 +351,7 @@ export async function deleteLocalBoard(boardId, { deleteVersions = true } = {}) 
 }
 
 export async function enqueueSync(board, metadata = {}) {
-  if (!board?.id) throw new Error("無法排入沒有 ID 的 Moodboard。");
+  if (!board?.id) throw new Error("無法排入沒有 ID 的工作檔。");
   const now = new Date().toISOString();
   const id = String(board.id);
   await withDatabase(async (database) => {
@@ -363,7 +363,7 @@ export async function enqueueSync(board, metadata = {}) {
       const next = compactSyncJobRecord({
         id,
         boardId: id,
-        name: String(board.name || existing?.name || "未命名 Infinite Moodboard"),
+        name: String(board.name || existing?.name || "未命名 Infinite Studio"),
         snapshotRevision: Number(board.revision || 0),
         snapshotUpdatedAt: String(board.updatedAt || ""),
         snapshotObjectCount: Array.isArray(board.objects) ? board.objects.length : 0,
