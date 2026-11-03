@@ -2,7 +2,7 @@
 
 Status as of 2026-11-04: the production Pages workflow builds with
 `VITE_DRIVE_GRANT_BACKEND=enabled` (introduced in v0.56.28), and the public
-update channel reported v0.56.31. The Cloudflare gateway is deployed separately;
+update channel reported v0.56.32. The Cloudflare gateway is deployed separately;
 its current deployment ID must be checked before any gateway change.
 
 An authenticated isolated acceptance page successfully authorized Google,
@@ -16,8 +16,11 @@ they by themselves prove a production cross-account edit cycle.
 On the production v0.56.31 sharing path, another browser profile opened that
 link-viewable test file without signing in and displayed its one object. Selecting
 “sign in to edit” retained the file ID in the URL and presented the sign-in
-screen. The subsequent authenticated opening and viewer permission-request path
-remain unverified; no sharing permissions were modified for the test.
+screen. On v0.56.32, the signed-in owner opened the same test file from its
+public view into the editor: its file ID and one object were retained, and
+Google Drive showed as connected. No file content or sharing permissions were
+modified during that check. The authenticated non-owner viewer and
+permission-request path remains unverified.
 
 The Drive readback client uses no-cache bounded retries and checks the original
 file bytes against SHA-256 when Drive provides a checksum. Where a checksum is
