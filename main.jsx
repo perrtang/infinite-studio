@@ -7387,6 +7387,7 @@ function App({ initialProtectedShare = null }) {
   const [agentAddress, setAgentAddress] = useState("");
   const [agentStatus, setAgentStatus] = useState("disconnected");
   const [agentError, setAgentError] = useState("");
+  const [agentAutoEdit, setAgentAutoEdit] = useState(false);
   const [agentRequest, setAgentRequest] = useState(null);
   const agentSocketRef = useRef(null);
   const agentPendingRef = useRef(null);
@@ -9320,6 +9321,7 @@ function App({ initialProtectedShare = null }) {
     agentSocketRef.current = null;
     setAgentStatus("disconnected");
     setAgentAddress("");
+    setAgentAutoEdit(false);
   }, [finishAgentRequest]);
 
   const closeAgent = useCallback(() => {
@@ -9340,6 +9342,7 @@ function App({ initialProtectedShare = null }) {
         isReadOnly: () => cloudReadOnlyRef.current,
         approveEdit: (request) => {
           if (agentPendingRef.current || agentBlockingRef.current) throw new Error("請先關閉目前的對話框，再重新提出修改。");
+          if (agentAutoEdit) return Promise.resolve(true);
           return new Promise((resolve) => {
             const timer = setTimeout(() => finishAgentRequest(false), 110000);
             agentPendingRef.current = { resolve, timer };
@@ -9363,9 +9366,9 @@ function App({ initialProtectedShare = null }) {
         onStatus: (status) => {
           if (agentSocketRef.current !== socket) return;
           setAgentStatus(status);
-          if (status === "connected") { setAgentAddress(""); setShowAgent(false); announce("已連接本機 AI；修改須經確認。", "success"); }
+          if (status === "connected") { setAgentAddress(""); setShowAgent(false); announce(agentAutoEdit ? "已連接本機 AI；本次連線可自動修改畫布。" : "已連接本機 AI；修改須經確認。", "success"); }
           if (status === "error") setAgentError("無法連接本機 Agent。請確認它仍在執行、重新取得連線資訊，並檢查瀏覽器是否允許此網站連接本機網路。");
-          if (status === "disconnected") { agentSocketRef.current = null; finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
+          if (status === "disconnected") { agentSocketRef.current = null; setAgentAutoEdit(false); finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
         },
       });
       agentSocketRef.current = socket;
@@ -9373,7 +9376,7 @@ function App({ initialProtectedShare = null }) {
       setAgentStatus("disconnected");
       setAgentError(error.message || "無法連接本機 Agent。");
     }
-  }, [agentAddress, announce, applyBoard, finishAgentRequest]);
+  }, [agentAddress, agentAutoEdit, announce, applyBoard, finishAgentRequest]);
 
   useLayoutEffect(() => {
     if (textFrameGesture || resizeGesture || groupGesture) return;
@@ -15015,10 +15018,12 @@ function App({ initialProtectedShare = null }) {
       ) : null}
       {showAgent ? <Modal title="AI 連線" description="連接此分頁的目前工作檔。" onClose={closeAgent}>
         <div className="drive-save-confirmation">
-          {agentStatus === "connected" ? <><p>已連接本機 AI。它可以讀取目前工作檔的物件名稱、位置與文字內容；每次修改都需經你確認。</p><div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={disconnectAgent}>中斷連線</button><button className="primary-button" type="button" onClick={() => setShowAgent(false)}>完成</button></div></> : <>
+          {agentStatus === "connected" ? <><p>已連接本機 AI。它可以讀取目前工作檔的物件名稱、位置與文字內容。</p><p>{agentAutoEdit ? "本次連線可自動修改畫布；可使用復原，或中斷連線停止。" : "每次修改都需經你確認。"}</p><div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={disconnectAgent}>中斷連線</button><button className="primary-button" type="button" onClick={() => setShowAgent(false)}>完成</button></div></> : <>
             <p>請先啟動 Infinite Studio 本機 Agent，從 Codex 或 Claude 取得連線資訊並貼在這裡。只連接你信任的 Agent。連線後可讀取物件名稱、位置與文字內容。</p>
             <p><a href="https://github.com/perrtang/infinite-studio/blob/main/mcp/README.md" target="_blank" rel="noreferrer">安裝與連線說明</a></p>
             <label className="agent-pairing-field">本機連線資訊<input type="text" autoComplete="off" spellCheck={false} value={agentAddress} onChange={(event) => setAgentAddress(event.target.value)} placeholder="ws://127.0.0.1:…" /></label>
+            <label className="agent-auto-edit"><input type="checkbox" checked={agentAutoEdit} disabled={agentStatus === "connecting"} onChange={(event) => setAgentAutoEdit(event.target.checked)} /> <span>允許 AI 在本次連線自動修改畫布</span></label>
+            <p>啟用後，AI 可直接新增及修改物件，完成後可檢查或使用復原；中斷連線或切換工作檔時權限結束。自動儲存依工作檔設定運作；分享權限不變。</p>
             {agentError ? <p role="alert">{agentError}</p> : null}
             <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={closeAgent}>取消</button><button className="primary-button" type="button" disabled={!agentAddress.trim() || agentStatus === "connecting"} onClick={connectAgent}>{agentStatus === "connecting" ? "正在連線…" : "連線"}</button></div>
           </>}

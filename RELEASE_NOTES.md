@@ -4,6 +4,7 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.9](./public/release-notes/v0.56.9.html) — optional automatic AI canvas edits per connection.
 - [v0.56.8](./public/release-notes/v0.56.8.html) — recover from stalled local agent connections.
 
 - [v0.56.7](./public/release-notes/v0.56.7.html) — local MCP connection for canvas and project files.

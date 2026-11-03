@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.8",
+  "version": "0.56.9",
   "releasedAt": "2026-11-03",
-  "summary": "修正 AI 本機連線等待逾時，提供檢查瀏覽器本機網路權限的提示。",
-  "notesUrl": "release-notes/v0.56.8.html",
+  "summary": "新增本次連線授權 AI 自動修改畫布，完成後可檢查與復原。",
+  "notesUrl": "release-notes/v0.56.9.html",
   "url": "https://infinite.petfashion.tw/"
 }
