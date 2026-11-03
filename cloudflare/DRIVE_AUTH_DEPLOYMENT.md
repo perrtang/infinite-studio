@@ -19,6 +19,11 @@ new backend, OAuth callback and secrets are in place and verified.
   and migration. Before applying it, inspect the existing gateway's current
   deployment, custom-domain routing and rollback procedure. Wrangler access
   must be sufficient for the binding, migration and secrets.
+- On 2026-11-04, the production dashboard reported compatibility date
+  `2026-10-19`, with no existing Durable Object bindings; the draft matches
+  that date. The then-current deployment was
+  `e028adba-5f15-4503-9628-6cf19c38c424`. Recheck both immediately before
+  deployment: they are observations, not a substitute for a rollback test.
 - To rotate a vault key, retain up to four old keys in the secret JSON map
   `DRIVE_VAULT_PREVIOUS_KEYS` keyed by their old IDs. Newly refreshed grants
   are re-encrypted using the active key. Removing an old key prematurely

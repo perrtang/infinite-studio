@@ -3,7 +3,8 @@
   // custom-domain binding and rollback before using a production deploy.
   "name": "infinite-studio-gateway",
   "main": "drive-worker-entry.js",
-  "compatibility_date": "2026-01-01",
+  // Match the existing gateway runtime rather than silently downgrading it.
+  "compatibility_date": "2026-10-19",
   "durable_objects": {
     "bindings": [{ "name": "DRIVE_GRANTS", "class_name": "DriveGrant" }]
   },
