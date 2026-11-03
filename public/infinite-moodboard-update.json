@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.12",
+  "version": "0.56.13",
   "releasedAt": "2026-11-03",
-  "summary": "未編輯的雲端工作畫布會偵測並載入其他分頁或裝置已儲存的更新。",
-  "notesUrl": "release-notes/v0.56.12.html",
+  "summary": "AI 連線預設允許本次修改畫布，也可取消勾選改為逐次確認。",
+  "notesUrl": "release-notes/v0.56.13.html",
   "url": "https://infinite.petfashion.tw/"
 }

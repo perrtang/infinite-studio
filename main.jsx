@@ -7392,7 +7392,7 @@ function App({ initialProtectedShare = null }) {
   const [agentAddress, setAgentAddress] = useState("");
   const [agentStatus, setAgentStatus] = useState("disconnected");
   const [agentError, setAgentError] = useState("");
-  const [agentAutoEdit, setAgentAutoEdit] = useState(false);
+  const [agentAutoEdit, setAgentAutoEdit] = useState(true);
   const [agentRequest, setAgentRequest] = useState(null);
   const agentSocketRef = useRef(null);
   const agentPendingRef = useRef(null);
@@ -9331,7 +9331,7 @@ function App({ initialProtectedShare = null }) {
     agentSocketRef.current = null;
     setAgentStatus("disconnected");
     setAgentAddress("");
-    setAgentAutoEdit(false);
+    setAgentAutoEdit(true);
   }, [finishAgentRequest]);
 
   const closeAgent = useCallback(() => {
@@ -9378,7 +9378,7 @@ function App({ initialProtectedShare = null }) {
           setAgentStatus(status);
           if (status === "connected") { setAgentAddress(""); setShowAgent(false); announce(agentAutoEdit ? "已連接本機 AI；本次連線可自動修改畫布。" : "已連接本機 AI；修改須經確認。", "success"); }
           if (status === "error") setAgentError("無法連接本機 Agent。請確認它仍在執行、重新取得連線資訊，並檢查瀏覽器是否允許此網站連接本機網路。");
-          if (status === "disconnected") { agentSocketRef.current = null; setAgentAutoEdit(false); finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
+          if (status === "disconnected") { agentSocketRef.current = null; setAgentAutoEdit(true); finishAgentRequest(false); announce("本機 AI 已中斷連線。", "info"); }
         },
       });
       agentSocketRef.current = socket;
@@ -15111,7 +15111,7 @@ function App({ initialProtectedShare = null }) {
             <p><a href="https://github.com/perrtang/infinite-studio/blob/main/mcp/README.md" target="_blank" rel="noreferrer">安裝與連線說明</a></p>
             <label className="agent-pairing-field">本機連線資訊<input type="text" autoComplete="off" spellCheck={false} value={agentAddress} onChange={(event) => setAgentAddress(event.target.value)} placeholder="ws://127.0.0.1:…" /></label>
             <label className="agent-auto-edit"><input type="checkbox" checked={agentAutoEdit} disabled={agentStatus === "connecting"} onChange={(event) => setAgentAutoEdit(event.target.checked)} /> <span>允許 AI 在本次連線自動修改畫布</span></label>
-            <p>啟用後，AI 可直接新增及修改物件，完成後可檢查或使用復原；中斷連線或切換工作檔時權限結束。自動儲存依工作檔設定運作；分享權限不變。</p>
+            <p>預設允許本次連線直接新增及修改物件；取消勾選後，每次修改會先徵求確認。可使用復原；中斷連線或切換工作檔時權限結束。自動儲存依工作檔設定運作；分享權限不變。</p>
             {agentError ? <p role="alert">{agentError}</p> : null}
             <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={closeAgent}>取消</button><button className="primary-button" type="button" disabled={!agentAddress.trim() || agentStatus === "connecting"} onClick={connectAgent}>{agentStatus === "connecting" ? "正在連線…" : "連線"}</button></div>
           </>}

@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.13](./public/release-notes/v0.56.13.html) — default to optional session-scoped AI edits.
+
 - [v0.56.12](./public/release-notes/v0.56.12.html) — refresh clean cloud documents when the linked Drive file changes.
 
 - [v0.56.11](./public/release-notes/v0.56.11.html) — unit-aware keyboard movement, viewport and guide snapping, adjustable text line height, and interface refinements.
