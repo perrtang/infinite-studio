@@ -10,6 +10,7 @@ import {
   googleDriveMembers,
   parseGoogleDriveMoodboardLink,
   preserveGoogleDriveResourceKey,
+  sharedEditorUrl,
 } from "./drive-share.js";
 import { linkDriveFile } from "./drive-state.js";
 import {
@@ -148,4 +149,19 @@ test("Drive ACL rejects invalid emails before making an external request", async
     /有效的 Email/,
   );
   assert.equal(called, false);
+});
+
+
+test("switching to editing preserves the exact shared file and resource key", () => {
+  const source = "https://infinite.petfashion.tw/?driveFile=shared_file_123456&resourceKey=resource_123&other=keep#canvas";
+  const url = new URL(sharedEditorUrl(source));
+  assert.equal(url.searchParams.get("driveFile"), "shared_file_123456");
+  assert.equal(url.searchParams.get("resourceKey"), "resource_123");
+  assert.equal(url.searchParams.get("sharedEdit"), "1");
+  assert.equal(url.searchParams.get("requestEdit"), "1");
+  assert.equal(url.searchParams.get("other"), "keep");
+  assert.equal(url.hash, "#canvas");
+  const errorPath = new URL(sharedEditorUrl(url.href, {requestEdit:false}));
+  assert.equal(errorPath.searchParams.get("driveFile"), "shared_file_123456");
+  assert.equal(errorPath.searchParams.has("requestEdit"), false);
 });

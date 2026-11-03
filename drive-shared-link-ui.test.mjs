@@ -31,7 +31,7 @@ test("failed or cancelled shared-file opening never adopts a blank board", () =>
 test("a viewer requesting editing is prompted even if that file is already open", () => {
   assert.match(source, /currentLink\?\.fileId === incoming\.fileId\) \{\s*(?:return )?refreshDriveSharing\(incoming, \{ onRole: promptForPendingSharedEdit \}\)/);
   assert.match(source, /pendingSharedEditRef\.current = false;\s*if \(role === "viewer"\)/);
-  assert.match(source, /requestEdit", "1"/);
+  assert.match(source, /sharedEditorUrl\(window\.location\.href/);
 });
 
 test("closing the sharing dialog preserves the incoming file and resource key", () => {

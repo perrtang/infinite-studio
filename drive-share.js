@@ -109,3 +109,13 @@ export function googleDriveGeneralAccess(permissions = []) {
   const anyone = permissions.map(normalizeGoogleDrivePermission).find((permission) => permission.type === "anyone" && !permission.deleted);
   return anyone ? { enabled: true, permissionId: anyone.id, role: drivePermissionRole(anyone) } : { enabled: false, permissionId: "", role: "viewer" };
 }
+
+// Preserve the exact shared-file URL and unrelated navigation context when
+// switching from public viewing to the editor.
+export function sharedEditorUrl(href, { requestEdit = true } = {}) {
+  const url = new URL(href);
+  url.searchParams.set('sharedEdit', '1');
+  if (requestEdit) url.searchParams.set('requestEdit', '1');
+  else url.searchParams.delete('requestEdit');
+  return url.href;
+}

@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { StudioFileStore } from './mcp/file-store.mjs';
-import { createBoard } from './model.js';
+import { BOARD_SCHEMA_VERSION, createBoard } from './model.js';
 
 test('MCP file edits preserve groups and unknown data, and never overwrite files', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'studio-mcp-'));
@@ -62,4 +62,20 @@ test('legacy files without format metadata can be saved as studio without rewrit
   assert.equal(copy.format, 'infinite-moodboard');
   assert.equal(copy.objects[0].text, 'legacy');
   assert.equal(await readFile(input, 'utf8'), original);
+});
+
+
+test('MCP upgrades an old studio copy when adding current-schema objects', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'studio-mcp-schema-'));
+  const input = join(dir, 'old.studio'), output = join(dir, 'copy.studio');
+  const old = { ...createBoard(), schemaVersion: 15 };
+  await writeFile(input, JSON.stringify(old));
+  const store = new StudioFileStore(input, output);
+  await store.open();
+  store.createObject({ type:'shape', shapeKind:'rectangle', x:10, y:20 });
+  await store.saveCopy();
+  const saved = JSON.parse(await readFile(output, 'utf8'));
+  assert.equal(saved.schemaVersion, BOARD_SCHEMA_VERSION);
+  assert.equal(saved.objects[0].strokeStyle, 'none');
+  assert.equal(JSON.parse(await readFile(input, 'utf8')).schemaVersion, 15);
 });

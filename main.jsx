@@ -243,6 +243,7 @@ import {
   googleDriveFileAccessUrl,
   googleDriveMembers,
   parseGoogleDriveMoodboardLink,
+  sharedEditorUrl,
 } from "./drive-share.js";
 import {
   completeMoodboardEmailSignInLink,
@@ -15407,10 +15408,7 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
   const openEditor = () => {
     if (preview) return;
     if (onProtectedEdit) { onProtectedEdit(state.status !== "error"); return; }
-    const url = new URL(window.location.href);
-    url.searchParams.set("sharedEdit", "1");
-    if (state.status !== "error") url.searchParams.set("requestEdit", "1");
-    window.location.assign(url.href);
+    window.location.assign(sharedEditorUrl(window.location.href, { requestEdit: state.status !== "error" }));
   };
   return <main ref={viewerRef} className="public-share-viewer">
     <header>

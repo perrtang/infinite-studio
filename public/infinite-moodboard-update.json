@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.28",
+  "version": "0.56.29",
   "releasedAt": "2026-11-04",
-  "summary": "新增物件外框設定，改善 Google 登入與 Drive 連線。",
-  "notesUrl": "release-notes/v0.56.28.html",
+  "summary": "改善分享連結切換與 AI 本機工作檔相容性。",
+  "notesUrl": "release-notes/v0.56.29.html",
   "url": "https://infinite.petfashion.tw/"
 }

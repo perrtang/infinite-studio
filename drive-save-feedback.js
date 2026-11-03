@@ -7,7 +7,7 @@ export function driveSaveFailureFeedback(error, { localRecoveryWarning = "" } = 
   if (!localRecoveryWarning) return feedback;
   return {
     ...feedback,
-    warning: "本機復原副本也未完成，請先下載 .moodboard 備份；不要關閉目前分頁。",
+    warning: "本機復原副本也未完成，請先下載 .studio 備份；不要關閉目前分頁。",
     action: "backup",
   };
 }

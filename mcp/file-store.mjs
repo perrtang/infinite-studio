@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { extname, resolve } from 'node:path';
-import { parseBoardFile } from '../model.js';
+import { BOARD_SCHEMA_VERSION, parseBoardFile } from '../model.js';
 
 const digest = (data) => createHash('sha256').update(data).digest('hex');
 const permitted = new Set(['name', 'text', 'textAlign', 'textVerticalAlign', 'fontSize', 'color', 'fill', 'pivotX', 'pivotY', 'width', 'height', 'rotation', 'visible', 'locked']);
@@ -65,6 +65,9 @@ export class StudioFileStore {
     const draft = { id, type, text, shapeKind, pivotX: x, pivotY: y, name: type === 'text' ? '文字' : '形狀', layerName: type === 'text' ? '文字' : '形狀' };
     const object = parseBoardFile(JSON.stringify({ ...this.board, objects: [draft], groups: [] }), this.input).objects[0];
     if (!object) throw new Error('Could not create object.');
+    // New normalized objects can contain fields from the current schema.
+    // Prevent an older client from silently dropping those fields on save.
+    this.board.schemaVersion = Math.max(Number(this.board.schemaVersion) || 1, BOARD_SCHEMA_VERSION);
     this.board.objects.push(object);
     this.board.revision = Number(this.board.revision || 0) + 1;
     this.board.updatedAt = new Date().toISOString();

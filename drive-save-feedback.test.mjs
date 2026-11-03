@@ -40,6 +40,8 @@ test("local recovery failure is never hidden behind a cloud failure or uncertain
     assert.equal(feedback.action, "backup");
     assert.match(feedback.warning, /本機復原副本也未完成/);
     assert.match(feedback.warning, /不要關閉目前分頁/);
+    assert.match(feedback.warning, /\.studio/);
+    assert.doesNotMatch(feedback.warning, /moodboard/i);
     assert.equal(feedback.message, driveSaveFailureFeedback({ code }).message);
     assert.doesNotMatch(feedback.message, /已保存|已保留|安全保存/);
   }
