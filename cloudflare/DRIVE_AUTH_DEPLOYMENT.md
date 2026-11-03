@@ -1,9 +1,11 @@
 # Drive automatic reconnection: deployment draft
 
-Status: not deployed. The existing production gateway remains the authority
-until an authenticated end-to-end check and a deliberate cutover are complete.
-The frontend flag `VITE_DRIVE_GRANT_BACKEND=enabled` must remain off until the
-new backend, OAuth callback and secrets are in place and verified.
+Status: the gateway backend was deployed on 2026-11-04 as Worker version
+`f5c76ca9-1cf7-460a-9135-26e47d010dde`; the frontend feature flag remains off.
+The production update manifest still reported v0.56.27, and an unauthenticated
+access-token request returned 401 after deployment. These checks do not prove
+that Google authorization or Drive access works. Keep the frontend flag off
+until authenticated end-to-end acceptance and a deliberate cutover are complete.
 
 ## Dependencies and secrets
 
