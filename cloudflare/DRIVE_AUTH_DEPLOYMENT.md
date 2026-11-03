@@ -1,11 +1,11 @@
 # Drive automatic reconnection: deployment draft
 
-Status: the gateway backend was deployed on 2026-11-04 as Worker version
-`e3db07bc-016c-4d26-9f55-ee858268a842`; the frontend feature flag remains off.
-The production update manifest still reported v0.56.27, and an unauthenticated
-access-token request returned 401 after deployment. These checks do not prove
-that Google authorization or Drive access works. Keep the frontend flag off
-until authenticated end-to-end acceptance and a deliberate cutover are complete.
+Status: the corrected gateway backend was deployed on 2026-11-04 as Worker
+version `aa62dbe8-5296-46a7-ba5e-404fc490e000`; the frontend flag remains off.
+An authenticated acceptance page successfully authorized Google, read Drive,
+and restored the stored grant in the same tab. Cloud file write/readback and
+actual new-tab frontend restoration remain unverified; retain the release gate
+until those paths have passed.
 The deployed gateway serves the OAuth completion HTML, CSS and JS itself;
 all three returned HTTP 200, `no-store`, and exact public-source content on
 the production hostname. This repairs the previously observed 404 callback.
