@@ -1,5 +1,6 @@
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
 import { connectCanvasAgent } from "./mcp-live-client.js";
+import { assertUpdateSnapshotUnchanged, savePrimaryBeforeUpdate } from "./update-safety.js";
 import { parseObjectClipboard, serializeObjectClipboard } from "./object-clipboard.js";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -6472,7 +6473,7 @@ function AppUpdateNotice({
           <small>{updateCheck.manifest.summary || "新的穩定版本已可使用。"}</small>
         </div>
       </div>
-      <p>立即更新會先儲存目前工作並建立「更新前自動備份」；任何一步失敗都不會重新載入。</p>
+      <p>更新前會保存目前工作及建立復原備份；若儲存未完成或畫面繼續變更，將停止更新並保留畫面。</p>
       {updateAction.message ? (
         <div className={`app-update-action-status is-${updateAction.status}`} role="status">
           {updateAction.status === "error" ? <AlertTriangle size={15} /> : <RefreshCw size={15} className={busy ? "is-spinning" : ""} />}
@@ -7566,6 +7567,11 @@ function App({ initialProtectedShare = null }) {
   const startupUserInteractedRef = useRef(false);
   const autoUpdateDeferredVersionRef = useRef("");
   const updateApplyPromiseRef = useRef(null);
+  const updateSavePrimaryRef = useRef(null);
+  const updateCheckStateRef = useRef(updateCheck);
+  updateCheckStateRef.current = updateCheck;
+  const updateNoticeStateRef = useRef({ dismissed: updateNoticeDismissed, preference: updatePreference });
+  updateNoticeStateRef.current = { dismissed: updateNoticeDismissed, preference: updatePreference };
   const preparedDownloadsRef = useRef([]);
   const emailLinkHandledRef = useRef(false);
   const doubleClickPanMovedRef = useRef(false);
@@ -9448,7 +9454,13 @@ function App({ initialProtectedShare = null }) {
   useEffect(() => {
     if (!hydrated || !online) return undefined;
     const timer = window.setTimeout(() => { checkForAppUpdates(); }, 900);
-    return () => window.clearTimeout(timer);
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== "visible" || updateApplyPromiseRef.current) return;
+      const existing = updateCheckStateRef.current;
+      if (existing.status !== "available") void checkForAppUpdates();
+      else if (updateNoticeStateRef.current.dismissed && updateNoticeStateRef.current.preference !== "auto" && !isAppUpdateSnoozed(localStorage, existing.manifest?.version)) setUpdateNoticeDismissed(false);
+    }, 15 * 60 * 1000);
+    return () => { window.clearTimeout(timer); window.clearInterval(interval); };
   }, [checkForAppUpdates, hydrated, online]);
 
   useEffect(() => {
@@ -10188,11 +10200,17 @@ function App({ initialProtectedShare = null }) {
       setUpdateAction({ status: "saving", message: automatic ? "正在安全保存並準備自動更新…" : "正在保存目前工作並建立更新前備份…" });
       window.clearTimeout(saveTimerRef.current);
       const snapshot = boardSnapshot();
+      const assertUnchanged = () => assertUpdateSnapshotUnchanged(snapshot, boardRef.current, viewRef.current);
       if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("updateFailure") === "save") {
         throw new Error("測試：無法完成本機儲存");
       }
       await persistBoardLocally(snapshot);
       await saveVersion(snapshot, translateInterfaceText("更新前自動備份"), "automatic");
+      assertUnchanged();
+      if (!updateSavePrimaryRef.current || !(await updateSavePrimaryRef.current())) {
+        throw new Error("尚未能儲存至主要位置，請先完成儲存後再更新");
+      }
+      assertUnchanged();
       setSaveState(`本機安全暫存已更新 ${new Date().toLocaleTimeString(interfaceLocaleToIntl(interfaceLocale), { hour: "2-digit", minute: "2-digit" })}`);
       setUpdateAction({ status: "reloading", message: `備份完成，正在載入 v${manifest.version}…` });
       writeSessionValue(APP_UPDATE_ATTEMPT_STORAGE_KEY, manifest.version);
@@ -11448,6 +11466,13 @@ function App({ initialProtectedShare = null }) {
     }
     saveBoardToGoogleDrive();
   }, [authReady, currentDriveAccessToken, currentPrimaryStorageTarget, driveSettings.enabled, localFileBinding.status, requestAdvancedFeature, saveBoardToGoogleDrive, saveBoardToLocalPrimary]);
+
+  updateSavePrimaryRef.current = () => savePrimaryBeforeUpdate({
+    dirty, target: currentPrimaryStorageTarget, localStatus: localFileBinding.status,
+    hasHandle: Boolean(fileHandleRef.current), driveBusy: Boolean(driveSavePromiseRef.current),
+    saveLocal: () => saveBoardToLocalPrimary({ silent: true }),
+    saveDrive: () => saveBoardToGoogleDrive({ silent: true }),
+  });
 
   const choosePrimaryStorageTarget = useCallback(async (target, { driveConsentAcknowledged = false } = {}) => {
     if (driveSavePromiseRef.current) { announce("正在儲存目前內容；完成後再變更儲存位置。", "info"); return; }

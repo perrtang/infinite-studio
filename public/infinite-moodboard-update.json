@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.9",
+  "version": "0.56.10",
   "releasedAt": "2026-11-03",
-  "summary": "新增本次連線授權 AI 自動修改畫布，完成後可檢查與復原。",
-  "notesUrl": "release-notes/v0.56.9.html",
+  "summary": "編輯期間定期檢查更新；更新前保存工作，若儲存失敗或內容變更則停止更新。",
+  "notesUrl": "release-notes/v0.56.10.html",
   "url": "https://infinite.petfashion.tw/"
 }
