@@ -37,8 +37,9 @@ async function tokenRequest(fields, { fetchImpl = fetch, timeoutMs = 10_000 } = 
     const signal = AbortSignal.timeout(timeoutMs);
     const response = await fetchImpl(TOKEN_URL, {
       method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", "accept": "application/json" },
-      body: new URLSearchParams(fields), signal, redirect: "error",
+      body: new URLSearchParams(fields), signal, redirect: "manual",
     });
+    if (response.status >= 300 && response.status < 400) throw new DriveOAuthError("provider_error");
     let body;
     try { body = await response.json(); } catch { throw new DriveOAuthError(signal.aborted ? "network_error" : "invalid_response"); }
     if (!response.ok) throw new DriveOAuthError(body?.error === "invalid_grant" ? "invalid_grant" : "provider_error");

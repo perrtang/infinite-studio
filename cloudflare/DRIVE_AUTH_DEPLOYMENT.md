@@ -36,6 +36,12 @@ the production hostname. This repairs the previously observed 404 callback.
 
 ## Acceptance and recovery
 
+- 2026-11-04: fixed Cloudflare Workers rejecting `redirect: "error"` before
+  Firebase account lookup and Google token requests. Both now use `manual`
+  and reject redirect responses without forwarding identity or credentials.
+  Synthetic edge requests and worker tests verified the transport behavior;
+  authenticated Drive acceptance remains a separate release requirement.
+
 1. Run `npm test`, `npm run test:drive-worker`, both frontend build variants,
    and a Wrangler dry-run. Keep tests and real credentials separate.
 2. Test OAuth with an isolated, authorized account and disposable Drive file:

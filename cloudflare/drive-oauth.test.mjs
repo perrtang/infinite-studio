@@ -29,7 +29,7 @@ test("authorization uses random state, nonce, browser binding and S256 PKCE with
 test("code exchange contacts only Google and rejects missing credentials and broad scopes", async () => {
   const fetchImpl = async (url, options) => {
     assert.equal(url, "https://oauth2.googleapis.com/token");
-    assert.equal(options.redirect, "error");
+    assert.equal(options.redirect, "manual");
     assert.equal(options.body.get("grant_type"), "authorization_code");
     assert.equal(options.body.get("code_verifier"), "v".repeat(43));
     return json(success);
@@ -41,6 +41,7 @@ test("code exchange contacts only Google and rejects missing credentials and bro
   }
   await assert.rejects(exchangeDriveAuthorizationCode({ ...input, verifier: "short" }, { fetchImpl }), { code: "configuration" });
   await assert.rejects(exchangeDriveAuthorizationCode(input, { fetchImpl: async () => new Response("invalid json") }), { code: "invalid_response" });
+  await assert.rejects(exchangeDriveAuthorizationCode(input, { fetchImpl: async () => new Response(null, { status: 302, headers: { location: "https://example.com" } }) }), { code: "provider_error" });
 });
 
 test("refresh handles omitted scope and invalid_grant without disclosing secrets", async () => {
