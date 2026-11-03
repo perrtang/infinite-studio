@@ -47,6 +47,21 @@ test("one-time email-link parameters are removed after completion", () => {
   assert.equal(url.searchParams.get("keep"), "yes");
 });
 
+test("email sign-in preserves the shared file and its editing context", () => {
+  const source = "https://infinite.petfashion.tw/?driveFile=shared_file_123456&resourceKey=resource_123&sharedEdit=1&requestEdit=1";
+  const action = createMoodboardEmailActionUrl(source, { feature: "shared-moodboard" });
+  const context = emailActionContextFromUrl(action);
+  assert.equal(context.feature, "shared-moodboard");
+  const pending = createPendingMoodboardEmailAuth({ email: "member@example.com", feature: context.feature });
+  assert.equal(pending.feature, "shared-moodboard");
+  const clean = new URL(cleanMoodboardEmailActionUrl(`${action}&oobCode=one-time-code`));
+  assert.equal(clean.searchParams.get("driveFile"), "shared_file_123456");
+  assert.equal(clean.searchParams.get("resourceKey"), "resource_123");
+  assert.equal(clean.searchParams.get("sharedEdit"), "1");
+  assert.equal(clean.searchParams.get("requestEdit"), "1");
+  assert.equal(clean.searchParams.has("oobCode"), false);
+});
+
 test("pending email authentication expires and keeps consent separate", () => {
   const storage = createStorage();
   const now = Date.parse("2026-10-18T12:00:00.000Z");

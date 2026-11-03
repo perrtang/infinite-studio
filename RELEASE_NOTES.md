@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.26](./public/release-notes/v0.56.26.html) — preserve shared-file context during email sign-in.
+
 - [v0.56.25](./public/release-notes/v0.56.25.html) — update default exported file names to Infinite Studio while retaining legacy format support.
 
 - [v0.56.24](./public/release-notes/v0.56.24.html) — pause notifications on interaction and select the current Drive file for sharing.

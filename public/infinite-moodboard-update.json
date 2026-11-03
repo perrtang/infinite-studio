@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.25",
+  "version": "0.56.26",
   "releasedAt": "2026-11-03",
-  "summary": "更新下載檔案的預設名稱並保留舊工作檔相容。",
-  "notesUrl": "release-notes/v0.56.25.html",
+  "summary": "改善分享檔案的 Email 登入接續流程。",
+  "notesUrl": "release-notes/v0.56.26.html",
   "url": "https://infinite.petfashion.tw/"
 }

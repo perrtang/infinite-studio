@@ -1,7 +1,7 @@
 export const MOODBOARD_PENDING_EMAIL_AUTH_KEY = "infinite-moodboard-pending-email-auth-v1";
 export const MOODBOARD_EMAIL_AUTH_TTL_MS = 60 * 60 * 1000;
 
-const ALLOWED_FEATURES = new Set(["account", "collaboration", "3d"]);
+const ALLOWED_FEATURES = new Set(["account", "collaboration", "shared-moodboard", "3d"]);
 const ALLOWED_MODES = new Set(["sign-in", "link"]);
 
 export const MOODBOARD_AUTH_PROVIDERS = Object.freeze([
