@@ -1,0 +1,11 @@
+:root { color-scheme: light dark; font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif; background: #f7f7f7; color: #171717; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
+main { width: min(100%, 480px); padding: 40px 28px; }
+.brand { margin: 0 0 40px; font-size: 16px; font-weight: 700; }
+.brand span { margin-left: 6px; }
+h1 { margin: 0 0 14px; font-size: 24px; line-height: 1.35; }
+p { font-size: 15px; line-height: 1.7; }
+#message { margin: 0 0 12px; }
+#help { margin: 0; color: #555; }
+@media (prefers-color-scheme: dark) { :root { background: #101010; color: #f5f5f5; } #help { color: #b6b6b6; } }

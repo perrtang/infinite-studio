@@ -55,8 +55,21 @@ export function isGoogleDriveAuthorizationError(error) {
   const reason = error?.reason || error?.details?.error?.errors?.[0]?.reason || "";
   return error?.code === "drive/authorization"
     || error?.code === "drive/permission"
+    || ["authorization_required", "authentication_required"].includes(error?.code)
     || error?.status === 401
     || ["authError", "invalidCredentials", "insufficientPermissions"].includes(reason);
+}
+
+export function driveReconnectFailure(error) {
+  const authorizationRequired = isGoogleDriveAuthorizationError(error);
+  return {
+    status: authorizationRequired ? "authorization-required" : error?.code === "drive/offline" ? "offline" : "error",
+    connected: false,
+    busy: false,
+    message: authorizationRequired
+      ? "無法在背景恢復 Google Drive；點一下重新連結，本機變更仍安全保留。"
+      : driveErrorMessage(error),
+  };
 }
 
 export function isGoogleDriveRetryableError(error) {
@@ -216,6 +229,12 @@ export function linkDriveFile(state, board, file) {
 
 export function driveErrorMessage(error) {
   const reason = error?.reason || error?.details?.error?.errors?.[0]?.reason || "";
+  if (["authorization_required", "authentication_required"].includes(error?.code)) return "Google Drive 授權已失效；請重新連結後再同步。";
+  if (error?.code === "popup_blocked") return "瀏覽器封鎖了 Google 授權視窗；請允許彈出式視窗後重試。";
+  if (error?.code === "authorization_cancelled") return "已取消 Google Drive 連結；目前工作內容未受影響。";
+  if (error?.code === "authorization_timeout") return "Google 授權等待逾時；請重新連結。";
+  if (["unavailable", "invalid_token_response", "invalid_authorization_url", "authorization_failed"].includes(error?.code)) return "目前無法完成 Google Drive 連結；請稍後重試，目前工作內容未受影響。";
+  if (error?.code === "account_changed") return "登入帳號已變更；請回到目前帳號重新連結 Google Drive。";
   if (error?.code === "drive/picker-unconfigured") return "網站尚未完成 Google 共享檔案選擇器設定；目前沒有開啟任何內容。";
   if (error?.code === "drive/picker-mismatch") return "你選的不是此分享連結指定的檔案；沒有開啟任何內容。";
   if (error?.code === "drive/picker-empty") return "Google Drive 沒有回傳可開啟的檔案；沒有開啟任何內容。";

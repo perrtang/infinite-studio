@@ -221,6 +221,7 @@ import {
   GOOGLE_DRIVE_SCOPE,
   contentByteLength,
   driveErrorMessage,
+  driveReconnectFailure,
   evaluateDriveQuota,
   googleDriveTokenFromOAuthAccessToken,
   isGoogleDriveAuthorizationError,
@@ -244,6 +245,7 @@ import {
 } from "./drive-share.js";
 import {
   completeMoodboardEmailSignInLink,
+  getFirebaseDriveCredential,
   isMoodboardEmailSignInLink,
   linkMoodboardFacebook,
   linkMoodboardGoogle,
@@ -375,6 +377,18 @@ import "./styles.css";
 
 const loadAssetExportRuntime = () => import("./asset-export.js");
 const loadDriveRuntime = () => import("./drive-storage.js");
+// Enabled only once the corresponding gateway, secrets and OAuth callback are deployed.
+const DRIVE_GRANT_BACKEND_ENABLED = import.meta.env.VITE_DRIVE_GRANT_BACKEND === "enabled";
+const loadDriveGrantRuntime = () => import("./drive-auth-client.js");
+async function restoreDriveBackendToken(expectedUid) {
+  const before = await getFirebaseDriveCredential();
+  if (!expectedUid || before.uid !== expectedUid) throw Object.assign(new Error("account_changed"), { code: "account_changed" });
+  const { restoreDriveGrant } = await loadDriveGrantRuntime();
+  const token = await restoreDriveGrant(before.token);
+  const after = await getFirebaseDriveCredential();
+  if (after.uid !== before.uid) throw Object.assign(new Error("account_changed"), { code: "account_changed" });
+  return token;
+}
 const loadDrivePickerRuntime = () => import("./drive-picker.js");
 const loadOutputRuntime = () => import("./output.js");
 const loadPortableRuntime = () => import("./portable.js");
@@ -5560,6 +5574,7 @@ function AuthGate({
             <small>{isDriveOnboarding
               ? "登入只使用名稱、頭像與 Email；Drive 僅要求 drive.file。完成連結不會自動上傳工作檔。"
               : "只使用名稱、頭像與 Email；工作檔不會因登入自動上傳。"}</small>
+            {isDriveOnboarding && DRIVE_GRANT_BACKEND_ENABLED ? <small>為了在新分頁恢復連線，Infinite Studio 會在伺服器加密保存 Drive 授權。</small> : null}
           </span>
         </label>
 
@@ -5951,6 +5966,7 @@ function StorageLocationModal({ currentTarget, onChoose, onClose }) {
           <span>
             <strong>我同意登入並自動連結 Google Drive <em>必填</em></strong>
             <small>繼續後會登入 PETFASHION，並由 Google 授予 drive.file 權限；只存取 Infinite Studio 建立或你指定的檔案。連結完成不會立即上傳，第一次儲存才會建立 Drive 工作檔，本機安全副本仍會保留。</small>
+            {DRIVE_GRANT_BACKEND_ENABLED ? <small>為了在新分頁恢復連線，Infinite Studio 會在伺服器加密保存 Drive 授權。</small> : null}
           </span>
         </label>
       ) : null}
@@ -6122,6 +6138,7 @@ function DriveLibraryModal({
         {!driveSession.connected ? (
           <section className="drive-permission-intro">
             <div><ShieldCheck size={23} aria-hidden="true" /><span><strong>只存取你在 Infinite Studio 建立的檔案</strong><small>Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。</small></span></div>
+            {DRIVE_GRANT_BACKEND_ENABLED ? <div><Lock size={23} aria-hidden="true" /><span><strong>自動恢復連線</strong><small>Infinite Studio 會在伺服器加密保存 Drive 授權，讓登入後的新分頁可恢復連線。</small></span></div> : null}
             <div><HardDrive size={23} aria-hidden="true" /><span><strong>優先更新本機安全副本</strong><small>若瀏覽器空間不足，Drive 仍會繼續同步並明確提示；也可隨時下載 `.studio` 備份。</small></span></div>
             <button className="primary-button" type="button" onClick={onConnect} disabled={!configured || busy}>
               {busy ? <RefreshCw size={17} className="is-spinning" /> : <Cloud size={17} />}
@@ -6661,6 +6678,7 @@ function SettingsModal({
   onSnoozeUpdate,
   onConnectDrive,
   onDisconnectDrive,
+  onRemoveDriveGrant,
   onManageThemes,
   onMarketingPreferenceChange,
   onLinkEmail,
@@ -6889,7 +6907,7 @@ function SettingsModal({
               })()}
               <div className="settings-account-boundary settings-drive-boundary">
                 <ShieldCheck size={20} />
-                <div><strong>只要求 drive.file 最小權限</strong><p>Infinite Studio 只能存取本服務建立的檔案；不會掃描整個 Google Drive，也不會保存 Google 存取權杖。</p></div>
+                <div><strong>只要求 drive.file 最小權限</strong><p>{DRIVE_GRANT_BACKEND_ENABLED ? "Infinite Studio 只能存取本服務建立或你指定的檔案；為了自動連線，伺服器會加密保存授權。" : "Infinite Studio 只能存取本服務建立的檔案；不會掃描整個 Google Drive，也不會保存 Google 存取權杖。"}</p></div>
               </div>
               {driveSession.connected ? (
                 <>
@@ -6909,14 +6927,16 @@ function SettingsModal({
                 </>
               ) : (
                 <div className="settings-drive-connect">
-                  <div><Cloud size={22} /><span><strong>連結後才會開始雲端保存</strong><small>目前畫布仍持續自動儲存在這台裝置。</small></span></div>
+                  <div><Cloud size={22} /><span><strong>連結後才會開始雲端保存</strong><small>目前畫布仍持續自動儲存在這台裝置。{DRIVE_GRANT_BACKEND_ENABLED ? " 為了自動恢復連線，伺服器會加密保存 Drive 授權。" : ""}</small></span></div>
                   <button className="primary-button" type="button" onClick={onConnectDrive} disabled={driveSession.status === "connecting"}><Cloud size={16} />連結 Google Drive</button>
                 </div>
               )}
               <div className="settings-account-links settings-storage-file-actions">
                 <button className="secondary-button" type="button" onClick={onOpenDriveLibrary}><FolderOpen size={15} />我的工作檔</button>
                 <button className="quiet-button" type="button" onClick={onDownloadBackup}><Download size={15} />下載 `.studio` 備份</button>
+                {DRIVE_GRANT_BACKEND_ENABLED && accountSignedIn ? <button className="quiet-button" type="button" onClick={onRemoveDriveGrant} disabled={driveSession.busy}><CloudOff size={15} />移除自動連線授權</button> : null}
               </div>
+              {DRIVE_GRANT_BACKEND_ENABLED && accountSignedIn ? <p className="settings-update-note">這只會移除伺服器保存的自動連線授權；新分頁需重新連結，已開啟分頁可能暫時仍可使用。要撤銷 Google 帳號授權，請至 Google 帳戶管理第三方連結。Drive 檔案不會刪除。</p> : null}
               <p className="settings-update-note">若離線、容量不足或授權失效，編輯不會中斷；畫布會標示等待同步，並可隨時下載 `.studio` 備份。</p>
             </section>
           ) : section === "general" ? (
@@ -8538,10 +8558,21 @@ function App({ initialProtectedShare = null }) {
       && connectionOwnerUid
       && driveSettings.connectionOwnerUid !== connectionOwnerUid
     );
+    const authPopup = DRIVE_GRANT_BACKEND_ENABLED ? window.open("about:blank", "_blank", "popup,width=560,height=720") : null;
     setDriveSession((current) => ({ ...current, status: "connecting", busy: true, message: "Google 會另外詢問 Drive 檔案權限。" }));
     try {
-      const { requestGoogleDriveToken } = await loadDriveRuntime();
-      const token = await requestGoogleDriveToken({ loginHint: resolvedConnectionUser?.email || "" });
+      let token;
+      if (DRIVE_GRANT_BACKEND_ENABLED) {
+        const { connectDriveGrant } = await loadDriveGrantRuntime();
+        token = await connectDriveGrant({ popup: authPopup, getCredential: async () => {
+          const credential = await getFirebaseDriveCredential();
+          if (credential.uid !== connectionOwnerUid) throw Object.assign(new Error("account_changed"), { code: "account_changed" });
+          return credential;
+        } });
+      } else {
+        const { requestGoogleDriveToken } = await loadDriveRuntime();
+        token = await requestGoogleDriveToken({ loginHint: resolvedConnectionUser?.email || "" });
+      }
       if (operationEpoch !== driveOperationEpochRef.current) return null;
       driveTokenRef.current = token;
       const result = await refreshGoogleDrive(
@@ -8552,6 +8583,7 @@ function App({ initialProtectedShare = null }) {
       if (result && !isOnboarding) announce("Google Drive 已連結；尚未主動儲存前不會上傳畫布。", "success");
       return result;
     } catch (error) {
+      if (authPopup && !authPopup.closed) authPopup.close();
       if (operationEpoch !== driveOperationEpochRef.current) return null;
       const authorizationRequired = isGoogleDriveAuthorizationError(error);
       if (authorizationRequired) driveTokenRef.current = null;
@@ -8586,6 +8618,30 @@ function App({ initialProtectedShare = null }) {
     });
     announce("已中斷這個分頁的 Google Drive；雲端檔案、本機畫布與 PETFASHION 登入都未受影響。", "success");
   }, [announce, cancelDriveOperations, updateDriveSettings]);
+
+  const removeAutomaticDriveGrant = useCallback(async () => {
+    if (driveSavePromiseRef.current || driveReadPendingRef.current) {
+      announce("請等目前雲端操作完成後，再移除自動連線授權。", "info");
+      return;
+    }
+    const epoch = driveOperationEpochRef.current;
+    const uid = authSession.user?.uid;
+    setDriveSession(current => ({ ...current, busy: true, message: "正在移除自動連線授權…" }));
+    try {
+      const credential = await getFirebaseDriveCredential();
+      if (!uid || credential.uid !== uid) throw Object.assign(new Error("account_changed"), { code: "account_changed" });
+      const { removeDriveGrant } = await loadDriveGrantRuntime();
+      await removeDriveGrant(credential.token);
+      const current = await getFirebaseDriveCredential();
+      if (epoch !== driveOperationEpochRef.current || current.uid !== uid) return;
+      disconnectGoogleDrive();
+      announce("已移除伺服器上的自動連線授權；Drive 檔案與目前畫布都保留。", "success");
+    } catch (error) {
+      if (epoch !== driveOperationEpochRef.current) return;
+      setDriveSession(current => ({ ...current, busy: false, message: driveErrorMessage(error) }));
+      announce(driveErrorMessage(error), "error");
+    }
+  }, [announce, authSession.user?.uid, disconnectGoogleDrive]);
 
   useEffect(() => {
     const driveConnectionReady = driveSession.connected
@@ -8698,28 +8754,19 @@ function App({ initialProtectedShare = null }) {
 
     const restoreDriveConnection = async () => {
       try {
-        const { requestGoogleDriveToken } = await loadDriveRuntime();
-        const token = await requestGoogleDriveToken({
-          loginHint: authSession.user?.email || driveSettings.connectionEmail || "",
-          prompt: "none",
-          timeoutMs: 8_000,
-        });
+        let token;
+        if (DRIVE_GRANT_BACKEND_ENABLED) token = await restoreDriveBackendToken(connectionOwnerUid);
+        else {
+          const { requestGoogleDriveToken } = await loadDriveRuntime();
+          token = await requestGoogleDriveToken({ loginHint: authSession.user?.email || driveSettings.connectionEmail || "", prompt: "none", timeoutMs: 8_000 });
+        }
         if (!active || operationEpoch !== driveOperationEpochRef.current) return;
         driveTokenRef.current = token;
         await refreshGoogleDrive(token.accessToken, driveSettings.folderId);
       } catch (error) {
         if (!active || operationEpoch !== driveOperationEpochRef.current) return;
-        const authorizationRequired = isGoogleDriveAuthorizationError(error);
-        if (authorizationRequired) driveTokenRef.current = null;
-        setDriveSession((current) => ({
-          ...current,
-          status: authorizationRequired ? "authorization-required" : error?.code === "drive/offline" ? "offline" : "error",
-          connected: false,
-          busy: false,
-          message: authorizationRequired
-            ? "無法在背景恢復 Google Drive；點一下重新連結，本機變更仍安全保留。"
-            : driveErrorMessage(error),
-        }));
+        if (isGoogleDriveAuthorizationError(error)) driveTokenRef.current = null;
+        setDriveSession((current) => ({ ...current, ...driveReconnectFailure(error) }));
       }
     };
     restoreDriveConnection();
@@ -8802,7 +8849,7 @@ function App({ initialProtectedShare = null }) {
       const receipt = saveMoodboardAccessConsent(localStorage, authSession.user, {
         feature: pendingAdvancedFeature,
         marketingOptIn,
-        rememberSession: false,
+        rememberSession: authReceipt?.authPersistence === "local",
       });
       setAuthReceipt(receipt);
       setAuthConsentGranted(true);
@@ -8824,7 +8871,7 @@ function App({ initialProtectedShare = null }) {
     } finally {
       setAuthBusy(false);
     }
-  }, [announce, authSession.user, connectGoogleDrive, pendingAdvancedFeature]);
+  }, [announce, authReceipt?.authPersistence, authSession.user, connectGoogleDrive, pendingAdvancedFeature]);
 
   const signInToMoodboard = useCallback(async ({ marketingOptIn = false, rememberSession = false } = {}) => {
     setAuthBusy(true);
@@ -8833,7 +8880,7 @@ function App({ initialProtectedShare = null }) {
       const isDriveOnboarding = pendingAdvancedFeature === "drive-onboarding";
       const { user, isNewUser, oauthAccessToken } = await signInMoodboardWithGoogle(interfaceLocale, {
         rememberSession,
-        additionalScopes: isDriveOnboarding ? [GOOGLE_DRIVE_SCOPE] : [],
+        additionalScopes: isDriveOnboarding && !DRIVE_GRANT_BACKEND_ENABLED ? [GOOGLE_DRIVE_SCOPE] : [],
       });
       if (!isMoodboardIdentityEligible(user)) {
         const identityError = new Error("登入身份尚未通過驗證。");
@@ -8851,7 +8898,8 @@ function App({ initialProtectedShare = null }) {
       setAuthConsentGranted(true);
       if (isDriveOnboarding) {
         setAuthMessage("Google 登入完成，正在確認 Drive 權限…");
-        const token = googleDriveTokenFromOAuthAccessToken(oauthAccessToken);
+        // A Firebase popup token does not establish a durable Drive grant.
+        const token = DRIVE_GRANT_BACKEND_ENABLED ? null : googleDriveTokenFromOAuthAccessToken(oauthAccessToken);
         let driveResult = null;
         if (token) {
           const connectionOwnerUid = String(user.uid || "");
@@ -10596,15 +10644,19 @@ function App({ initialProtectedShare = null }) {
         const initialEpoch = driveOperationEpochRef.current;
         const renewal = (async () => {
           try {
-            const { requestGoogleDriveToken } = await loadDriveRuntime();
-            const token = await requestGoogleDriveToken({ loginHint: authSession.user?.email || driveSettings.connectionEmail || "", prompt: "none", timeoutMs: 8_000 });
+            let token;
+            if (DRIVE_GRANT_BACKEND_ENABLED) token = await restoreDriveBackendToken(authSession.user?.uid);
+            else {
+              const { requestGoogleDriveToken } = await loadDriveRuntime();
+              token = await requestGoogleDriveToken({ loginHint: authSession.user?.email || driveSettings.connectionEmail || "", prompt: "none", timeoutMs: 8_000 });
+            }
             if (initialEpoch !== driveOperationEpochRef.current || boardRef.current.id !== initialBoardId) return false;
             driveTokenRef.current = token;
             if (!currentDriveAccessToken()) throw new Error("Google Drive 授權已過期。" );
             return await saveBoardToGoogleDrive({ asCopy, silent, forceOverwrite, overwriteTarget });
-          } catch {
+          } catch (error) {
             if (initialEpoch === driveOperationEpochRef.current) {
-              setDriveSession((current) => ({ ...current, status: "authorization-required", connected: false, busy: false, message: "無法自動恢復 Google Drive；請重新連結，本機內容仍保留。" }));
+              setDriveSession((current) => ({ ...current, ...driveReconnectFailure(error) }));
               if (!silent) setShowDriveLibrary(true);
             }
             return false;
@@ -15048,6 +15100,7 @@ function App({ initialProtectedShare = null }) {
           onSnoozeUpdate={snoozeCurrentAppUpdate}
           onConnectDrive={connectGoogleDrive}
           onDisconnectDrive={disconnectGoogleDrive}
+          onRemoveDriveGrant={removeAutomaticDriveGrant}
           onManageThemes={openInterfaceThemes}
           onMarketingPreferenceChange={updateMoodboardMarketingPreference}
           onLinkEmail={linkEmailToMoodboardAccount}

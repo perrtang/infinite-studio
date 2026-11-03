@@ -28,6 +28,7 @@ import {
   normalizeMoodboardEmail,
   savePendingMoodboardEmailAuth,
 } from "./email-auth-state.js";
+import { currentFirebaseDriveCredential } from "./firebase-drive-credential.js";
 
 const runtimeEnv = import.meta.env || {};
 
@@ -72,6 +73,10 @@ async function moodboardAuth() {
     authPromise = Promise.resolve(getAuth(firebaseApp));
   }
   return authPromise;
+}
+
+export async function getFirebaseDriveCredential() {
+  return currentFirebaseDriveCredential(await moodboardAuth());
 }
 
 function setMoodboardAuthLanguage(auth, locale) {

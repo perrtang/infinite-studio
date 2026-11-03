@@ -1,0 +1,7 @@
+{
+  "name": "infinite-studio-drive-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test *.test.mjs ../cloudflare-drive-credential-vault.test.mjs ../cloudflare-drive-grant-state.test.mjs" },
+  "dependencies": { "jose": "^6.1.0" }
+}

@@ -66,6 +66,24 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 
 const EN_EXACT = Object.freeze({
   "有新版本可更新": "Update available",
+  "帳號與設定": "Account & settings",
+  "管理帳號、儲存與介面偏好。": "Manage your account, storage, and interface preferences.",
+  "為了在新分頁恢復連線，Infinite Studio 會在伺服器加密保存 Drive 授權。": "To restore your connection in new tabs, Infinite Studio stores your Drive authorization encrypted on its server.",
+  "自動恢復連線": "Restore connection automatically",
+  "Infinite Studio 會在伺服器加密保存 Drive 授權，讓登入後的新分頁可恢復連線。": "Infinite Studio stores your Drive authorization encrypted on its server so new tabs can reconnect after sign-in.",
+  "Infinite Studio 只能存取本服務建立或你指定的檔案；為了自動連線，伺服器會加密保存授權。": "Infinite Studio can only access files created by this app or selected by you. Your authorization is encrypted and stored on the server for automatic reconnection.",
+  "目前畫布仍持續自動儲存在這台裝置。 為了自動恢復連線，伺服器會加密保存 Drive 授權。": "Your canvas continues to be saved automatically on this device. Your Drive authorization is encrypted and stored on the server for automatic reconnection.",
+  "為了自動恢復連線，伺服器會加密保存 Drive 授權。": "Your Drive authorization is encrypted and stored on the server for automatic reconnection.",
+  "移除自動連線授權": "Remove automatic connection authorization",
+  "這只會移除伺服器保存的自動連線授權；新分頁需重新連結，已開啟分頁可能暫時仍可使用。要撤銷 Google 帳號授權，請至 Google 帳戶管理第三方連結。Drive 檔案不會刪除。": "This removes only the automatic connection authorization stored on the server. New tabs must reconnect, and open tabs may remain authorized temporarily. To revoke Google account access, manage third-party connections in your Google Account. Drive files are not deleted.",
+  "請等目前雲端操作完成後，再移除自動連線授權。": "Wait for the current cloud operation to finish before removing automatic connection authorization.",
+  "正在移除自動連線授權…": "Removing automatic connection authorization…",
+  "已移除伺服器上的自動連線授權；Drive 檔案與目前畫布都保留。": "Automatic connection authorization was removed from the server. Your Drive files and current canvas remain intact.",
+  "瀏覽器封鎖了 Google 授權視窗；請允許彈出式視窗後重試。": "Your browser blocked the Google authorization window. Allow pop-ups and try again.",
+  "已取消 Google Drive 連結；目前工作內容未受影響。": "Google Drive connection was canceled. Your current work is unchanged.",
+  "Google 授權等待逾時；請重新連結。": "Google authorization timed out. Please reconnect.",
+  "目前無法完成 Google Drive 連結；請稍後重試，目前工作內容未受影響。": "Google Drive could not be connected. Try again later; your current work is unchanged.",
+  "登入帳號已變更；請回到目前帳號重新連結 Google Drive。": "The signed-in account changed. Return to the current account and reconnect Google Drive.",
   "允許 AI 在本次連線自動修改畫布": "Allow AI to edit the canvas automatically for this connection",
   "啟用後，AI 可直接新增及修改物件，完成後可檢查或使用復原；中斷連線或切換工作檔時權限結束。自動儲存依工作檔設定運作；分享權限不變。": "AI can add and edit objects directly. Review or undo changes afterward. Permission ends when disconnected or switching projects. Autosave follows the project settings; sharing permissions do not change.",
   "已連接本機 AI；本次連線可自動修改畫布。": "Local AI connected; it may edit this canvas during this connection.",
@@ -1913,6 +1931,7 @@ const EN_EXACT = Object.freeze({
 });
 
 const EN_PATTERNS = Object.freeze([
+  [/^帳號與設定：(.+)$/, "Account & settings: $1"],
   [/^最後編輯 (.+)$/, "Last edited $1"],
   [/^目前本機畫布 · 內容 r(\d+) · (.+)$/, "Current local Moodboard · content r$1 · $2"],
   [/^(.+) 可用，共 (.+)$/, "$1 available of $2"],

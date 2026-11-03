@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { detectInterfaceLocale, loadInterfaceLocalePreference, translateInterfaceText } from "./i18n.js";
 
+test("automatic Drive authorization explains storage and recovery in English", () => {
+  assert.equal(translateInterfaceText("移除自動連線授權", "en"), "Remove automatic connection authorization");
+  assert.match(translateInterfaceText("為了在新分頁恢復連線，Infinite Studio 會在伺服器加密保存 Drive 授權。", "en"), /encrypted/);
+  assert.match(translateInterfaceText("目前無法完成 Google Drive 連結；請稍後重試，目前工作內容未受影響。", "en"), /unchanged/);
+  assert.equal(translateInterfaceText("移除自動連線授權", "zh-Hans"), "移除自动连接授权");
+});
+
 test("automatic locale follows the device time zone and falls back safely", () => {
   assert.equal(detectInterfaceLocale(["en-US"], "Asia/Taipei"), "zh-Hant");
   assert.equal(detectInterfaceLocale(["en-US"], "Asia/Shanghai"), "zh-Hans");
@@ -74,6 +81,8 @@ test("the default fashion monochrome palette name is localized", () => {
 
 test("dynamic account labels retain the user name", () => {
   assert.equal(translateInterfaceText("帳號：Perr Tang", "en"), "Account: Perr Tang");
+  assert.equal(translateInterfaceText("帳號與設定", "en"), "Account & settings");
+  assert.equal(translateInterfaceText("帳號與設定：Perr Tang", "en"), "Account & settings: Perr Tang");
 });
 
 test("paper, annotation, grid, and semantic grouping copy is localized", () => {
