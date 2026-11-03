@@ -11,6 +11,13 @@ test("the update notice pauses while any blocking dialog is open", () => {
   assert.match(styles, /\.app-update-notice \{[\s\S]*z-index: 90;/);
 });
 
+test("an available update starts as an accessible, collapsed header action", () => {
+  assert.match(main, /const \[expanded, setExpanded\] = useState\(false\)/);
+  assert.match(main, /className="app-update-trigger" aria-expanded=\{expanded\} aria-controls="app-update-details"/);
+  assert.match(main, /\{expanded \? <aside id="app-update-details"/);
+  assert.match(styles, /\.moodboard-app\[data-interface-mode="dark"\] \.app-update-trigger/);
+});
+
 test("the update notice uses one clear type hierarchy and consistent actions", () => {
   assert.match(styles, /\.app-update-notice-heading strong \{[\s\S]*font-size: calc\(14px \+ var\(--ui-font-offset, 0px\)\)/);
   assert.match(styles, /\.app-update-notice-heading small,[\s\S]*\.app-update-notice > p \{[\s\S]*font-size: calc\(11px \+ var\(--ui-font-offset, 0px\)\)/);

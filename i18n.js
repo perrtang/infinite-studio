@@ -65,6 +65,7 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "有新版本可更新": "Update available",
   "允許 AI 在本次連線自動修改畫布": "Allow AI to edit the canvas automatically for this connection",
   "啟用後，AI 可直接新增及修改物件，完成後可檢查或使用復原；中斷連線或切換工作檔時權限結束。自動儲存依工作檔設定運作；分享權限不變。": "AI can add and edit objects directly. Review or undo changes afterward. Permission ends when disconnected or switching projects. Autosave follows the project settings; sharing permissions do not change.",
   "已連接本機 AI；本次連線可自動修改畫布。": "Local AI connected; it may edit this canvas during this connection.",

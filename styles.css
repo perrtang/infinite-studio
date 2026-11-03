@@ -738,7 +738,7 @@ button:disabled {
   color: var(--accent);
   display: flex;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: calc(27px + var(--ui-font-offset, 0px));
+  font-size: calc(36px + var(--ui-font-offset, 0px));
   font-weight: 400;
   height: 34px;
   justify-content: center;
@@ -9168,6 +9168,27 @@ button.status-label:hover {
   width: max-content;
   z-index: 90;
 }
+
+.app-update-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #8a4900;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: calc(12px + var(--ui-font-offset, 0px));
+  font-weight: 700;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.moodboard-app[data-interface-mode="dark"] .app-update-trigger { color: #ffd16b; }
+.app-update-trigger:hover { text-decoration: underline; }
+.app-update-trigger:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 1250px) { .app-update-trigger { min-height: 44px; } }
+@media (max-width: 620px) { .app-update-trigger { font-size: 11px; padding-inline: 4px; } }
 
 .app-update-notice.is-error {
   border-color: rgb(var(--danger-rgb) / 0.56);

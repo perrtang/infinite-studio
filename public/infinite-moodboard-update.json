@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.15",
+  "version": "0.56.16",
   "releasedAt": "2026-11-03",
-  "summary": "修正分享檢視器未命名工作檔與替代文字中的舊名稱。",
-  "notesUrl": "release-notes/v0.56.15.html",
+  "summary": "醒目顯示新版本提示，點擊後查看更新選項；調整標誌比例。",
+  "notesUrl": "release-notes/v0.56.16.html",
   "url": "https://infinite.petfashion.tw/"
 }

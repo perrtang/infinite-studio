@@ -6464,12 +6464,17 @@ function AppUpdateNotice({
   onUpdateNow,
   onSnooze,
 }) {
+  const [expanded, setExpanded] = useState(false);
   if (updateCheck.status !== "available" || !updateCheck.manifest) return null;
   const busy = updateAction.status === "saving" || updateAction.status === "reloading";
   const version = updateCheck.manifest.version;
 
   return (
-    <aside className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
+    <>
+    <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
+      <Download size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
+    </button>
+    {expanded ? <aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
         <span className="app-update-notice-icon" aria-hidden="true"><Download size={19} /></span>
         <div>
@@ -6500,7 +6505,8 @@ function AppUpdateNotice({
         <button className="text-button" type="button" onClick={onSnooze} disabled={busy}>稍後更新</button>
       </div>
       <small className="app-update-auto-note">自動更新只會在下一次安全開啟時套用，不會在編輯途中突然重整。</small>
-    </aside>
+    </aside> : null}
+    </>
   );
 }
 
@@ -14268,8 +14274,11 @@ function App({ initialProtectedShare = null }) {
             <span className="brand-mark" aria-hidden="true">∞</span>
             <span className="brand-name" aria-hidden="true">Infinite Studio</span>
           </div>
-
-
+          {!updateNoticeDismissed && !hasBlockingDialog ? (
+            <AppUpdateNotice updateCheck={updateCheck} updateAction={updateAction}
+              autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
+              onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
+          ) : null}
         </div>
 
         <label className="board-title-field">
@@ -14820,16 +14829,6 @@ function App({ initialProtectedShare = null }) {
       </div>
 
       {mobilePanel ? <button className="mobile-scrim" type="button" aria-label="關閉面板" onClick={() => setMobilePanel(null)} /> : null}
-      {!updateNoticeDismissed && !hasBlockingDialog ? (
-        <AppUpdateNotice
-          updateCheck={updateCheck}
-          updateAction={updateAction}
-          autoUpdateEnabled={updatePreference === "auto"}
-          onEnableAutoUpdate={() => setAppAutoUpdate(true)}
-          onUpdateNow={() => applyAppUpdate()}
-          onSnooze={snoozeCurrentAppUpdate}
-        />
-      ) : null}
       {toast ? <div className={`toast toast-${toast.tone}`} role="status">{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span></div> : null}
 
       {escapeCancellationRequest ? (
