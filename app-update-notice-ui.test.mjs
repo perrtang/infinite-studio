@@ -14,7 +14,7 @@ test("the update notice pauses while any blocking dialog is open", () => {
 test("an available update starts as an accessible, collapsed header action", () => {
   assert.match(main, /const \[expanded, setExpanded\] = useState\(false\)/);
   assert.match(main, /className="app-update-trigger" aria-expanded=\{expanded\} aria-controls="app-update-details"/);
-  assert.match(main, /\{expanded \? <aside id="app-update-details"/);
+  assert.match(main, /\{expanded \? <Modal title="有新版本可更新"[\s\S]*?<aside id="app-update-details"/);
   assert.match(styles, /\.moodboard-app\[data-interface-mode="dark"\] \.app-update-trigger/);
   assert.match(main, /className="app-update-trigger"[\s\S]*?<MessageCircle size=\{15\}/);
   assert.match(main, /className="topbar-secondary">[\s\S]*?<AppUpdateNotice[\s\S]*?className=\{`topbar-save-button/);

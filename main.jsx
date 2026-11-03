@@ -2033,7 +2033,7 @@ function FileMenu({
         type="button"
         aria-label="主選單"
         title="主選單"
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="file-menu-popover"
         ref={triggerRef}
@@ -2042,6 +2042,7 @@ function FileMenu({
         <Menu size={18} />
       </button>
       {open ? (
+        <Modal title="主選單" onClose={() => setOpen(false)} className="file-menu-dialog">
         <div
           className="file-menu-popover"
           id="file-menu-popover"
@@ -2106,6 +2107,7 @@ function FileMenu({
             </button>
           </div>
         </div>
+        </Modal>
       ) : null}
     </div>
   );
@@ -2253,6 +2255,10 @@ function SelectionActionBar({ count, grouped, onAddArtboard, onAddAnnotation, on
   );
 }
 
+function displayTextColor(color) {
+  return !color || color.toLowerCase() === "#edf7fb" ? "var(--canvas-default-text, #edf7fb)" : color;
+}
+
 function MediaElement({ object, className = "", controls = false, decorative = false, style }) {
   if (isArtboardObject(object)) {
     return (
@@ -2277,7 +2283,7 @@ function MediaElement({ object, className = "", controls = false, decorative = f
         aria-label={decorative ? undefined : `${object.name}：${displayText}`}
         aria-hidden={decorative || undefined}
         style={{
-          color: object.color,
+          color: displayTextColor(object.color),
           fontFamily: object.fontFamily,
           fontSize: object.fontSize,
           fontWeight: object.fontWeight,
@@ -2356,7 +2362,7 @@ function CanvasTextEditor({ object, editSession, onChange, onFinish }) {
       data-placeholder="輸入文字"
       spellCheck="true"
       style={{
-        color: object.color,
+        color: displayTextColor(object.color),
         fontFamily: object.fontFamily,
         fontSize: object.fontSize,
         fontWeight: object.fontWeight,
@@ -3290,7 +3296,7 @@ function CaptureThumbnail({ capture, board }) {
                   xmlns="http://www.w3.org/1999/xhtml"
                   style={{
                     boxSizing: "border-box",
-                    color: object.color,
+                    color: displayTextColor(object.color),
                     height: "100%",
                     fontFamily: object.fontFamily,
                     fontSize: Math.max(3, (state.fontSize || object.fontSize) * capture.view.zoom),
@@ -6470,6 +6476,14 @@ function AppUpdateNotice({
   onSnooze,
 }) {
   const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape" && updateAction.status !== "saving" && updateAction.status !== "reloading") setExpanded(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expanded, updateAction.status]);
   if (updateCheck.status !== "available" || !updateCheck.manifest) return null;
   const busy = updateAction.status === "saving" || updateAction.status === "reloading";
   const version = updateCheck.manifest.version;
@@ -6479,7 +6493,7 @@ function AppUpdateNotice({
     <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
       <MessageCircle size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
-    {expanded ? <aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
+    {expanded ? <Modal title="有新版本可更新" onClose={() => setExpanded(false)} busy={busy} className="update-details-dialog"><aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
         <span className="app-update-notice-icon" aria-hidden="true"><Download size={19} /></span>
         <div>
@@ -6510,7 +6524,7 @@ function AppUpdateNotice({
         <button className="text-button" type="button" onClick={onSnooze} disabled={busy}>稍後更新</button>
       </div>
       <small className="app-update-auto-note">自動更新只會在下一次安全開啟時套用，不會在編輯途中突然重整。</small>
-    </aside> : null}
+    </aside></Modal> : null}
     </>
   );
 }
@@ -14277,7 +14291,7 @@ function App({ initialProtectedShare = null }) {
         <div className="topbar-primary">
           <div className="brand-block" role="img" aria-label="Infinite Studio" title="Infinite Studio｜PETFASHION 創意工具">
             <StudioBrandMark />
-            <span className="brand-name" aria-hidden="true">Infinite Studio</span>
+            <span className="brand-name" aria-hidden="true">INFINITE <span>studio</span></span>
           </div>
         </div>
 
