@@ -1,11 +1,14 @@
 # Drive automatic reconnection: deployment draft
 
 Status: the corrected gateway backend was deployed on 2026-11-04 as Worker
-version `1cd6e582-0dff-42b7-874d-a6f96c9ca61b`; the frontend flag remains off.
+version `39c16ef3-a327-46bc-8e13-24128c74d76a`; the frontend flag remains off.
 An authenticated acceptance page successfully authorized Google, read Drive,
 and restored the stored grant in a separate tab after a manual test action.
-Cloud file write/readback and automatic frontend restoration remain unverified; retain the release gate
-until those paths have passed.
+An isolated Drive test file was created, updated and read back through the
+grant using the updated no-cache, bounded-retry client with SHA-256 verification
+of original file bytes when Drive provides a checksum. When it does not, version comparison remains
+an eventual-consistency assumption. Automatic frontend restoration remains
+unverified; retain the release gate until it has passed.
 The deployed gateway serves the OAuth completion HTML, CSS and JS itself;
 all three returned HTTP 200, `no-store`, and exact public-source content on
 the production hostname. This repairs the previously observed 404 callback.

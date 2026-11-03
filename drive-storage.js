@@ -154,6 +154,7 @@ export function normalizeDriveFile(file = {}) {
     size: finiteNumber(file.size),
     version: String(file.version || ""),
     headRevisionId: String(file.headRevisionId || ""),
+    sha256Checksum: String(file.sha256Checksum || "").toLowerCase(),
     webViewLink: String(file.webViewLink || ""),
     resourceKey: String(file.resourceKey || ""),
     ownedByMe: file.ownedByMe === true,
@@ -422,6 +423,9 @@ async function driveRequest(accessToken, url, options = {}) {
   try {
     const response = await fetch(url, {
       ...fetchOptions,
+      // Version checks and file contents must reflect Drive, not an earlier
+      // browser cache entry from before an upload.
+      cache: "no-store",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         ...(fetchOptions.headers || {}),
@@ -433,9 +437,12 @@ async function driveRequest(accessToken, url, options = {}) {
     try {
       payload = response.ok && responseType === "text"
         ? await response.text()
-        : await response.json();
+        : response.ok && responseType === "arrayBuffer"
+          ? await response.arrayBuffer()
+          : await response.json();
     } catch (error) {
       if (timedOut || error?.name === "AbortError") throw error;
+      if (response.ok && (responseType === "text" || responseType === "arrayBuffer")) throw error;
     }
     if (!response.ok) throw googleApiError(payload, response);
     return includeResponse ? { payload, response } : payload;
@@ -505,7 +512,7 @@ export async function ensureGoogleDriveFolder(accessToken, knownFolderId = "", {
   return String(folder.id);
 }
 
-const DRIVE_FILE_FIELDS = "id,name,mimeType,createdTime,modifiedTime,size,version,headRevisionId,webViewLink,resourceKey,ownedByMe,parents,appProperties,capabilities(canDownload,canReadRevisions,canEdit,canShare)";
+const DRIVE_FILE_FIELDS = "id,name,mimeType,createdTime,modifiedTime,size,version,headRevisionId,sha256Checksum,webViewLink,resourceKey,ownedByMe,parents,appProperties,capabilities(canDownload,canReadRevisions,canEdit,canShare)";
 const DRIVE_REVISION_FIELDS = "id,mimeType,modifiedTime,size,keepForever,originalFilename,lastModifyingUser(displayName,emailAddress,photoLink)";
 const DRIVE_PERMISSION_FIELDS = "id,type,role,displayName,emailAddress,photoLink,domain,allowFileDiscovery,pendingOwner,deleted";
 
@@ -766,6 +773,7 @@ export async function downloadGoogleDriveMoodboard(accessToken, fileId, {
   resourceKey = "",
   signal,
   timeoutMs = DRIVE_TRANSFER_TIMEOUT_MS,
+  rawBytes = false,
 } = {}) {
   const encodedFileId = encodeURIComponent(fileId);
   const endpoint = revisionId
@@ -775,19 +783,33 @@ export async function downloadGoogleDriveMoodboard(accessToken, fileId, {
     headers: driveResourceKeyHeaders(fileId, resourceKey),
     signal,
     timeoutMs,
-    responseType: "text",
+    responseType: rawBytes ? "arrayBuffer" : "text",
   });
 }
 
 export async function downloadCurrentGoogleDriveMoodboard(accessToken, fileId, { resourceKey = "", signal } = {}) {
-  const before = await getGoogleDriveFile(accessToken, fileId, { resourceKey, signal });
-  if (before.id !== String(fileId)) throw new DriveApiError("Google Drive 回傳的檔案與分享連結不符；目前畫布未變更。", { code: "drive/file-mismatch" });
-  if (!before.version) throw new DriveApiError("Google Drive 未提供檔案版本，無法安全開啟；目前畫布未變更。", { code: "drive/version-unavailable" });
-  const resolvedKey = before.resourceKey || resourceKey;
-  const content = await downloadGoogleDriveMoodboard(accessToken, fileId, { resourceKey: resolvedKey, signal });
-  const after = await getGoogleDriveFile(accessToken, fileId, { resourceKey: resolvedKey, signal });
-  if (!after.version || before.version !== after.version || after.id !== before.id) throw new DriveConflictError(after);
-  return { content, metadata: { ...after, resourceKey: after.resourceKey || resolvedKey } };
+  let after;
+  // Drive can advance metadata immediately after creating or updating a file.
+  // Retry bounded read-only snapshots, but never return a mismatched version.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const before = await getGoogleDriveFile(accessToken, fileId, { resourceKey, signal });
+    if (before.id !== String(fileId)) throw new DriveApiError("Google Drive 回傳的檔案與分享連結不符；目前畫布未變更。", { code: "drive/file-mismatch" });
+    if (!before.version) throw new DriveApiError("Google Drive 未提供檔案版本，無法安全開啟；目前畫布未變更。", { code: "drive/version-unavailable" });
+    const resolvedKey = before.resourceKey || resourceKey;
+    const bytes = await downloadGoogleDriveMoodboard(accessToken, fileId, { resourceKey: resolvedKey, signal, rawBytes: true });
+    after = await getGoogleDriveFile(accessToken, fileId, { resourceKey: resolvedKey, signal });
+    if (after.version && before.version === after.version && after.id === before.id) {
+      const checksum = before.sha256Checksum || after.sha256Checksum;
+      if (checksum) {
+        if (!/^[a-f0-9]{64}$/.test(checksum) || (before.sha256Checksum && after.sha256Checksum && before.sha256Checksum !== after.sha256Checksum)) continue;
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+        if (actual !== checksum) continue;
+      }
+      return { content: new TextDecoder().decode(bytes), metadata: { ...after, resourceKey: after.resourceKey || resolvedKey } };
+    }
+  }
+  throw new DriveConflictError(after);
 }
 
 export async function uploadGoogleDriveMoodboard(accessToken, {

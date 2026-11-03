@@ -205,6 +205,7 @@ test("normalizes Drive files and maps recoverable errors", () => {
     version: "3",
     headRevisionId: "",
     webViewLink: "",
+    sha256Checksum: "",
     resourceKey: "",
     ownedByMe: false,
     parents: [],
@@ -833,6 +834,7 @@ test("opens the current Drive file for a viewer and verifies the same version", 
   t.after(() => { globalThis.fetch = originalFetch; });
   const calls = [];
   globalThis.fetch = async (url, options) => {
+    assert.equal(options.cache, "no-store");
     calls.push({ url: String(url), headers: options.headers });
     if (String(url).includes("alt=media")) return new Response('{"id":"board-1","objects":[{"id":"image"}]}');
     return new Response(JSON.stringify({ id: "file-1", name: "Board.moodboard", version: "7", headRevisionId: "head-7", capabilities: { canReadRevisions: false, canEdit: false } }));
@@ -845,6 +847,52 @@ test("opens the current Drive file for a viewer and verifies the same version", 
   assert.match(calls[1].url, /files\/file-1\?alt=media/);
   assert.doesNotMatch(calls[1].url, /revisions/);
   assert.ok(calls.every((call) => new Headers(call.headers).get("X-Goog-Drive-Resource-Keys") === "file-1/shared-key"));
+});
+
+test("retries a changing Drive snapshot and only returns a stable version", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  let reads = 0, downloads = 0;
+  globalThis.fetch = async (url) => String(url).includes("alt=media")
+    ? new Response(JSON.stringify({ attempt: ++downloads }))
+    : new Response(JSON.stringify({ id: "file-1", version: reads++ === 0 ? "1" : "2" }));
+  const result = await downloadCurrentGoogleDriveMoodboard("token", "file-1");
+  assert.equal(result.metadata.version, "2");
+  assert.equal(JSON.parse(result.content).attempt, 2);
+});
+
+test("rejects content that does not match Drive's checksum even if metadata versions match", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("old content"));
+  const checksum = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  globalThis.fetch = async (url) => String(url).includes("alt=media")
+    ? new Response("different content")
+    : new Response(JSON.stringify({ id: "file-1", version: "1", sha256Checksum: checksum }));
+  await assert.rejects(downloadCurrentGoogleDriveMoodboard("token", "file-1"), DriveConflictError);
+});
+
+test("checks original UTF-8 bytes including BOM before decoding legacy text", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  const content = '{"文字":"測試"}';
+  const encoded = new TextEncoder().encode(content);
+  const bytes = new Uint8Array([0xef, 0xbb, 0xbf, ...encoded]);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const checksum = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  globalThis.fetch = async (url) => String(url).includes("alt=media")
+    ? new Response(bytes)
+    : new Response(JSON.stringify({ id: "file-1", version: "1", sha256Checksum: checksum }));
+  assert.equal((await downloadCurrentGoogleDriveMoodboard("token", "file-1")).content, content);
+});
+
+test("reports a failed response body read as a Drive network error", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async (url) => String(url).includes("alt=media")
+    ? { ok: true, status: 200, arrayBuffer: async () => { throw new Error("connection dropped"); } }
+    : new Response(JSON.stringify({ id: "file-1", version: "1" }));
+  await assert.rejects(downloadCurrentGoogleDriveMoodboard("token", "file-1"), { code: "drive/network" });
 });
 
 test("does not open a Drive file that changes during the download", async (t) => {
