@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.13",
+  "version": "0.56.14",
   "releasedAt": "2026-11-03",
-  "summary": "AI 連線預設允許本次修改畫布，也可取消勾選改為逐次確認。",
-  "notesUrl": "release-notes/v0.56.13.html",
+  "summary": "修正英文介面中工作檔與 Google Drive 訊息殘留的舊名稱。",
+  "notesUrl": "release-notes/v0.56.14.html",
   "url": "https://infinite.petfashion.tw/"
 }

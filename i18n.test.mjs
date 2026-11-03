@@ -16,6 +16,18 @@ test("automatic locale follows the device time zone and falls back safely", () =
   assert.equal(detectInterfaceLocale([], ""), "en");
 });
 
+test("current English Drive and workspace wording uses the Infinite Studio name", () => {
+  const messages = [
+    "Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。",
+    "目前本機畫布",
+    "目前畫布仍持續自動儲存在這台裝置。",
+    "Google Drive 已連結；尚未主動儲存前不會上傳畫布。",
+    "Google Drive 空間不足；畫布仍安全保存在這台裝置。",
+  ];
+  for (const message of messages) assert.doesNotMatch(translateInterfaceText(message, "en"), /moodboard/i);
+  assert.equal(translateInterfaceText("支援 .studio 與舊版工作檔", "en"), "Supports .studio and legacy project files");
+});
+
 test("a saved manual language wins; absent, auto and inaccessible storage use automatic mode", () => {
   const storage = (value) => ({ getItem: () => value });
   assert.equal(loadInterfaceLocalePreference(storage("zh-Hant")), "zh-Hant");
