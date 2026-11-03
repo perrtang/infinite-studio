@@ -12,6 +12,7 @@ import {
 test("local Moodboard filenames are safe and retain the expected extension", () => {
   assert.equal(localMoodboardFilename("Campaign / Spring:01"), "Campaign - Spring-01.studio");
   assert.equal(localMoodboardFilename("   "), "studio.studio");
+  assert.equal(localMoodboardFilename(""), "studio.studio");
   assert.equal(localMoodboardFilename("Board... "), "Board.studio");
 });
 

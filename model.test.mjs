@@ -211,7 +211,7 @@ test("application update manifests compare stable semantic versions", () => {
   assert.equal(compareSemanticVersions("0.1.9", "0.2.0"), -1);
   assert.equal(compareSemanticVersions("1.0.0", "0.9.9"), 1);
   assert.deepEqual(normalizeUpdateManifest({ version: "0.2.0", summary: "最新版本" }), {
-    product: "Infinite Moodboard",
+    product: "Infinite Studio",
     channel: "stable",
     version: "0.2.0",
     releasedAt: "",

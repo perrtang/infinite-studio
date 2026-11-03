@@ -7,7 +7,7 @@ export function shouldWriteLocalAutosaveFile({ autoSave, target, status, hasHand
 }
 
 export function localMoodboardFilename(name) {
-  const safeName = String(name || "moodboard")
+  const safeName = String(name || "studio")
     .trim()
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, "-")
     .replace(/[. ]+$/g, "")

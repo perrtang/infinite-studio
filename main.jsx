@@ -9357,7 +9357,7 @@ function App({ initialProtectedShare = null }) {
 
   const exportObjectColorSets = useCallback(() => {
     const blob = new Blob([serializeObjectColorSets(objectColorSets)], { type: "application/json;charset=utf-8" });
-    downloadBlob(blob, "Infinite-Moodboard-Color-Sets.moodcolors");
+    downloadBlob(blob, "Infinite-Studio-Color-Sets.moodcolors");
     const colorCount = objectColorSets.sets.reduce((total, set) => total + set.colors.length, 0);
     announce(`已匯出 ${objectColorSets.sets.length} 組、共 ${colorCount} 個色彩。`, "success");
   }, [announce, objectColorSets]);
@@ -10651,8 +10651,8 @@ function App({ initialProtectedShare = null }) {
       .replace(" ", "-");
     const fileExtension = !asCopy && linkedFile && (!linkedFile.name || /\.moodboard$/i.test(linkedFile.name)) ? "moodboard" : "studio";
     const filename = asCopy
-      ? `${safeFilename(snapshot.name, "moodboard")}-${translateInterfaceText("複本")}-${timestamp}.studio`
-      : `${safeFilename(snapshot.name, "moodboard")}.${fileExtension}`;
+      ? `${safeFilename(snapshot.name, "studio")}-${translateInterfaceText("複本")}-${timestamp}.studio`
+      : `${safeFilename(snapshot.name, "studio")}.${fileExtension}`;
     const operationEpoch = driveOperationEpochRef.current;
     const controller = new AbortController();
     driveSaveControllerRef.current = controller;
@@ -11777,7 +11777,7 @@ function App({ initialProtectedShare = null }) {
       announce("正在準備瀏覽器版…", "info");
       const { createPortableHtml } = await loadPortableRuntime();
       const snapshot = boardSnapshot();
-      const filename = `${safeFilename(snapshot.name, "moodboard")}-${safeFilename(translateInterfaceText("瀏覽版"), "browser-view")}.html`;
+      const filename = `${safeFilename(snapshot.name, "studio")}-${safeFilename(translateInterfaceText("瀏覽版"), "browser-view")}.html`;
       const content = createPortableHtml(snapshot, { locale: interfaceLocale });
       downloadBlob(new Blob([content], { type: "text/html;charset=utf-8" }), filename);
       announce("瀏覽器版 HTML 已下載；可離線開啟，但不會改動原始工作檔。", "success");
@@ -14007,7 +14007,7 @@ function App({ initialProtectedShare = null }) {
       format = compositionOutputFormat(compositionFormat);
       const rendered = await renderSelectionComposition(targets, compositionScale);
       const blob = await encodeCompositionCanvas(rendered.canvas, compositionFormat);
-      const filename = `${safeFilename(`${boardRef.current.name}-選取合成`, "moodboard-composition")}.${format.extension}`;
+      const filename = `${safeFilename(`${boardRef.current.name}-選取合成`, "studio-composition")}.${format.extension}`;
       downloadBlob(blob, filename);
       const reducedNote = rendered.reduced ? "；尺寸過大，已在不改變比例下自動縮小" : "";
       announce(`已輸出 ${format.label} · ${rendered.pixelWidth} × ${rendered.pixelHeight}px${reducedNote}`, "success");

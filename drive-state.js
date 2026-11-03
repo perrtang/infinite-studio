@@ -109,7 +109,7 @@ export function evaluateDriveQuota(storageQuota, uploadBytes, { safetyBytes = 64
 export function normalizeDriveFile(file = {}) {
   return {
     id: String(file.id || ""),
-    name: String(file.name || "未命名.moodboard"),
+    name: String(file.name || "未命名.studio"),
     mimeType: String(file.mimeType || DRIVE_FILE_MIME_TYPE),
     createdTime: String(file.createdTime || ""),
     modifiedTime: String(file.modifiedTime || ""),
