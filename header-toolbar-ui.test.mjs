@@ -16,11 +16,13 @@ test("the header keeps only the centered board name as visible text", () => {
   assert.match(styles, /\.account-menu-button \{[\s\S]*max-width: 36px;[\s\S]*width: 36px;/);
 });
 
-test("primary insert actions are icon-only with accessible tooltips", () => {
-  for (const label of ["加入文字", "加入圖片", "加入影片"]) {
-    assert.match(main, new RegExp(`aria-label="${label}"[\\s\\S]{0,100}title=`));
+test("insert actions share an accessible compact menu while text stays direct", () => {
+  assert.match(main, /aria-label="加入文字" title="加入文字"/);
+  assert.match(main, /aria-label="加入素材與形狀"[\s\S]*?aria-haspopup="menu"/);
+  for (const label of ["匯入文字文件", "加入圖片", "加入影片", "建立 Grid", "匯入 SVG", "基本形狀"]) {
+    assert.ok(main.includes(label));
   }
-  assert.match(main, /aria-label="加入形狀"\s*title="加入形狀或匯入 SVG"/);
+  assert.match(main, /onMenuKeyDown[\s\S]*?event\.key === "Escape"/);
   assert.doesNotMatch(main, /className="insert-tool-label"/);
   assert.doesNotMatch(main, /className="insert-tool-chevron"/);
   assert.match(styles, /\.insert-tool \{[\s\S]*min-width: 34px;[\s\S]*padding: 0;/);

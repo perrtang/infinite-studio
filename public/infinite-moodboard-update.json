@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.18",
+  "version": "0.56.19",
   "releasedAt": "2026-11-03",
-  "summary": "改善淺色畫布文字、品牌比例與更新及選單對話框。",
-  "notesUrl": "release-notes/v0.56.18.html",
+  "summary": "將素材、文件、形狀和 Grid 整合至工具列選單。",
+  "notesUrl": "release-notes/v0.56.19.html",
   "url": "https://infinite.petfashion.tw/"
 }

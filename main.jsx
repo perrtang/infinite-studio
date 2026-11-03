@@ -68,7 +68,6 @@ import {
   Mail,
   Maximize2,
   Menu,
-  MessageCircle,
   Minus,
   Minimize2,
   Monitor,
@@ -2556,7 +2555,12 @@ function CanvasVideoPlayer({ object, onControlsVisibilityChange }) {
   );
 }
 
-function InsertToolbar({ open, disabled = false, onToggle, onAddText, onImportText, onAddShape, onChooseImage, onChooseVideo, onChooseSvg }) {
+function InsertToolbar({ open, disabled = false, onToggle, onClose, onAddText, onImportText, onAddShape, onChooseImage, onChooseVideo, onChooseSvg, onAddGrid }) {
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (open) menuRef.current?.querySelector('[role="menuitem"]')?.focus();
+  }, [open]);
   const shapeActions = [
     ["square", "正方形", Square],
     ["rectangle", "矩形", RectangleHorizontal],
@@ -2564,38 +2568,47 @@ function InsertToolbar({ open, disabled = false, onToggle, onAddText, onImportTe
     ["polygon", "六邊形", Hexagon],
     ["star", "星形", Star],
   ];
+  const activate = (action) => { onClose(); action(); };
+  const onMenuKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+      triggerRef.current?.focus();
+      return;
+    }
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    const items = [...menuRef.current.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+    if (!items.length) return;
+    event.preventDefault();
+    const index = items.indexOf(document.activeElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1
+      : event.key === "ArrowDown" ? (index + 1 + items.length) % items.length
+      : (index - 1 + items.length) % items.length;
+    items[next].focus();
+  };
   return (
     <div className="insert-tools" role="group" aria-label="加入物件">
       <button className="toolbar-action insert-tool" type="button" aria-label="加入文字" title="加入文字" onClick={onAddText} disabled={disabled}>
         <Type size={17} />
       </button>
-      <button className="toolbar-action insert-tool" type="button" aria-label="匯入文字文件" title="匯入文字文件（TXT、Markdown、CSV、DOCX）" onClick={onImportText} disabled={disabled}><FileUp size={17} /></button>
-      <button className="toolbar-action insert-tool" type="button" aria-label="加入圖片" title="從本機加入圖片" onClick={onChooseImage} disabled={disabled}>
-        <ImagePlus size={17} />
-      </button>
-      <button className="toolbar-action insert-tool" type="button" aria-label="加入影片" title="從本機加入影片" onClick={onChooseVideo} disabled={disabled}>
-        <Video size={17} />
-      </button>
       <div className="insert-menu-wrap">
-        <button
-          className={`toolbar-action insert-tool ${open ? "is-active" : ""}`}
-          type="button"
-          aria-label="加入形狀"
-          title="加入形狀或匯入 SVG"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={onToggle}
-          disabled={disabled}
-        >
-          <Shapes size={17} />
+        <button ref={triggerRef} className={`toolbar-action insert-tool ${open ? "is-active" : ""}`} type="button"
+          aria-label="加入素材與形狀" title="加入素材、形狀或 Grid" aria-haspopup="menu"
+          aria-expanded={open} aria-controls="insert-tools-menu" onClick={onToggle} disabled={disabled}>
+          <Plus size={17} /><ChevronDown size={12} aria-hidden="true" />
         </button>
         {open ? (
-          <div className="insert-menu shape-menu" role="menu" aria-label="選擇形狀">
-            <button type="button" role="menuitem" onClick={onChooseSvg}><FileUp size={17} /><span><strong>匯入 SVG</strong><small>從本機選擇，拖入畫布也可以</small></span></button>
+          <div ref={menuRef} id="insert-tools-menu" className="insert-menu shape-menu" role="menu" aria-label="加入素材、形狀或 Grid" onKeyDown={onMenuKeyDown}>
+            <button type="button" role="menuitem" onClick={() => activate(onImportText)}><FileUp size={17} /><span><strong>匯入文字文件</strong><small>TXT、Markdown、CSV、DOCX</small></span></button>
+            <button type="button" role="menuitem" onClick={() => activate(onChooseImage)}><ImagePlus size={17} /><span><strong>加入圖片</strong></span></button>
+            <button type="button" role="menuitem" onClick={() => activate(onChooseVideo)}><Video size={17} /><span><strong>加入影片</strong></span></button>
+            <button type="button" role="menuitem" onClick={() => activate(onAddGrid)}><LayoutGrid size={17} /><span><strong>建立 Grid</strong></span></button>
+            <button type="button" role="menuitem" onClick={() => activate(onChooseSvg)}><FileUp size={17} /><span><strong>匯入 SVG</strong></span></button>
             <span className="insert-menu-heading">基本形狀</span>
             <div className="insert-shape-grid">
               {shapeActions.map(([kind, label, Icon]) => (
-                <button key={kind} type="button" role="menuitem" aria-label={`加入${label}`} title={`加入${label}`} onClick={() => onAddShape(kind)}>
+                <button key={kind} type="button" role="menuitem" aria-label={`加入${label}`} title={`加入${label}`} onClick={() => activate(() => onAddShape(kind))}>
                   <Icon size={18} /><span>{label}</span>
                 </button>
               ))}
@@ -6491,7 +6504,7 @@ function AppUpdateNotice({
   return (
     <>
     <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
-      <MessageCircle size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
+      <Info size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
     {expanded ? <Modal title="有新版本可更新" onClose={() => setExpanded(false)} busy={busy} className="update-details-dialog"><aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
@@ -14547,6 +14560,8 @@ function App({ initialProtectedShare = null }) {
                   open={shapeMenuOpen}
                   disabled={cloudReadOnly}
                   onToggle={() => setShapeMenuOpen((current) => !current)}
+                  onClose={() => setShapeMenuOpen(false)}
+                  onAddGrid={() => setShowGridBuilder(true)}
                   onAddText={addTextObject}
                   onImportText={() => textDocumentInputRef.current?.click()}
                   onAddShape={addShapeObject}
@@ -14554,7 +14569,6 @@ function App({ initialProtectedShare = null }) {
                   onChooseVideo={() => { setShapeMenuOpen(false); videoInputRef.current?.click(); }}
                   onChooseSvg={() => { setShapeMenuOpen(false); svgInputRef.current?.click(); }}
                 />
-                <IconButton label="建立 Grid" onClick={() => setShowGridBuilder(true)} disabled={cloudReadOnly}><LayoutGrid size={18} /></IconButton>
                 <div className="tool-divider" />
                 <div className="zoom-group">
                   <IconButton label="縮小" onClick={() => { const rect = canvasRef.current.getBoundingClientRect(); zoomAround(rect.left + rect.width / 2, rect.top + rect.height / 2, view.zoom / 1.2); }}><Minus size={17} /></IconButton>

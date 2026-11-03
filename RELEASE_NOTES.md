@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.19](./public/release-notes/v0.56.19.html) — consolidate canvas insert actions in an accessible menu.
+
 - [v0.56.18](./public/release-notes/v0.56.18.html) — improve default canvas text contrast in light mode and refine the brand wordmark.
 
 - [v0.56.17](./public/release-notes/v0.56.17.html) — introduce the ribbon logo and move update messages beside the save control.
