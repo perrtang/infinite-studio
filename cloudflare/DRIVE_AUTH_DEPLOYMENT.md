@@ -1,17 +1,29 @@
-# Drive automatic reconnection: deployment draft
+# Drive automatic reconnection: deployment and acceptance
 
-Status: the corrected gateway backend was deployed on 2026-11-04 as Worker
-version `39c16ef3-a327-46bc-8e13-24128c74d76a`; the frontend flag remains off.
-An authenticated acceptance page successfully authorized Google, read Drive,
-and restored the stored grant in a separate tab after a manual test action.
-An isolated Drive test file was created, updated and read back through the
-grant using the updated no-cache, bounded-retry client with SHA-256 verification
-of original file bytes when Drive provides a checksum. When it does not, version comparison remains
-an eventual-consistency assumption. Automatic frontend restoration remains
-unverified; retain the release gate until it has passed.
-The deployed gateway serves the OAuth completion HTML, CSS and JS itself;
-all three returned HTTP 200, `no-store`, and exact public-source content on
-the production hostname. This repairs the previously observed 404 callback.
+Status as of 2026-11-04: the production Pages workflow builds with
+`VITE_DRIVE_GRANT_BACKEND=enabled` (introduced in v0.56.28), and the public
+update channel reported v0.56.31. The Cloudflare gateway is deployed separately;
+its current deployment ID must be checked before any gateway change.
+
+An authenticated isolated acceptance page successfully authorized Google,
+read Drive and restored the grant. A separate synthetic Drive file was created,
+updated and read back through that grant. In a real frontend acceptance session,
+a user-created test project was saved to Drive, then a second private-browsing
+tab displayed the signed-in account and saved-to-Drive status. These checks do
+not establish uninterrupted authorization after expiry or revocation, nor do
+they by themselves prove a production cross-account edit cycle.
+
+On the production v0.56.31 sharing path, another browser profile opened that
+link-viewable test file without signing in and displayed its one object. Selecting
+“sign in to edit” retained the file ID in the URL and presented the sign-in
+screen. The subsequent authenticated opening and viewer permission-request path
+remain unverified; no sharing permissions were modified for the test.
+
+The Drive readback client uses no-cache bounded retries and checks the original
+file bytes against SHA-256 when Drive provides a checksum. Where a checksum is
+unavailable, matching version metadata remains an eventual-consistency
+assumption. The gateway serves OAuth completion assets; verify their status
+again when changing the deployment.
 
 ## Dependencies and secrets
 
@@ -43,7 +55,7 @@ the production hostname. This repairs the previously observed 404 callback.
   Firebase account lookup and Google token requests. Both now use `manual`
   and reject redirect responses without forwarding identity or credentials.
   Synthetic edge requests and worker tests verified the transport behavior;
-  authenticated Drive acceptance remains a separate release requirement.
+  authenticated acceptance is recorded above; the remaining cases below are separate.
 
 1. Run `npm test`, `npm run test:drive-worker`, both frontend build variants,
    and a Wrangler dry-run. Keep tests and real credentials separate.
