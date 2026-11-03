@@ -5,9 +5,9 @@ import {
   TEXT_LAST_ALIGNMENTS,
   TEXT_VERTICAL_ALIGNMENTS,
   objectWorldCorners,
-  shapeClipPath,
   shapePolygonPoints,
 } from "./model.js";
+import { objectStroke, strokeDashArray } from "./object-stroke.js";
 
 function isVideoObject(object) {
   return object?.type === "video" || object?.mime?.startsWith("video/");
@@ -50,31 +50,32 @@ function escapeXmlAttribute(value) {
     .replaceAll(">", "&gt;");
 }
 
-function shapeSvgPoints(object) {
-  const points = shapePolygonPoints(object);
-  if (!points) return "";
-  return points.map(([x, y]) => `${Number((x * 100).toFixed(3))},${Number((y * 100).toFixed(3))}`).join(" ");
-}
-
 function shapeSvgMarkup(object, x, y, width, height) {
   const fill = escapeXmlAttribute(object.fill || "#58e6ff");
-  const points = shapeSvgPoints(object);
+  const points = shapePolygonPoints(object)?.map(([px, py]) => `${px * width},${py * height}`).join(" ");
+  const stroke = objectStroke(object);
+  const strokeAttributes = stroke.enabled ? ` stroke="${escapeXmlAttribute(stroke.color)}" stroke-width="${stroke.width}"${strokeDashArray(stroke).length ? ` stroke-dasharray="${strokeDashArray(stroke).join(" ")}"` : ""}` : "";
   const content = points
-    ? `<polygon points="${points}" fill="${fill}"/>`
-    : `<rect x="1" y="1" width="98" height="98" rx="2" fill="${fill}"/>`;
-  return `<g transform="translate(${x} ${y}) scale(${width / 100} ${height / 100})">${content}</g>`;
+    ? `<polygon points="${points}" fill="${fill}"${strokeAttributes}/>`
+    : `<rect x="${width * 0.01}" y="${height * 0.01}" width="${width * 0.98}" height="${height * 0.98}" rx="${width * 0.02}" ry="${height * 0.02}" fill="${fill}"${strokeAttributes}/>`;
+  return `<svg x="${x}" y="${y}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" overflow="hidden">${content}</svg>`;
+}
+
+function frameOutlineCss(object) {
+  const stroke = objectStroke(object);
+  return stroke.enabled ? `outline:${stroke.width}px ${stroke.style} ${escapeXmlAttribute(stroke.color)};outline-offset:-${stroke.width}px;` : "";
 }
 
 function objectHtmlVisualMarkup(object, sourceOverride = "") {
   if (isArtboardObject(object)) {
-    return `<div style="box-sizing:border-box;width:100%;height:100%;background:${escapeXmlAttribute(object.fill || "#fffdf7")};"></div>`;
+    return `<div style="box-sizing:border-box;width:100%;height:100%;background:${escapeXmlAttribute(object.fill || "#fffdf7")};${frameOutlineCss(object)}"></div>`;
   }
   if (isTextObject(object)) {
     const layout = textLayoutStyle(object);
-    return `<div style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};">${escapeXmlAttribute(objectDisplayText(object))}</div>`;
+    return `<div style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};${frameOutlineCss(object)}">${escapeXmlAttribute(objectDisplayText(object))}</div>`;
   }
   if (isShapeObject(object)) {
-    return `<div style="width:100%;height:100%;background:${escapeXmlAttribute(object.fill || "#58e6ff")};clip-path:${shapeClipPath(object)};"></div>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 ${object.width} ${object.height}" preserveAspectRatio="none">${shapeSvgMarkup(object, 0, 0, object.width, object.height)}</svg>`;
   }
   return `<img src="${escapeXmlAttribute(sourceOverride || object.src)}" alt="" style="display:block;width:100%;height:100%;object-fit:fill;"/>`;
 }
@@ -109,11 +110,13 @@ function objectToSvgBlob(object) {
   let content;
   if (isTextObject(object)) {
     const layout = textLayoutStyle(object);
-    content = `<foreignObject x="${x}" y="${y}" width="${width}" height="${height}"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};">${escapeXmlAttribute(objectDisplayText(object))}</div></foreignObject>`;
+    content = `<foreignObject x="${x}" y="${y}" width="${width}" height="${height}"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};${frameOutlineCss(object)}">${escapeXmlAttribute(objectDisplayText(object))}</div></foreignObject>`;
   } else if (isShapeObject(object)) {
     content = shapeSvgMarkup(object, x, y, width, height);
   } else if (isArtboardObject(object)) {
-    content = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${escapeXmlAttribute(object.fill || "#fffdf7")}"/>`;
+    const stroke = objectStroke(object);
+    const frame = stroke.enabled ? `<rect x="${x + stroke.width / 2}" y="${y + stroke.width / 2}" width="${Math.max(0, width - stroke.width)}" height="${Math.max(0, height - stroke.width)}" fill="none" stroke="${escapeXmlAttribute(stroke.color)}" stroke-width="${stroke.width}" stroke-dasharray="${strokeDashArray(stroke).join(" ")}"/>` : "";
+    content = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${escapeXmlAttribute(object.fill || "#fffdf7")}"/>${frame}`;
   } else {
     content = `<image href="${escapeXmlAttribute(object.src)}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="none"/>`;
   }

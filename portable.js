@@ -1,5 +1,6 @@
 import { normalizeInterfaceLocale, translateInterfaceText } from "./i18n.js";
-import { shapeClipPath } from "./model.js";
+import { shapeClipPath, shapePolygonPoints } from "./model.js";
+import { objectStroke } from "./object-stroke.js";
 
 const VIEWER_MARKERS = {
   heart: "♥",
@@ -79,6 +80,8 @@ export function createPortableHtml(board, options = {}) {
         starPoints: object.starPoints,
         starInnerRatio: object.starInnerRatio,
         shapeClipPath: shapeClipPath(object),
+        shapePoints: shapePolygonPoints(object),
+        stroke: objectStroke(object),
         fill: object.fill,
         paperPreset: object.paperPreset,
         markers: Array.isArray(object.markers)
@@ -131,7 +134,7 @@ export function createPortableHtml(board, options = {}) {
     .frame > img, .frame > video, .frame > .shape { display: block; height: 100%; object-fit: fill; width: 100%; }
     .frame > img { pointer-events: none; }
     .text { display: flex; flex-direction: column; height: 100%; line-height: 1.2; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; width: 100%; }
-    .shape { background: var(--shape-fill, #58e6ff); }
+    .shape { overflow: hidden; }
     .artboard { background: var(--paper-fill, #fffdf7); box-shadow: 0 18px 54px rgba(0, 0, 0, 0.24); height: 100%; width: 100%; }
     .markers { align-items: center; background: rgba(7, 11, 16, 0.88); border: 1px solid rgba(113, 177, 200, 0.24); border-radius: 5px; display: flex; gap: 4px; left: 6px; line-height: 1; padding: 4px 5px; pointer-events: none; position: absolute; top: 6px; }
     .marker { font-family: Arial, sans-serif; font-size: 15px; }
@@ -243,12 +246,19 @@ export function createPortableHtml(board, options = {}) {
           frame.style.height = height + "px";
           frame.style.transform = "perspective(" + clamp(finite(object.perspective, 1000), 400, 3000) + "px) translateZ(" + clamp(finite(object.depth, 0), -240, 240) + "px) rotateX(" + clamp(finite(object.tiltX, 0), -60, 60) + "deg) rotateY(" + clamp(finite(object.tiltY, 0), -60, 60) + "deg)";
           const isVideo = object.type === "video" || String(object.mime || "").startsWith("video/");
+          const stroke = object.stroke || { enabled: false };
+          const applyFrameStroke = (element) => {
+            if (!stroke.enabled) return;
+            element.style.outline = stroke.width + "px " + stroke.style + " " + stroke.color;
+            element.style.outlineOffset = -stroke.width + "px";
+          };
           if (object.type === "artboard") {
             const artboard = document.createElement("div");
             artboard.className = "artboard";
             artboard.setAttribute("role", "img");
             artboard.setAttribute("aria-label", object.name || "Artboard");
             artboard.style.setProperty("--paper-fill", object.fill || "#fffdf7");
+            applyFrameStroke(artboard);
             frame.appendChild(artboard);
           } else if (object.type === "text") {
             const text = document.createElement("div");
@@ -263,14 +273,22 @@ export function createPortableHtml(board, options = {}) {
             text.style.textAlign = ["left", "center", "right", "justify"].includes(object.textAlign) ? object.textAlign : "left";
             text.style.textAlignLast = object.textAlign === "justify" && ["left", "center", "right"].includes(object.textAlignLast) ? object.textAlignLast : "auto";
             text.style.justifyContent = { top: "flex-start", middle: "safe center", bottom: "safe flex-end" }[object.textVerticalAlign] || "flex-start";
+            applyFrameStroke(text);
             frame.appendChild(text);
           } else if (object.type === "shape") {
-            const shape = document.createElement("div");
-            shape.className = "shape";
+            const svgNs = "http" + "://www.w3.org/2000/svg";
+            const shape = document.createElementNS(svgNs, "svg");
+            shape.setAttribute("class", "shape");
+            shape.setAttribute("viewBox", "0 0 " + width + " " + height);
+            shape.setAttribute("preserveAspectRatio", "none");
             shape.setAttribute("role", "img");
             shape.setAttribute("aria-label", object.name || copy.shapeObject);
-            shape.style.setProperty("--shape-fill", object.fill || "#58e6ff");
-            shape.style.clipPath = object.shapeClipPath || "none";
+            const geometry = document.createElementNS(svgNs, Array.isArray(object.shapePoints) ? "polygon" : "rect");
+            if (Array.isArray(object.shapePoints)) geometry.setAttribute("points", object.shapePoints.map(point => (point[0] * width) + "," + (point[1] * height)).join(" "));
+            else { geometry.setAttribute("x", width * 0.01); geometry.setAttribute("y", height * 0.01); geometry.setAttribute("width", width * 0.98); geometry.setAttribute("height", height * 0.98); geometry.setAttribute("rx", width * 0.02); geometry.setAttribute("ry", height * 0.02); }
+            geometry.setAttribute("fill", object.fill || "#58e6ff");
+            if (stroke.enabled) { geometry.setAttribute("stroke", stroke.color); geometry.setAttribute("stroke-width", stroke.width); if (stroke.style === "dashed") geometry.setAttribute("stroke-dasharray", (stroke.width * 4) + " " + (stroke.width * 2)); if (stroke.style === "dotted") geometry.setAttribute("stroke-dasharray", stroke.width + " " + (stroke.width * 2)); }
+            shape.appendChild(geometry);
             frame.appendChild(shape);
           } else {
             const media = document.createElement(isVideo ? "video" : "img");

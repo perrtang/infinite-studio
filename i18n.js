@@ -65,6 +65,16 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "外框線": "Border",
+  "外框樣式": "Border style",
+  "無外框": "No border",
+  "實線": "Solid",
+  "虛線": "Dashed",
+  "點線": "Dotted",
+  "外框色彩": "Border color",
+  "文字框外框粗細": "Text frame border width",
+  "外框粗細": "Border width",
+  "外框沿文字物件的範圍顯示。": "The border follows the text frame.",
   "有新版本可更新": "Update available",
   "帳號與設定": "Account & settings",
   "管理帳號、儲存與介面偏好。": "Manage your account, storage, and interface preferences.",

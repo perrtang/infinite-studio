@@ -3,6 +3,7 @@ import { driveHeaderIndicator } from "./drive-header-indicator.js";
 import { connectCanvasAgent } from "./mcp-live-client.js";
 import { assertUpdateSnapshotUnchanged, savePrimaryBeforeUpdate } from "./update-safety.js";
 import { parseObjectClipboard, serializeObjectClipboard } from "./object-clipboard.js";
+import { objectStroke, strokeDashArray, strokeOutlineStyle } from "./object-stroke.js";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { workspaceReadIsCurrent, remoteContentChanged } from "./workspace-read-guard.js";
@@ -1115,12 +1116,6 @@ function createShapeObject(kind, point) {
   };
 }
 
-function shapeSvgPoints(object) {
-  const points = shapePolygonPoints(object);
-  if (!points) return "";
-  return points.map(([x, y]) => `${Number((x * 100).toFixed(3))},${Number((y * 100).toFixed(3))}`).join(" ");
-}
-
 function waitForVideoFrame(video, timeout = 7000) {
   if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth && video.videoHeight) {
     return Promise.resolve(video);
@@ -1280,6 +1275,27 @@ function drawShapeObjectSource(context, object, width, height) {
     context.rect(width * 0.01, height * 0.01, width * 0.98, height * 0.98);
   }
   context.fill();
+  const stroke = objectStroke(object);
+  if (stroke.enabled) {
+    context.save();
+    context.strokeStyle = stroke.color;
+    context.lineWidth = stroke.width;
+    context.setLineDash(strokeDashArray(stroke));
+    context.stroke();
+    context.restore();
+  }
+}
+
+function drawObjectFrame(context, object, width, height) {
+  const stroke = objectStroke(object);
+  if (!stroke.enabled) return;
+  const inset = stroke.width / 2;
+  context.save();
+  context.strokeStyle = stroke.color;
+  context.lineWidth = stroke.width;
+  context.setLineDash(strokeDashArray(stroke));
+  context.strokeRect(inset, inset, Math.max(0, width - stroke.width), Math.max(0, height - stroke.width));
+  context.restore();
 }
 
 async function createObjectSourceCanvas(object, sourceOverride, renderScale) {
@@ -1297,8 +1313,10 @@ async function createObjectSourceCanvas(object, sourceOverride, renderScale) {
   if (isArtboardObject(object)) {
     context.fillStyle = object.fill || "#fffdf7";
     context.fillRect(0, 0, width, height);
+    drawObjectFrame(context, object, width, height);
   } else if (isTextObject(object)) {
     drawTextObjectSource(context, object, width, height);
+    drawObjectFrame(context, object, width, height);
   } else if (isShapeObject(object)) {
     drawShapeObjectSource(context, object, width, height);
   } else {
@@ -2317,7 +2335,7 @@ function MediaElement({ object, className = "", controls = false, decorative = f
         role={decorative ? undefined : "img"}
         aria-label={decorative ? undefined : `${object.name}，紙張`}
         aria-hidden={decorative || undefined}
-        style={{ backgroundColor: object.fill || "#fffdf7", ...style }}
+        style={{ backgroundColor: object.fill || "#fffdf7", ...strokeOutlineStyle(object), ...style }}
       >
         <span data-l10n-ignore>{object.name}</span>
       </div>
@@ -2337,6 +2355,7 @@ function MediaElement({ object, className = "", controls = false, decorative = f
           fontFamily: object.fontFamily,
           fontSize: object.fontSize,
           fontWeight: object.fontWeight,
+          ...strokeOutlineStyle(object),
           ...textLayoutStyle(object),
           ...style,
         }}
@@ -2346,18 +2365,21 @@ function MediaElement({ object, className = "", controls = false, decorative = f
     );
   }
   if (isShapeObject(object)) {
-    const points = shapeSvgPoints(object);
+    const width = Math.max(1, Number(object.width) || 1), height = Math.max(1, Number(object.height) || 1);
+    const points = shapePolygonPoints(object)?.map(([x, y]) => `${x * width},${y * height}`).join(" ");
+    const stroke = objectStroke(object);
+    const border = stroke.enabled ? { stroke: stroke.color, strokeWidth: stroke.width, strokeDasharray: strokeDashArray(stroke).join(" ") || undefined } : {};
     return (
       <svg
         className={`object-shape-visual ${className}`}
-        viewBox="0 0 100 100"
+        viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
         role={decorative ? undefined : "img"}
         aria-label={decorative ? undefined : `${object.name}，${SHAPE_LABELS[object.shapeKind] || "形狀"}`}
         aria-hidden={decorative || undefined}
-        style={style}
+        style={{ overflow: "hidden", ...style }}
       >
-        {points ? <polygon points={points} fill={object.fill} /> : <rect x="1" y="1" width="98" height="98" rx="2" fill={object.fill} />}
+        {points ? <polygon points={points} fill={object.fill} {...border} /> : <rect x={width * 0.01} y={height * 0.01} width={width * 0.98} height={height * 0.98} rx={width * 0.02} ry={height * 0.02} fill={object.fill} {...border} />}
       </svg>
     );
   }
@@ -3375,15 +3397,16 @@ function CaptureThumbnail({ capture, board }) {
                     whiteSpace: "pre-wrap",
                     width: "100%",
                     ...textLayoutStyle(object),
+                    ...strokeOutlineStyle({ ...object, strokeWidth: objectStroke(object).width * capture.view.zoom }),
                   }}
                 >
                   {objectDisplayText(object)}
                 </div>
               </foreignObject>
-            ) : isShapeObject(object) ? (
-              <g transform={`translate(${-anchor.x * scaledWidth} ${-anchor.y * scaledHeight}) scale(${scaledWidth / 100} ${scaledHeight / 100})`}>
-                {shapeSvgPoints(object) ? <polygon points={shapeSvgPoints(object)} fill={object.fill} /> : <rect x="1" y="1" width="98" height="98" rx="2" fill={object.fill} />}
-              </g>
+            ) : isShapeObject(object) || isArtboardObject(object) ? (
+              <foreignObject x={-anchor.x * scaledWidth} y={-anchor.y * scaledHeight} width={scaledWidth} height={scaledHeight}>
+                <MediaElement object={{ ...object, width: scaledWidth, height: scaledHeight, strokeWidth: objectStroke(object).width * capture.view.zoom }} decorative style={{ width: "100%", height: "100%" }} />
+              </foreignObject>
             ) : (
               <image href={object.src} x={-anchor.x * scaledWidth} y={-anchor.y * scaledHeight} width={scaledWidth} height={scaledHeight} preserveAspectRatio="none" />
             )}
@@ -4279,6 +4302,23 @@ function Inspector({
                   <Maximize2 size={15} /> 依目前紙上物件重新符合
                 </button>
                 <p className="section-helper">此數值只在建立或手動重新符合紙張時計算；不會顯示導引線，也不會限制、裁切或連動其它物件。只有建立群組後才會共同變形。</p>
+              </section>
+            ) : null}
+
+            {(isTextObject(object) || isShapeObject(object) || isArtboardObject(object)) ? (
+              <section className="inspector-section object-stroke-properties">
+                <h3>外框線</h3>
+                <label><span>外框樣式</span><select value={objectStroke(object).style} onChange={(event) => onUpdateObject(object.id, { strokeStyle: event.target.value })}>
+                  <option value="none">無外框</option>
+                  <option value="solid">實線</option>
+                  <option value="dashed">虛線</option>
+                  <option value="dotted">點線</option>
+                </select></label>
+                {objectStroke(object).enabled ? <>
+                  <label><span>外框粗細</span><div className="input-with-suffix"><input key={`${object.id}:${objectStroke(object).width}`} type="number" min="0.1" max="100" step="0.1" defaultValue={objectStroke(object).width} onBlur={(event) => { const value = Number(event.target.value); if (Number.isFinite(value) && value >= 0.1 && value <= 100) onUpdateObject(object.id, { strokeWidth: value }); else event.target.value = String(objectStroke(object).width); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} /><b>px</b></div></label>
+                  <ObjectColorSetControl label="外框色彩" value={objectStroke(object).color} colorSetsState={objectColorSets} onChange={(strokeColor) => onUpdateObject(object.id, { strokeColor })} onSelectSet={onSelectObjectColorSet} onAdd={onAddObjectColor} onCreateSet={onCreateObjectColorSet} onRenameSet={onRenameObjectColorSet} onRemoveColor={onRemoveObjectColor} onDeleteSet={onDeleteObjectColorSet} onLoad={onLoadObjectColorSets} onExport={onExportObjectColorSets} />
+                  {isTextObject(object) ? <p className="section-helper">外框沿文字物件的範圍顯示。</p> : null}
+                </> : null}
               </section>
             ) : null}
 

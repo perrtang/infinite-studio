@@ -51,6 +51,7 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /
+          VITE_DRIVE_GRANT_BACKEND: enabled
           VITE_GOOGLE_DRIVE_PICKER_API_KEY: ${{ secrets.GOOGLE_DRIVE_PICKER_API_KEY }}
           VITE_GOOGLE_DRIVE_PROJECT_NUMBER: ${{ vars.GOOGLE_DRIVE_PROJECT_NUMBER }}
       - name: Configure Pages

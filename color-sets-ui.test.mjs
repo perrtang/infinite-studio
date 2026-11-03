@@ -8,10 +8,11 @@ const [main, styles] = await Promise.all([
 ]);
 
 test("text, shape, and paper colors use the same global Color Set control", () => {
-  assert.equal((main.match(/<ObjectColorSetControl/g) || []).length, 3);
+  assert.equal((main.match(/<ObjectColorSetControl/g) || []).length, 4);
   assert.match(main, /label="文字色彩"[\s\S]*?colorSetsState=\{objectColorSets\}/);
   assert.match(main, /label="填滿色彩"[\s\S]*?colorSetsState=\{objectColorSets\}/);
   assert.match(main, /label="紙張色彩"[\s\S]*?colorSetsState=\{objectColorSets\}/);
+  assert.match(main, /label="外框色彩"[\s\S]*?colorSetsState=\{objectColorSets\}/);
   assert.doesNotMatch(main, /<span>紙張色彩<\/span>\s*<span className="color-input-row">/);
 });
 

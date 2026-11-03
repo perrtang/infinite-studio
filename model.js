@@ -1,4 +1,6 @@
-export const BOARD_SCHEMA_VERSION = 15;
+import { STROKE_STYLES } from "./object-stroke.js";
+
+export const BOARD_SCHEMA_VERSION = 16;
 
 export const ANCHORS = {
   tl: { x: 0, y: 0, label: "左上" },
@@ -261,6 +263,9 @@ function normalizeObject(object, index) {
     fill: typeof object?.fill === "string" && object.fill
       ? object.fill
       : inferredType === "artboard" ? "#fffdf7" : "#58e6ff",
+    strokeStyle: STROKE_STYLES.includes(object?.strokeStyle) ? object.strokeStyle : "none",
+    strokeWidth: clampNumber(object?.strokeWidth, 2, 0.1, 100),
+    strokeColor: typeof object?.strokeColor === "string" && /^#[0-9a-f]{6}$/i.test(object.strokeColor) ? object.strokeColor : "#000000",
     paperPreset: Object.hasOwn(PAPER_PRESETS, object?.paperPreset) ? object.paperPreset : inferredType === "artboard" ? "fit" : null,
     paperOrientation: object?.paperOrientation === "landscape" ? "landscape" : "portrait",
     paperPadding: clampNumber(object?.paperPadding, 40, 0, 400),

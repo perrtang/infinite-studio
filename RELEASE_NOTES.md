@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.28](./public/release-notes/v0.56.28.html) — add object borders and improve Google Drive authorization and readback.
+
 - [v0.56.27](./public/release-notes/v0.56.27.html) — preserve the remember-login preference when retrying Drive connection.
 
 - [v0.56.26](./public/release-notes/v0.56.26.html) — preserve shared-file context during email sign-in.
