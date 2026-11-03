@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.32](./public/release-notes/v0.56.32.html) — avoid overlapping login and Drive sharing dialogs.
+
 - [v0.56.31](./public/release-notes/v0.56.31.html) — align release packages and self-hosting guidance with Infinite Studio.
 
 - [v0.56.30](./public/release-notes/v0.56.30.html) — repair packaged MCP startup and verify its module graph.

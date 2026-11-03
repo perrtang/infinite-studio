@@ -11515,11 +11515,11 @@ function App({ initialProtectedShare = null }) {
   useEffect(() => {
     const incoming = initialDriveShareRef.current;
     if (!hydrated || !incoming?.fileId || sharingCurrentBoardRef.current) return;
-    setShowCollaboration(true);
     if (!authReady) {
       if (authSession.status !== "loading") requestAdvancedFeature("shared-moodboard");
       return;
     }
+    setShowCollaboration(true);
     if (!currentDriveAccessToken()) {
       setDriveSharing({
         ...EMPTY_DRIVE_SHARING,
@@ -15308,7 +15308,7 @@ function App({ initialProtectedShare = null }) {
           </div>
         </div>
       </Modal> : null}
-      {showCollaboration ? (
+      {showCollaboration && !pendingAdvancedFeature ? (
         <DriveSharingModal
           boardName={board.name}
           sharing={driveSharing}

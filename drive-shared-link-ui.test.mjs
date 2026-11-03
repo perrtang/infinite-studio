@@ -59,3 +59,12 @@ test("explicit sharing uses the open board without discarding an unopened incomi
   assert.match(source, /!sharingCurrentBoardRef\.current && initialDriveShareRef\.current\?\.fileId/);
   assert.match(source, /if \(sharingCurrentBoardRef\.current\) return refreshDriveSharing\(\)/);
 });
+
+
+test("shared-link authorization shows the login gate before the Drive sharing dialog", () => {
+  const effect = source.match(/useEffect\(\(\) => \{\n    const incoming = initialDriveShareRef\.current;[\s\S]*?\n  \}, \[authReady,[^;]+;/)?.[0] || "";
+  assert.ok(effect);
+  assert.ok(effect.indexOf('if (!authReady)') < effect.indexOf('setShowCollaboration(true)'));
+  assert.match(effect, /requestAdvancedFeature\("shared-moodboard"\)/);
+  assert.match(source, /showCollaboration && !pendingAdvancedFeature \? \(/);
+});

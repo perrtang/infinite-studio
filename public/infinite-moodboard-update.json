@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.31",
+  "version": "0.56.32",
   "releasedAt": "2026-11-04",
-  "summary": "統一下載版名稱與正式網站資訊。",
-  "notesUrl": "release-notes/v0.56.31.html",
+  "summary": "修正開啟分享檔案時對話框重疊。",
+  "notesUrl": "release-notes/v0.56.32.html",
   "url": "https://infinite.petfashion.tw/"
 }
