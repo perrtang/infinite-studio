@@ -1,5 +1,6 @@
 // Serve the public static app under a second hostname while the original site
 // remains available for existing links and browser-local recovery data.
+import { DRIVE_CALLBACK_ASSETS } from './drive-callback-assets.js';
 const UPSTREAM = 'https://moodboard.petfashion.tw';
 const ALLOWED_METHODS = new Set(['GET', 'HEAD']);
 const FORWARDED_HEADERS = ['accept', 'if-none-match', 'if-modified-since', 'range', 'if-range'];
@@ -9,6 +10,13 @@ export async function handleRequest(request, fetchUpstream = fetch) {
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
   const incoming = new URL(request.url);
+  if (Object.hasOwn(DRIVE_CALLBACK_ASSETS, incoming.pathname)) {
+    const extension = incoming.pathname.split('.').pop();
+    const contentType = { html: 'text/html', css: 'text/css', js: 'text/javascript' }[extension];
+    return new Response(request.method === 'HEAD' ? null : DRIVE_CALLBACK_ASSETS[incoming.pathname], {
+      headers: { 'content-type': `${contentType}; charset=utf-8`, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff' },
+    });
+  }
   const upstream = new URL(UPSTREAM);
   upstream.pathname = incoming.pathname;
   if (upstream.pathname === "/infinite-moodboard-update.json") {

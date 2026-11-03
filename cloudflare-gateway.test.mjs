@@ -1,6 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import worker, { handleRequest } from './cloudflare/infinite-studio-gateway.js';
+
+test('OAuth callback assets are served without proxying and match the public source', async () => {
+  for (const ext of ['html', 'css', 'js']) {
+    const path = `/drive-auth-complete.${ext}`;
+    const expected = await readFile(new URL(`./public${path}`, import.meta.url), 'utf8');
+    const response = await handleRequest(new Request(`https://infinite.petfashion.tw${path}?result=success`), () => { throw new Error('must not proxy'); });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), expected);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+    assert.equal((await handleRequest(new Request(`https://infinite.petfashion.tw${path}`, { method: 'HEAD' }))).status, 200);
+  }
+});
 
 test('gateway serves only the fixed static origin and does not forward shared-file tokens or cookies', async () => {
   let received;
