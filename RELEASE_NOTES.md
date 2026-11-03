@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.24](./public/release-notes/v0.56.24.html) — pause notifications on interaction and select the current Drive file for sharing.
+
 - [v0.56.23](./public/release-notes/v0.56.23.html) — use non-modal account and main menus.
 
 - [v0.56.22](./public/release-notes/v0.56.22.html) — add a direct image action beside the insert menu.

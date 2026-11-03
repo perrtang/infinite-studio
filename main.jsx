@@ -6521,6 +6521,28 @@ function StudioBrandMark() {
   return <span className="brand-mark" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}brand/infinite-ribbon.png`} alt="" /></span>;
 }
 
+// A fresh interval begins after the pointer and keyboard focus both leave.
+function useToastPause(active, duration, dismiss) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const dismissRef = useRef(dismiss);
+  dismissRef.current = dismiss;
+  useEffect(() => {
+    if (!active) { setHovered(false); setFocused(false); }
+  }, [active]);
+  useEffect(() => {
+    if (!active || hovered || focused) return undefined;
+    const timer = window.setTimeout(() => dismissRef.current(), duration);
+    return () => window.clearTimeout(timer);
+  }, [active, duration, hovered, focused]);
+  return {
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+    onFocus: () => setFocused(true),
+    onBlur: (event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); },
+  };
+}
+
 function AppUpdateNotice({
   updateCheck,
   updateAction,
@@ -6534,8 +6556,7 @@ function AppUpdateNotice({
   useEffect(() => {
     if (updateCheck.status !== "available" || !updateCheck.manifest?.version) return undefined;
     setToastVisible(true);
-    const timer = window.setTimeout(() => setToastVisible(false), 5000);
-    return () => window.clearTimeout(timer);
+    return undefined;
   }, [updateCheck.status, updateCheck.manifest?.version]);
   useEffect(() => {
     if (!expanded) return undefined;
@@ -6545,6 +6566,7 @@ function AppUpdateNotice({
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [expanded, updateAction.status]);
+  const toastPause = useToastPause(toastVisible && !expanded, 5000, () => setToastVisible(false));
   if (updateCheck.status !== "available" || !updateCheck.manifest) return null;
   const busy = updateAction.status === "saving" || updateAction.status === "reloading";
   const version = updateCheck.manifest.version;
@@ -6554,7 +6576,7 @@ function AppUpdateNotice({
     <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => { setToastVisible(false); setExpanded((value) => !value); }}>
       <Info size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
-    {toastVisible && !expanded ? <div className="app-update-toast" role="status">
+    {toastVisible && !expanded ? <div className="app-update-toast" role="status" {...toastPause}>
       <Info size={17} aria-hidden="true" />
       <span>有新版本可更新</span>
       <button type="button" className="app-update-toast-details" onClick={() => { setToastVisible(false); setExpanded(true); }}>查看</button>
@@ -7671,6 +7693,7 @@ function App({ initialProtectedShare = null }) {
   const peersRef = useRef(new Map());
   const sessionIdRef = useRef(createId("session"));
   const initialDriveShareRef = useRef(initialProtectedShare || parseGoogleDriveMoodboardLink(window.location.href));
+  const sharingCurrentBoardRef = useRef(false);
   const directShareAttemptRef = useRef(null);
   const pendingSharedEditRef = useRef(new URL(window.location.href).searchParams.get("requestEdit") === "1");
   const legacyCollaborationLinkRef = useRef(new URL(window.location.href).searchParams.has("collab"));
@@ -7681,7 +7704,7 @@ function App({ initialProtectedShare = null }) {
   const localFilePromptDismissedRef = useRef(new Set());
   const localPersistenceGenerationRef = useRef(0);
   const driveSyncTimerRef = useRef(null);
-  const toastTimerRef = useRef(null);
+
   const startupUserInteractedRef = useRef(false);
   const autoUpdateDeferredVersionRef = useRef("");
   const updateApplyPromiseRef = useRef(null);
@@ -8200,10 +8223,10 @@ function App({ initialProtectedShare = null }) {
   }, []);
 
   const announce = useCallback((message, tone = "info") => {
-    window.clearTimeout(toastTimerRef.current);
     setToast({ message, tone });
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 3600);
   }, []);
+
+  const toastPause = useToastPause(toast, 3600, () => setToast(null));
 
   const resetPanelWidths = useCallback(() => {
     const left = normalizeLeftPanelWidth(LEFT_PANEL_MIN_WIDTH, 304);
@@ -8725,6 +8748,7 @@ function App({ initialProtectedShare = null }) {
 
   const completeAdvancedFeature = useCallback((feature) => {
     if (feature === "collaboration" || feature === "shared-moodboard") {
+      if (feature === "collaboration") { sharingCurrentBoardRef.current = true; setDriveSharing(EMPTY_DRIVE_SHARING); }
       setShowLocalFileLocation(false);
       setShowStorageLocation(false);
       setShowCollaboration(true);
@@ -11095,8 +11119,9 @@ function App({ initialProtectedShare = null }) {
     const currentState = loadDriveState(localStorage);
     const linked = currentState.links[boardRef.current.id] || null;
     const incoming = initialDriveShareRef.current;
-    const fileId = String(target?.fileId || target?.id || incoming?.fileId || linked?.fileId || "");
-    const resourceKey = String(target?.resourceKey || incoming?.resourceKey || linked?.resourceKey || "");
+    const selected = target?.fileId || target?.id ? target : (sharingCurrentBoardRef.current ? linked : incoming || linked);
+    const fileId = String(selected?.fileId || selected?.id || "");
+    const resourceKey = String(selected?.resourceKey || "");
     if (!fileId) {
       setDriveSharing({
         ...EMPTY_DRIVE_SHARING,
@@ -11204,6 +11229,7 @@ function App({ initialProtectedShare = null }) {
     setDriveSharing((current) => ({ ...current, status: "authorizing", message: "正在連結你的 Google Drive…" }));
     const connection = await connectGoogleDrive();
     if (!connection) return false;
+    if (sharingCurrentBoardRef.current) return refreshDriveSharing();
     const incoming = initialDriveShareRef.current;
     if (incoming?.fileId) {
       const currentLink = loadDriveState(localStorage).links[boardRef.current.id];
@@ -11395,7 +11421,7 @@ function App({ initialProtectedShare = null }) {
 
   useEffect(() => {
     const incoming = initialDriveShareRef.current;
-    if (!hydrated || !incoming?.fileId) return;
+    if (!hydrated || !incoming?.fileId || sharingCurrentBoardRef.current) return;
     setShowCollaboration(true);
     if (!authReady) {
       if (authSession.status !== "loading") requestAdvancedFeature("shared-moodboard");
@@ -11444,7 +11470,7 @@ function App({ initialProtectedShare = null }) {
   }, [cancelDriveRead]);
 
   useEffect(() => {
-    if (!showCollaboration || initialDriveShareRef.current?.fileId || legacyCollaborationLinkRef.current) return;
+    if (!showCollaboration || (!sharingCurrentBoardRef.current && initialDriveShareRef.current?.fileId) || legacyCollaborationLinkRef.current) return;
     if (!authReady) {
       requestAdvancedFeature("collaboration");
       return;
@@ -14931,7 +14957,7 @@ function App({ initialProtectedShare = null }) {
       </div>
 
       {mobilePanel ? <button className="mobile-scrim" type="button" aria-label="關閉面板" onClick={() => setMobilePanel(null)} /> : null}
-      {toast ? <div className={`toast toast-${toast.tone}`} role="status">{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span></div> : null}
+      {toast ? <div className={`toast toast-${toast.tone}`} role="status" tabIndex={0} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span></div> : null}
 
       {escapeCancellationRequest ? (
         <EscapeCancellationModal
@@ -15196,7 +15222,7 @@ function App({ initialProtectedShare = null }) {
           onConnectDrive={connectDriveForSharing}
           onAuthorizeIncomingDriveFile={authorizeIncomingDriveFile}
           onSaveToDrive={saveCurrentBoardForSharing}
-          onRefresh={() => { if (initialDriveShareRef.current?.fileId && !["ready", "linked"].includes(driveSharing.status)) { directShareAttemptRef.current = null; void openIncomingDirectly(); } else void refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }); }}
+          onRefresh={() => { if (!sharingCurrentBoardRef.current && initialDriveShareRef.current?.fileId && !["ready", "linked"].includes(driveSharing.status)) { directShareAttemptRef.current = null; void openIncomingDirectly(); } else void refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }); }}
           onCopyLink={copyDriveSharingLink}
           onSetGeneralAccess={setDriveSharingGeneralAccess}
           onInviteMember={inviteDriveSharingMember}

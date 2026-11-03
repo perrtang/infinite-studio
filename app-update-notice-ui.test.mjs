@@ -21,7 +21,9 @@ test("an available update starts as an accessible, collapsed header action", () 
 });
 
 test("update toast is temporary and can be dismissed without hiding the update entry", () => {
-  assert.match(main, /setTimeout\(\(\) => setToastVisible\(false\), 5000\)/);
+  assert.match(main, /useToastPause\(toastVisible && !expanded, 5000/);
+  assert.match(main, /onMouseEnter:[\s\S]*onMouseLeave:[\s\S]*onFocus:[\s\S]*onBlur:/);
+  assert.match(main, /useToastPause\(toast, 3600/);
   assert.match(main, /aria-label="關閉更新提示" onClick=\{\(\) => setToastVisible\(false\)\}/);
   assert.match(main, /app-update-toast-details[\s\S]*?setExpanded\(true\)/);
 });

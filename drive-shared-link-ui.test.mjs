@@ -50,3 +50,12 @@ test("the public viewer observes an existing session before labeling its editor 
   assert.match(viewer, /observeMoodboardSession/);
   assert.match(viewer, /viewerSignedIn\s*\?\s*"開啟編輯"/);
 });
+
+
+test("explicit sharing uses the open board without discarding an unopened incoming link", () => {
+  assert.match(source, /sharingCurrentBoardRef = useRef\(false\)/);
+  assert.match(source, /feature === "collaboration"\) \{ sharingCurrentBoardRef\.current = true/);
+  assert.match(source, /sharingCurrentBoardRef\.current \? linked : incoming \|\| linked/);
+  assert.match(source, /!sharingCurrentBoardRef\.current && initialDriveShareRef\.current\?\.fileId/);
+  assert.match(source, /if \(sharingCurrentBoardRef\.current\) return refreshDriveSharing\(\)/);
+});

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.23",
+  "version": "0.56.24",
   "releasedAt": "2026-11-03",
-  "summary": "帳號與主選單改為下拉式操作，設定不遮罩畫布。",
-  "notesUrl": "release-notes/v0.56.23.html",
+  "summary": "提示停留時暫停消失，並修正分享時的檔案目標。",
+  "notesUrl": "release-notes/v0.56.24.html",
   "url": "https://infinite.petfashion.tw/"
 }
