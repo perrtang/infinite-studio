@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.29",
+  "version": "0.56.30",
   "releasedAt": "2026-11-04",
-  "summary": "改善分享連結切換與 AI 本機工作檔相容性。",
-  "notesUrl": "release-notes/v0.56.29.html",
+  "summary": "修正下載版 AI 本機工具的啟動問題。",
+  "notesUrl": "release-notes/v0.56.30.html",
   "url": "https://infinite.petfashion.tw/"
 }

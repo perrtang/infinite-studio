@@ -43,8 +43,11 @@ cp -R dist/. "$package_dir/"
 cp SELF_HOSTING.md PRIVACY.md SECURITY.md "$package_dir/"
 mkdir -p "$package_dir/mcp"
 cp mcp/*.mjs mcp/package.json mcp/package-lock.json mcp/README.md "$package_dir/mcp/"
-cp model.js "$package_dir/"
+cp model.js object-stroke.js "$package_dir/"
 printf '%s\n' '{"type":"module"}' > "$package_dir/package.json"
+# Check the actual staged MCP file-mode module graph, not the source tree.
+node --input-type=module -e 'await import(process.argv[1]); await import(process.argv[2]);' \
+  "$package_dir/model.js" "$package_dir/mcp/file-store.mjs"
 cp "public/release-notes/v$version.html" "$notes_path"
 
 cd "$staging_dir"
