@@ -20,7 +20,7 @@ const GOOGLE_IDENTITY_SCRIPT = "https://accounts.google.com/gsi/client";
 const DEFAULT_QUOTA_SAFETY_BYTES = 64 * 1024;
 const DRIVE_REQUEST_TIMEOUT_MS = 20_000;
 const DRIVE_TRANSFER_TIMEOUT_MS = 120_000;
-export const MAX_RETAINED_DRIVE_REVISIONS = 24;
+export const MAX_RETAINED_DRIVE_REVISIONS = 200;
 
 let identityScriptPromise;
 
@@ -708,12 +708,9 @@ export async function enforceGoogleDriveRevisionRetention(accessToken, fileId, {
   const limit = Math.max(0, Math.floor(Number(maxRetained) || 0));
   const revisions = await listGoogleDriveRevisions(accessToken, fileId, { resourceKey, signal });
   const retained = revisions.filter((revision) => revision.keepForever);
-  const released = [];
-  for (const revision of retained.slice(limit)) {
-    await updateGoogleDriveRevisionRetention(accessToken, fileId, revision.id, false, { resourceKey, signal });
-    released.push(revision.id);
-  }
-  return { revisions, released };
+  // Google Drive does not allow a kept-forever blob revision to be unpinned.
+  // Never delete revisions to make space automatically: they are recovery data.
+  return { revisions, retained, limit, released: [] };
 }
 
 function normalizeConditionalDriveFile(file = {}) {
@@ -833,12 +830,16 @@ export async function uploadGoogleDriveMoodboard(accessToken, {
     }
     const protectedHeadRevisionId = remoteState.file.headRevisionId;
     const protectedName = remoteState.file.name;
-    await enforceGoogleDriveRevisionRetention(accessToken, existingFile.id, {
-      maxRetained: MAX_RETAINED_DRIVE_REVISIONS - 1,
+    const retention = await enforceGoogleDriveRevisionRetention(accessToken, existingFile.id, {
+      maxRetained: MAX_RETAINED_DRIVE_REVISIONS,
       resourceKey,
       signal,
     });
-    await updateGoogleDriveRevisionRetention(accessToken, existingFile.id, protectedHeadRevisionId, true, { resourceKey, signal });
+    const headAlreadyRetained = retention.retained.some((revision) => revision.id === protectedHeadRevisionId);
+    if (!headAlreadyRetained && retention.retained.length >= retention.limit) {
+      throw new DriveApiError("Google Drive 已達永久保留版本上限，無法先保留目前雲端版本，因此未上傳。請先下載備份，並在 Google Drive 管理版本後再試。", { code: "drive/revision", details: remoteState.file });
+    }
+    if (!headAlreadyRetained) await updateGoogleDriveRevisionRetention(accessToken, existingFile.id, protectedHeadRevisionId, true, { resourceKey, signal });
     remoteState = await getGoogleDriveFileState(accessToken, existingFile.id, { resourceKey, signal });
     // Retaining a revision changes Drive's file version even when the file
     // contents did not change. Compare the head revision instead, then use the

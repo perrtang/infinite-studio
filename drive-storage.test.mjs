@@ -723,7 +723,7 @@ test("Drive revisions are normalized, paginated, and sorted newest first", async
   }
 });
 
-test("Drive revision retention releases only preserved versions beyond the limit", async () => {
+test("Drive revision retention never unpins or deletes preserved versions", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, options = {}) => {
@@ -743,12 +743,73 @@ test("Drive revision retention releases only preserved versions beyond the limit
   };
   try {
     const result = await enforceGoogleDriveRevisionRetention("token", "file-1", { maxRetained: 1 });
-    assert.deepEqual(result.released, ["r1"]);
-    assert.equal(calls.filter((call) => call.method === "PATCH").length, 1);
-    assert.equal(JSON.parse(calls.find((call) => call.method === "PATCH").body).keepForever, false);
+    assert.deepEqual(result.released, []);
+    assert.equal(result.retained.length, 2);
+    assert.equal(result.limit, 1);
+    assert.equal(calls.length, 1);
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("saving with previously preserved versions never tries to unpin them", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  let reads = 0;
+  globalThis.fetch = async (url, options = {}) => {
+    const endpoint = String(url);
+    const method = options.method || "GET";
+    calls.push({ endpoint, method, body: options.body });
+    if (endpoint.includes("/revisions?")) return new Response(JSON.stringify({ revisions: Array.from({ length: 25 }, (_, i) => ({ id: `revision-${i}`, keepForever: true })) }));
+    if (endpoint.includes("/revisions/") && method === "PATCH") return new Response(JSON.stringify({ id: "revision-25", keepForever: true }));
+    if (endpoint.includes("/upload/")) return new Response(JSON.stringify({ id: "drive-1", title: "Board.studio", version: "3", headRevisionId: "revision-new" }));
+    reads++;
+    const current = reads < 3;
+    return new Response(JSON.stringify({ id: "drive-1", title: "Board.studio", name: "Board.studio", etag: '"safe"', version: current ? "1" : "3", headRevisionId: current ? "revision-25" : "revision-new" }));
+  };
+  try {
+    const saved = await uploadGoogleDriveMoodboard("token", { board: { id: "board-1" }, content: "{}", filename: "Board.studio", existingFile: { id: "drive-1" }, expectedVersion: "1" });
+    assert.equal(saved.version, "3");
+    const patches = calls.filter((call) => call.method === "PATCH");
+    assert.equal(patches.length, 1);
+    assert.deepEqual(JSON.parse(patches[0].body), { keepForever: true });
+    assert.equal(calls.filter((call) => call.method === "DELETE").length, 0);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("saving stops safely at Drive's permanent revision limit without deleting history", async () => {
+  const originalFetch = globalThis.fetch;
+  const methods = [];
+  globalThis.fetch = async (url, options = {}) => {
+    methods.push(options.method || "GET");
+    if (String(url).includes("/revisions?")) return new Response(JSON.stringify({ revisions: Array.from({ length: 200 }, (_, i) => ({ id: `old-${i}`, keepForever: true })) }));
+    return new Response(JSON.stringify({ id: "drive-1", title: "Board.studio", etag: '"safe"', version: "1", headRevisionId: "current" }));
+  };
+  try {
+    await assert.rejects(uploadGoogleDriveMoodboard("token", { board: { id: "board-1" }, content: "{}", filename: "Board.studio", existingFile: { id: "drive-1" }, expectedVersion: "1" }), (error) => error.code === "drive/revision" && /上限/.test(error.message));
+    assert.ok(methods.every((method) => method === "GET"));
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("saving remains possible at the limit when the current head is already retained", async () => {
+  const originalFetch = globalThis.fetch;
+  const methods = [];
+  let reads = 0;
+  globalThis.fetch = async (url, options = {}) => {
+    const endpoint = String(url);
+    const method = options.method || "GET";
+    methods.push(method);
+    if (endpoint.includes("/revisions?")) return new Response(JSON.stringify({ revisions: Array.from({ length: 200 }, (_, i) => ({ id: i === 0 ? "current" : `old-${i}`, keepForever: true })) }));
+    if (endpoint.includes("/upload/")) return new Response(JSON.stringify({ id: "drive-1", title: "Board.studio", version: "2", headRevisionId: "next" }));
+    reads++;
+    return new Response(JSON.stringify({ id: "drive-1", title: "Board.studio", name: "Board.studio", etag: '"safe"', version: reads < 3 ? "1" : "2", headRevisionId: reads < 3 ? "current" : "next" }));
+  };
+  try {
+    const saved = await uploadGoogleDriveMoodboard("token", { board: { id: "board-1" }, content: "{}", filename: "Board.studio", existingFile: { id: "drive-1" }, expectedVersion: "1" });
+    assert.equal(saved.version, "2");
+    assert.equal(methods.includes("PATCH"), false);
+    assert.equal(methods.includes("DELETE"), false);
+  } finally { globalThis.fetch = originalFetch; }
 });
 
 test("downloads the exact head revision when a revision id is supplied", async () => {
