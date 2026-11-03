@@ -11232,3 +11232,24 @@ button.status-label:hover {
 .settings-layout .settings-development-note,
 .settings-layout .settings-update-note { font-size: calc(12px + var(--ui-font-offset, 0px)); line-height: 1.5; }
 .settings-layout .settings-content button { line-height: 1.35; }
+
+/* Non-modal account panel, anchored below the account control. */
+.settings-popover {
+  position: fixed;
+  top: 54px;
+  right: 52px;
+  width: min(680px, calc(100vw - 16px));
+  max-height: min(720px, calc(100dvh - 64px));
+  z-index: 160;
+}
+@media (max-width: 900px) {
+  .settings-popover { right: 8px; top: 54px; }
+}
+
+.account-menu { position: relative; }
+.account-menu-popover { width: min(280px, calc(100vw - 16px)); }
+.account-menu-profile { display: grid; gap: 3px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.account-menu-profile strong { font-size: 13px; overflow-wrap: anywhere; }
+.account-menu-profile small { color: var(--text-muted); font-size: 12px; overflow-wrap: anywhere; }
+.account-menu-popover .file-menu-section > button { min-height: 40px; }
+@media (max-width: 900px) { .topbar-secondary > .account-menu { display: none; } }

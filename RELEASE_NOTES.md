@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.23](./public/release-notes/v0.56.23.html) — use non-modal account and main menus.
+
 - [v0.56.22](./public/release-notes/v0.56.22.html) — add a direct image action beside the insert menu.
 
 - [v0.56.21](./public/release-notes/v0.56.21.html) — preserve Google Drive history without attempting to unpin permanent revisions.

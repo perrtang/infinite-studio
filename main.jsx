@@ -2032,7 +2032,7 @@ function FileMenu({
         type="button"
         aria-label="主選單"
         title="主選單"
-        aria-haspopup="dialog"
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls="file-menu-popover"
         ref={triggerRef}
@@ -2041,7 +2041,6 @@ function FileMenu({
         <Menu size={18} />
       </button>
       {open ? (
-        <Modal title="主選單" onClose={() => setOpen(false)} className="file-menu-dialog">
         <div
           className="file-menu-popover"
           id="file-menu-popover"
@@ -2106,10 +2105,48 @@ function FileMenu({
             </button>
           </div>
         </div>
-        </Modal>
       ) : null}
     </div>
   );
+}
+
+function AccountMenu({ user, signedIn, onOpenSection, onCloseSettings }) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const frame = window.requestAnimationFrame(() => menuRef.current?.querySelector('[role="menuitem"]')?.focus());
+    const outside = (event) => { if (!wrapperRef.current?.contains(event.target)) setOpen(false); };
+    const escape = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault(); event.stopImmediatePropagation(); setOpen(false);
+      window.requestAnimationFrame(() => triggerRef.current?.focus());
+    };
+    window.addEventListener("pointerdown", outside);
+    window.addEventListener("keydown", escape, true);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("pointerdown", outside); window.removeEventListener("keydown", escape, true); };
+  }, [open]);
+  const sections = [["account", "帳號與隱私", UserRound], ["storage", "儲存與同步", Cloud], ["general", "一般設定", Languages], ["appearance", "外觀", Palette], ["workspace", "工作區", LayoutGrid], ["about", "關於", Info]];
+  const navigate = (event) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    const items = [...(menuRef.current?.querySelectorAll('[role="menuitem"]') || [])];
+    if (!items.length) return;
+    event.preventDefault();
+    const index = items.indexOf(document.activeElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : event.key === "ArrowDown" ? (index + 1 + items.length) % items.length : (index - 1 + items.length) % items.length;
+    items[next].focus();
+  };
+  return <div className="account-menu" ref={wrapperRef}>
+    <button ref={triggerRef} className="account-menu-button" type="button" aria-label={signedIn ? `帳號與設定：${accountDisplayName(user)}` : "帳號與設定"} title="帳號與設定" aria-haspopup="menu" aria-expanded={open} aria-controls="account-menu-popover" onClick={() => { if (!open) onCloseSettings(); setOpen((current) => !current); }}>
+      {signedIn ? <AccountAvatar user={user} size={26} /> : <UserRound size={17} />}
+    </button>
+    {open ? <div id="account-menu-popover" className="file-menu-popover account-menu-popover" role="menu" aria-label="帳號與設定" ref={menuRef} onKeyDown={navigate}>
+      <div className="account-menu-profile"><strong data-l10n-ignore>{signedIn ? accountDisplayName(user) : "訪客模式"}</strong>{signedIn && user?.email ? <small data-l10n-ignore>{user.email}</small> : null}</div>
+      <div className="file-menu-section">{sections.map(([key, label, Icon]) => <button type="button" role="menuitem" key={key} onClick={() => { setOpen(false); onOpenSection(key); }}><Icon size={17} /><span><strong>{label}</strong></span></button>)}</div>
+    </div> : null}
+  </div>;
 }
 
 function MobileTopbarMoreMenu({
@@ -6628,6 +6665,27 @@ function SettingsModal({
   onClose,
 }) {
   const [section, setSection] = useState(initialSection);
+  const panelRef = useRef(null);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => panelRef.current?.querySelector('.settings-nav .is-active')?.focus());
+    const closeOutside = (event) => {
+      if (!panelRef.current?.contains(event.target) && !event.target.closest?.('.account-menu')) onClose();
+    };
+    const closeEscape = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      onClose();
+      document.querySelector('.account-menu-button')?.focus();
+    };
+    window.addEventListener('pointerdown', closeOutside, true);
+    window.addEventListener('keydown', closeEscape, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('pointerdown', closeOutside, true);
+      window.removeEventListener('keydown', closeEscape, true);
+    };
+  }, [onClose]);
   const resolvedTypography = resolveInterfaceTypography(typography);
   const [customFontDraft, setCustomFontDraft] = useState(typography.customFamily || "");
   const providerStates = moodboardProviderStates(accountUser)
@@ -6663,8 +6721,9 @@ function SettingsModal({
   })();
 
   return (
-    <Modal title="帳號與設定" description="管理帳號、儲存與介面偏好。" onClose={onClose} className="settings-dialog" wide>
-      <div className="settings-layout">
+    <section ref={panelRef} id="account-settings-popover" className="modal is-wide settings-dialog settings-popover" role="dialog" aria-label="帳號與設定">
+      <header><div><h2>帳號與設定</h2><p>管理帳號、儲存與介面偏好。</p></div><IconButton label="關閉" onClick={onClose}><X size={19} /></IconButton></header>
+      <div className="modal-body"><div className="settings-layout">
         <nav className="settings-nav" aria-label="設定分類">
           <button className={section === "account" ? "is-active" : ""} type="button" onClick={() => setSection("account")}>
             <UserRound size={17} /><span>帳號與隱私</span>
@@ -7121,8 +7180,8 @@ function SettingsModal({
             </section>
           )}
         </div>
-      </div>
-    </Modal>
+      </div></div>
+    </section>
   );
 }
 
@@ -9299,6 +9358,8 @@ function App({ initialProtectedShare = null }) {
     setPreviewTheme(null);
     setShowInterfaceThemes(false);
   }, []);
+
+  const closeAccountSettings = useCallback(() => setShowSettings(false), []);
 
   const openAccountSettings = useCallback(() => {
     setPreviewTheme(null);
@@ -14289,7 +14350,6 @@ function App({ initialProtectedShare = null }) {
     || (showLocalFileLocation && currentPrimaryStorageTarget === "local")
     || showGridBuilder
     || showAnnotationBuilder
-    || showSettings
     || pendingAdvancedFeature
     || showDeleteLocalData
     || showInterfaceThemes
@@ -14360,15 +14420,7 @@ function App({ initialProtectedShare = null }) {
             onClick={redo}
             disabled={cloudReadOnly || sourceModeActive || !redoRef.current.length}
           ><Redo2 size={18} /></IconButton>
-          <button
-            className="account-menu-button"
-            type="button"
-            aria-label={authReady ? `帳號與設定：${accountDisplayName(authSession.user)}` : "帳號與設定"}
-            title={authReady ? `帳號與設定：${accountDisplayName(authSession.user)}` : "帳號與設定"}
-            onClick={openAccountSettings}
-          >
-            {authReady ? <AccountAvatar user={authSession.user} size={26} /> : <UserRound size={17} />}
-          </button>
+          <AccountMenu user={authSession.user} signedIn={authReady} onCloseSettings={closeAccountSettings} onOpenSection={(section) => { setSettingsInitialSection(section); setShowSettings(true); }} />
           <div className="file-actions">
             <FileMenu
               onOpenLibrary={openGoogleDriveLibrary}
@@ -15005,7 +15057,7 @@ function App({ initialProtectedShare = null }) {
           onSetShowSaveStatus={setSaveStatusPreference}
           onSaveDrive={() => saveBoardToGoogleDrive()}
           onSetDriveAutoSync={setDriveAutoSync}
-          onClose={() => setShowSettings(false)}
+          onClose={closeAccountSettings}
         />
       ) : null}
 

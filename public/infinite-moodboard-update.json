@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.22",
+  "version": "0.56.23",
   "releasedAt": "2026-11-03",
-  "summary": "工具列新增圖片可直接使用，其他素材由選單開啟。",
-  "notesUrl": "release-notes/v0.56.22.html",
+  "summary": "帳號與主選單改為下拉式操作，設定不遮罩畫布。",
+  "notesUrl": "release-notes/v0.56.23.html",
   "url": "https://infinite.petfashion.tw/"
 }

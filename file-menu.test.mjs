@@ -39,3 +39,19 @@ test("header keeps the file menu visible on mobile without restoring scattered f
   assert.match(styles, /\.file-actions \.file-menu-trigger \{[\s\S]*display: flex;[\s\S]*min-height: 44px;/);
   assert.match(styles, /\.file-menu-section > button \{[\s\S]*min-height: 48px;/);
 });
+
+
+test("header menus are non-modal and account settings remain accessible", () => {
+  const file = main.slice(main.indexOf("function FileMenu("), main.indexOf("function AccountMenu("));
+  const account = main.slice(main.indexOf("function AccountMenu("), main.indexOf("function MobileTopbarMoreMenu("));
+  const settings = main.slice(main.indexOf("function SettingsModal("), main.indexOf("function InterfaceThemeModal("));
+  assert.doesNotMatch(file, /<Modal/);
+  assert.match(file, /aria-haspopup="menu"/);
+  assert.match(account, /aria-haspopup="menu"/);
+  assert.match(account, /aria-expanded=\{open\}/);
+  for (const name of ["帳號與隱私", "儲存與同步", "一般設定", "外觀", "工作區", "關於"]) assert.ok(account.includes(name));
+  assert.match(account, /ArrowDown[\s\S]*ArrowUp/);
+  assert.match(settings, /settings-popover/);
+  assert.doesNotMatch(settings, /aria-modal="true"/);
+  assert.match(settings, /closeOutside/);
+});
