@@ -364,7 +364,7 @@ import {
   resolveGuidePosition,
   shouldConfirmEscapeCancellation,
 } from "./workspace-tools.js";
-import { isEditableShortcutEvent } from "./workspace-keyboard.js";
+import { isEditableShortcutEvent, objectNudgeDelta, nudgeSelectedObjects } from "./workspace-keyboard.js";
 import {
   fitSourceView,
   panSourceView,
@@ -782,6 +782,7 @@ function textLayoutStyle(object) {
     justifyContent: { top: "flex-start", middle: "safe center", bottom: "safe flex-end" }[textVerticalAlign],
     textAlign,
     textAlignLast: textAlign === "justify" ? textAlignLast : "auto",
+    lineHeight: Number(object?.lineHeight) || 1.2,
   };
 }
 
@@ -813,7 +814,7 @@ function createTextMeasurementNode(object, overrides = {}) {
     fontWeight: String(object.fontWeight || "600"),
     height: `${Math.max(24, Number(object.height) || 24)}px`,
     left: "-100000px",
-    lineHeight: "1.2",
+    lineHeight: String(Number(object.lineHeight) || 1.2),
     margin: "0",
     maxWidth: "none",
     overflow: "hidden",
@@ -1002,6 +1003,7 @@ function createTextObject(point) {
     fontFamily: DEFAULT_TEXT_FONT,
     fontWeight: "600",
     fontSize: 36,
+    lineHeight: 1.3,
     originalFontSize: 36,
     color: "#edf7fb",
     textAlign: "left",
@@ -1212,7 +1214,7 @@ function drawJustifiedCanvasText(context, text, width, y) {
 
 function drawTextObjectSource(context, object, width, height) {
   const fontSize = Math.max(6, Number(object.fontSize) || 32);
-  const lineHeight = fontSize * 1.2;
+  const lineHeight = fontSize * (Number(object.lineHeight) || 1.2);
   const alignment = TEXT_ALIGNMENTS.includes(object.textAlign) ? object.textAlign : "left";
   const lastAlignment = TEXT_LAST_ALIGNMENTS.includes(object.textAlignLast) ? object.textAlignLast : "left";
   const verticalAlignment = TEXT_VERTICAL_ALIGNMENTS.includes(object.textVerticalAlign) ? object.textVerticalAlign : "top";
@@ -3291,7 +3293,7 @@ function CaptureThumbnail({ capture, board }) {
                     fontFamily: object.fontFamily,
                     fontSize: Math.max(3, (state.fontSize || object.fontSize) * capture.view.zoom),
                     fontWeight: object.fontWeight,
-                    lineHeight: 1.2,
+                    lineHeight: Number(object.lineHeight) || 1.2,
                     overflow: "hidden",
                     overflowWrap: "anywhere",
                     whiteSpace: "pre-wrap",
@@ -3564,7 +3566,7 @@ function PanelEdge({ side, visible, mobile = false, onToggle, width, min, max, o
   const reset = () => { window.clearTimeout(clickTimer.current); if (!mobile && visible) onResetWidth?.(); };
   return <div className={`panel-edge is-${side} ${visible ? "is-open" : "is-closed"} ${mobile ? "is-mobile" : "is-desktop"}`}>
     <button className="panel-edge-toggle" type="button" onClick={click} onDoubleClick={reset} onPointerDown={start} onKeyDown={visible ? onResizeKeyDown : undefined} aria-label={`${visible ? "收合" : "展開"}${label}`} aria-expanded={visible} title={visible ? (mobile ? `收合${label}` : `點擊收合${label}；拖曳調整寬度；雙擊恢復預設`) : `展開${label}`}>
-      <Ellipsis size={17} className="panel-edge-dots" aria-hidden="true" />
+      <span className="panel-edge-dots" aria-hidden="true" />
     </button>
   </div>;
 }
@@ -3996,6 +3998,7 @@ function Inspector({
                   </label>
                   <label><span>大小</span><div className="input-with-suffix"><input type="number" min="6" max="512" value={Math.round(object.fontSize * 10) / 10} onChange={(event) => onUpdateObject(object.id, { fontSize: Math.max(6, Number(event.target.value) || 6) })} /><b>px</b></div></label>
                 </div>
+                <label><span>行高</span><div className="input-with-suffix"><input key={`${object.id}:${object.lineHeight}`} type="number" min="0.5" max="4" step="0.1" defaultValue={object.lineHeight ?? 1.2} onBlur={(event) => { const value = Number(event.target.value); if (Number.isFinite(value) && value >= 0.5 && value <= 4) onUpdateObject(object.id, { lineHeight: value }); else event.target.value = String(object.lineHeight ?? 1.2); }} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} /><b>×</b></div></label>
                 <ObjectColorSetControl
                   label="文字色彩"
                   value={object.color}
@@ -12148,6 +12151,7 @@ function App({ initialProtectedShare = null }) {
       fontFamily: source.fontFamily,
       fontWeight: source.fontWeight,
       fontSize: source.fontSize,
+      lineHeight: source.lineHeight ?? 1.2,
       originalFontSize: source.fontSize,
       color: source.color,
       textAlign: source.textAlign,
@@ -12635,6 +12639,15 @@ function App({ initialProtectedShare = null }) {
         deltaX: rawDx,
         deltaY: rawDy,
         zoom,
+        viewport: (() => {
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (!rect) return null;
+          const current = viewRef.current;
+          return { left: -current.x / current.zoom, top: -current.y / current.zoom, right: (rect.width - current.x) / current.zoom, bottom: (rect.height - current.y) / current.zoom };
+        })(),
+        manualGuides: guidesVisible ? base.guides || [] : [],
+        disabled: moveEvent.metaKey || moveEvent.ctrlKey,
+        alternateAxis: moveEvent.altKey,
       });
       setSmartAlignmentGuides(alignment.guides);
       previewBoard({
@@ -12684,7 +12697,7 @@ function App({ initialProtectedShare = null }) {
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up, { once: true });
     window.addEventListener("pointercancel", cancel, { once: true });
-  }, [announce, captureGestureHistory, cloudReadOnly, filters.colors.length, filters.symbols.length, finalizeGesture, loadedTextFlow, previewBoard, pushUndo, registerPointerGesture, restoreGestureHistory, spaceDown, startCanvasPan, tool]);
+  }, [announce, captureGestureHistory, cloudReadOnly, filters.colors.length, filters.symbols.length, finalizeGesture, guidesVisible, loadedTextFlow, previewBoard, pushUndo, registerPointerGesture, restoreGestureHistory, spaceDown, startCanvasPan, tool]);
 
   const onObjectPointerUp = useCallback((event, id) => {
     if (event.button !== 0 || tool === "hand" || tool === "3d" || spaceDown || filters.symbols.length || filters.colors.length) return;
@@ -13624,6 +13637,16 @@ function App({ initialProtectedShare = null }) {
       const modifier = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
       const shiftOnly = event.shiftKey && !modifier && !event.altKey;
+      const nudge = objectNudgeDelta(event, rulerUnit);
+      if (nudge && leftTab !== "sources" && !cloudReadOnly && !document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        const ids = selectedIdsRef.current;
+        const canMove = boardRef.current.objects.some((object) => ids.includes(object.id) && !object.locked && object.visible !== false);
+        if (canMove) {
+          event.preventDefault();
+          applyBoard((current) => ({ ...current, objects: nudgeSelectedObjects(current.objects, ids, nudge) }));
+          return;
+        }
+      }
       if (leftTab === "sources") {
         const blockedModifier = modifier && !event.altKey && ["a", "c", "x", "v", "z"].includes(key);
         const blockedShift = shiftOnly && ["KeyV", "KeyH", "Digit3", "KeyR", "Semicolon", "Quote", "KeyD", "KeyG"].includes(event.code);
@@ -13739,7 +13762,7 @@ function App({ initialProtectedShare = null }) {
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [agentRequest, finishAgentRequest, showAgent, closeAgent, announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
+  }, [agentRequest, applyBoard, cloudReadOnly, rulerUnit, finishAgentRequest, showAgent, closeAgent, announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
 
   const exportObjects = useCallback(async (scopeOverride) => {
     const scope = typeof scopeOverride === "string" ? scopeOverride : exportScope;

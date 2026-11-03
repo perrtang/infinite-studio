@@ -146,8 +146,12 @@ export function resolveSmartAlignment({
   zoom = 1,
   previewThresholdPx = 12,
   snapThresholdPx = 5,
-  adjacencyThresholdPx = 120,
+  viewport = null,
+  manualGuides = [],
+  disabled = false,
+  alternateAxis = false,
 } = {}) {
+  if (disabled) return { deltaX, deltaY, guides: [] };
   const moving = new Set(movingIds);
   const excluded = new Set(excludedIds);
   const movingObjects = objects.filter((object) => moving.has(object.id));
@@ -156,24 +160,25 @@ export function resolveSmartAlignment({
 
   const candidates = objects
     .filter((object) => object.visible !== false && !excluded.has(object.id))
-    .map((object) => ({ object, bounds: objectWorldBounds(object) }));
-  if (!candidates.length) return { deltaX, deltaY, guides: [] };
+    .map((object) => ({ object, bounds: objectWorldBounds(object) }))
+    .filter(({bounds}) => !viewport || (bounds.right >= viewport.left && bounds.left <= viewport.right && bounds.bottom >= viewport.top && bounds.top <= viewport.bottom));
 
   const safeZoom = Math.max(0.01, Number(zoom) || 1);
   const previewThreshold = Math.max(0, previewThresholdPx) / safeZoom;
   const snapThreshold = Math.min(Math.max(0, snapThresholdPx), Math.max(0, previewThresholdPx)) / safeZoom;
-  const adjacencyThreshold = Math.max(0, adjacencyThresholdPx) / safeZoom;
   const proposedBounds = translatedBounds(baseBounds, deltaX, deltaY);
-  const xMatch = nearestAlignment(
+  const guideCandidates = (axis) => manualGuides.filter((g) => g.axis === axis && (!viewport || (axis === "x" ? g.position >= viewport.left && g.position <= viewport.right : g.position >= viewport.top && g.position <= viewport.bottom))).map((g) => ({object:{id:g.id},bounds:axis === "x" ? {left:g.position,right:g.position,centerX:g.position,top:proposedBounds.top,bottom:proposedBounds.bottom,centerY:proposedBounds.centerY} : {top:g.position,bottom:g.position,centerY:g.position,left:proposedBounds.left,right:proposedBounds.right,centerX:proposedBounds.centerX}}));
+  const activeAxis = alternateAxis ? (Math.abs(deltaX) >= Math.abs(deltaY) ? "y" : "x") : null;
+  const xMatch = activeAxis === "y" ? null : nearestAlignment(
     "x",
     proposedBounds,
-    candidates.filter((candidate) => perpendicularGap(proposedBounds, candidate.bounds, "x") <= adjacencyThreshold),
+    [...candidates, ...guideCandidates("x")],
     previewThreshold,
   );
-  const yMatch = nearestAlignment(
+  const yMatch = activeAxis === "x" ? null : nearestAlignment(
     "y",
     proposedBounds,
-    candidates.filter((candidate) => perpendicularGap(proposedBounds, candidate.bounds, "y") <= adjacencyThreshold),
+    [...candidates, ...guideCandidates("y")],
     previewThreshold,
   );
   const xSnapped = Boolean(xMatch && xMatch.distance <= snapThreshold + EPSILON);

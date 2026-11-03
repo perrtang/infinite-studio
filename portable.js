@@ -69,6 +69,7 @@ export function createPortableHtml(board, options = {}) {
         fontFamily: object.fontFamily,
         fontWeight: object.fontWeight,
         fontSize: object.fontSize,
+        lineHeight: object.lineHeight,
         color: object.color,
         textAlign: ["left", "center", "right", "justify"].includes(object.textAlign) ? object.textAlign : "left",
         textAlignLast: ["left", "center", "right"].includes(object.textAlignLast) ? object.textAlignLast : "left",
@@ -258,6 +259,7 @@ export function createPortableHtml(board, options = {}) {
             text.style.fontFamily = object.fontFamily || "Inter, sans-serif";
             text.style.fontWeight = object.fontWeight || "600";
             text.style.fontSize = Math.max(6, finite(object.fontSize, 32)) + "px";
+            text.style.lineHeight = String(finite(object.lineHeight, 1.2));
             text.style.textAlign = ["left", "center", "right", "justify"].includes(object.textAlign) ? object.textAlign : "left";
             text.style.textAlignLast = object.textAlign === "justify" && ["left", "center", "right"].includes(object.textAlignLast) ? object.textAlignLast : "auto";
             text.style.justifyContent = { top: "flex-start", middle: "safe center", bottom: "safe flex-end" }[object.textVerticalAlign] || "flex-start";

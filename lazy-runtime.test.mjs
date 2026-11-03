@@ -72,3 +72,8 @@ test("startup-safe collaboration state keeps invite and resume behavior", () => 
   assert.deepEqual(loadCollaborationResume(storage), saved);
   assert.equal(collaborationAccessRequestStatusLabel("pending"), "等待擁有者回覆");
 });
+
+test('exported text preserves chosen line height', async () => {
+  const artifact = objectExportArtifact({type:'text',text:'one\ntwo',width:200,height:100,fontSize:20,lineHeight:1.8});
+  assert.match(await artifact.blob.text(), /line-height:1\.8/);
+});

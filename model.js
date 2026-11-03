@@ -248,6 +248,7 @@ function normalizeObject(object, index) {
       ? String(object.fontWeight)
       : "600",
     fontSize,
+    lineHeight: clampNumber(object?.lineHeight, 1.2, 0.5, 4),
     originalFontSize: Math.max(6, finiteNumber(object?.originalFontSize, fontSize)),
     color: typeof object?.color === "string" && object.color ? object.color : "#edf7fb",
     textAlign: TEXT_ALIGNMENTS.includes(object?.textAlign) ? object.textAlign : "left",

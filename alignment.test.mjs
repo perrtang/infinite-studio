@@ -76,6 +76,19 @@ test("smart alignment can snap both axes and keeps tolerance stable across zoom"
   assert.deepEqual({ deltaX: zoomedOut.deltaX, deltaY: zoomedOut.deltaY }, { deltaX: 10, deltaY: 10 });
 });
 
+test("alignment considers visible viewport targets and visible manual guides and can be temporarily disabled", () => {
+  const objects = [rectangle("moving", 0, 0), rectangle("offscreen", 110, 600)];
+  const viewport = {left:-10,top:-10,right:200,bottom:300};
+  assert.equal(resolveSmartAlignment({objects,movingIds:["moving"],deltaX:7,viewport}).deltaX, 7);
+  const visible = resolveSmartAlignment({objects,movingIds:["moving"],deltaX:7,viewport:{...viewport,bottom:800}});
+  assert.equal(visible.deltaX, 10);
+  const guide = resolveSmartAlignment({objects:[objects[0]],movingIds:["moving"],deltaX:7,viewport,manualGuides:[{id:"g",axis:"x",position:110}]});
+  assert.equal(guide.deltaX, 10);
+  assert.deepEqual(resolveSmartAlignment({objects,movingIds:["moving"],deltaX:7,deltaY:8,disabled:true}).guides, []);
+  const otherAxis = resolveSmartAlignment({objects,movingIds:["moving"],deltaX:7,deltaY:0,alternateAxis:true,viewport:{...viewport,bottom:800}});
+  assert.equal(otherAxis.deltaX, 7);
+});
+
 test("smart alignment ignores distant and explicitly excluded selected objects", () => {
   const objects = [
     rectangle("moving", 0, 0),
@@ -88,6 +101,7 @@ test("smart alignment ignores distant and explicitly excluded selected objects",
     excludedIds: ["moving", "locked-selected"],
     deltaX: 0,
     zoom: 1,
+    viewport: {left:-10,top:-10,right:200,bottom:200},
   });
   assert.equal(result.deltaX, 0);
   assert.deepEqual(result.guides, []);

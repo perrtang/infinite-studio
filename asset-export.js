@@ -71,7 +71,7 @@ function objectHtmlVisualMarkup(object, sourceOverride = "") {
   }
   if (isTextObject(object)) {
     const layout = textLayoutStyle(object);
-    return `<div style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:1.2;">${escapeXmlAttribute(objectDisplayText(object))}</div>`;
+    return `<div style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};">${escapeXmlAttribute(objectDisplayText(object))}</div>`;
   }
   if (isShapeObject(object)) {
     return `<div style="width:100%;height:100%;background:${escapeXmlAttribute(object.fill || "#58e6ff")};clip-path:${shapeClipPath(object)};"></div>`;
@@ -109,7 +109,7 @@ function objectToSvgBlob(object) {
   let content;
   if (isTextObject(object)) {
     const layout = textLayoutStyle(object);
-    content = `<foreignObject x="${x}" y="${y}" width="${width}" height="${height}"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:1.2;">${escapeXmlAttribute(objectDisplayText(object))}</div></foreignObject>`;
+    content = `<foreignObject x="${x}" y="${y}" width="${width}" height="${height}"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;display:flex;flex-direction:column;justify-content:${layout.justifyContent};text-align:${layout.textAlign};text-align-last:${layout.textAlignLast};width:100%;height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:${escapeXmlAttribute(object.color || "#edf7fb")};font-family:${escapeXmlAttribute(object.fontFamily || DEFAULT_TEXT_FONT)};font-size:${Math.max(6, Number(object.fontSize) || 32)}px;font-weight:${escapeXmlAttribute(object.fontWeight || "600")};line-height:${Number(object.lineHeight) || 1.2};">${escapeXmlAttribute(objectDisplayText(object))}</div></foreignObject>`;
   } else if (isShapeObject(object)) {
     content = shapeSvgMarkup(object, x, y, width, height);
   } else if (isArtboardObject(object)) {

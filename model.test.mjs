@@ -1812,3 +1812,11 @@ test("studio identification accepts existing unmarked files and rejects foreign 
   assert.throws(() => parseBoardFile(JSON.stringify({ format: "silhouette", objects: [] }), "foreign.studio"), /不相容/);
   assert.throws(() => parseBoardFile("invalid", "foreign.studio"), /不是有效/);
 });
+
+test('text line height persists and existing documents preserve legacy line spacing', () => {
+  const board = ensureBoard({schemaVersion: BOARD_SCHEMA_VERSION, objects: [
+    {id:'old',type:'text',text:'a\nb'}, {id:'new',type:'text',text:'a\nb',lineHeight:1.3}, {id:'custom',type:'text',lineHeight:1.8},
+  ]});
+  assert.deepEqual(board.objects.map(object => object.lineHeight), [1.2,1.3,1.8]);
+  assert.equal(ensureBoard(JSON.parse(JSON.stringify(board))).objects[2].lineHeight, 1.8);
+});
