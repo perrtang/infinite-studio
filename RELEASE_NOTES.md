@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.17](./public/release-notes/v0.56.17.html) — introduce the ribbon logo and move update messages beside the save control.
+
 - [v0.56.16](./public/release-notes/v0.56.16.html) — make update availability visible in the header and balance the brand mark.
 
 - [v0.56.15](./public/release-notes/v0.56.15.html) — update unnamed shared-view labels to Infinite Studio.

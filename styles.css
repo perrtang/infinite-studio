@@ -734,18 +734,15 @@ button:disabled {
 
 .brand-mark {
   align-items: center;
-  background: transparent;
-  color: var(--accent);
   display: flex;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: calc(36px + var(--ui-font-offset, 0px));
-  font-weight: 400;
+  flex: 0 0 auto;
   height: 34px;
   justify-content: center;
-  line-height: 1;
-  text-shadow: 0 0 12px rgb(var(--accent-rgb) / 0.42);
-  width: 34px;
+  overflow: hidden;
+  width: 42px;
 }
+.brand-mark img { display: block; flex: 0 0 auto; max-width: none; width: 150%; }
+.moodboard-app[data-interface-mode="light"] .brand-mark img { filter: invert(1); }
 
 .topbar-primary,
 .file-actions,
@@ -10575,7 +10572,7 @@ button.status-label:hover {
 
   .brand-mark {
     height: 32px;
-    width: 32px;
+    width: 40px;
   }
 
   .board-title-field input {

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.16",
+  "version": "0.56.17",
   "releasedAt": "2026-11-03",
-  "summary": "醒目顯示新版本提示，點擊後查看更新選項；調整標誌比例。",
-  "notesUrl": "release-notes/v0.56.16.html",
+  "summary": "更新立體緞帶標誌，將更新訊息移至儲存按鈕旁。",
+  "notesUrl": "release-notes/v0.56.17.html",
   "url": "https://infinite.petfashion.tw/"
 }

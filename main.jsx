@@ -68,6 +68,7 @@ import {
   Mail,
   Maximize2,
   Menu,
+  MessageCircle,
   Minus,
   Minimize2,
   Monitor,
@@ -6456,6 +6457,10 @@ function DriveEditPermissionModal({ sharing, onClose }) {
   </Modal>;
 }
 
+function StudioBrandMark() {
+  return <span className="brand-mark" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}brand/infinite-ribbon.png`} alt="" /></span>;
+}
+
 function AppUpdateNotice({
   updateCheck,
   updateAction,
@@ -6472,7 +6477,7 @@ function AppUpdateNotice({
   return (
     <>
     <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
-      <Download size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
+      <MessageCircle size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
     {expanded ? <aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
@@ -14271,14 +14276,9 @@ function App({ initialProtectedShare = null }) {
       <header className="app-topbar" aria-hidden={isBooting || focusMode || undefined} inert={isBooting || focusMode ? true : undefined}>
         <div className="topbar-primary">
           <div className="brand-block" role="img" aria-label="Infinite Studio" title="Infinite Studio｜PETFASHION 創意工具">
-            <span className="brand-mark" aria-hidden="true">∞</span>
+            <StudioBrandMark />
             <span className="brand-name" aria-hidden="true">Infinite Studio</span>
           </div>
-          {!updateNoticeDismissed && !hasBlockingDialog ? (
-            <AppUpdateNotice updateCheck={updateCheck} updateAction={updateAction}
-              autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
-              onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
-          ) : null}
         </div>
 
         <label className="board-title-field">
@@ -14293,6 +14293,11 @@ function App({ initialProtectedShare = null }) {
         </label>
 
         <div className="topbar-secondary">
+          {!updateNoticeDismissed && !hasBlockingDialog ? (
+            <AppUpdateNotice updateCheck={updateCheck} updateAction={updateAction}
+              autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
+              onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
+          ) : null}
           <button className={`topbar-save-button ${currentPrimaryStorageTarget === "drive" ? `is-${drivePresentation.tone}` : ""}`} type="button" onClick={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
             disabled={sourceModeActive || driveSession.busy}
             title={cloudReadOnly ? "申請編輯權限" : currentPrimaryStorageTarget === "drive" ? `上傳目前畫布至 Google Drive；不會載入雲端內容。 ${drivePresentation.label}` : topbarSaveState}>
@@ -15193,7 +15198,7 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
   };
   return <main ref={viewerRef} className="public-share-viewer">
     <header>
-      <div className="public-share-brand" aria-label="Infinite Studio"><span className="brand-mark" aria-hidden="true">∞</span></div>
+      <div className="public-share-brand" aria-label="Infinite Studio"><StudioBrandMark /></div>
       <strong className="public-share-title" title={state.name || "分享的工作檔"} data-l10n-ignore={state.name ? true : undefined}>{state.name || "分享的工作檔"}</strong>
       <div className="public-share-actions"><span><span>僅檢視</span>{preview ? <span> · 模擬資料</span> : null}</span><button className="primary-button" type="button" onClick={openEditor}>{viewerSignedIn ? "開啟編輯" : state.status === "error" ? "登入以開啟" : "登入後編輯"}</button></div>
     </header>
