@@ -341,12 +341,12 @@ No open-source license has been selected. Public source visibility does not gran
 
 ## 繁體中文
 
-Infinite Studio 是 PETFASHION 的免費、本機優先無限畫布。圖片、影片、文字、SVG、版本與輸出主要在瀏覽器內處理；不登入也能編輯、儲存、開啟與輸出。建議直接使用[線上版](https://moodboard.petfashion.tw/)，並定期下載可再次編輯的 `.moodboard` 工作檔。只有主動使用 Google Drive 儲存或分享等連線功能時才需要登入與另外授權；雲端內容與權限都留在使用者自己的 Google Drive 檔案。
+Infinite Studio 是 PETFASHION 的免費、本機優先無限畫布。圖片、影片、文字、SVG、版本與輸出主要在瀏覽器內處理；不登入也能編輯、儲存、開啟與輸出。建議直接使用[線上版](https://infinite.petfashion.tw/)，並定期下載可再次編輯的 `.studio` 工作檔；舊版 `.moodboard` 檔案仍可開啟。只有主動使用 Google Drive 儲存或分享等連線功能時才需要登入與另外授權；雲端內容與權限都留在使用者自己的 Google Drive 檔案。
 
 下載的 `self-hosted.zip` 是供自行架站的靜態網頁版本，不是桌面安裝程式。資料與權限界線請讀 [PRIVACY.md](PRIVACY.md)。
 
 ## 简体中文
 
-Infinite Studio 是 PETFASHION 的免费、本地优先无限画布。图片、视频、文字、SVG、版本与输出主要在浏览器内处理；无需登录也能编辑、保存、打开与导出。建议直接使用[在线版](https://moodboard.petfashion.tw/)，并定期下载可再次编辑的 `.moodboard` 工作文件。只有主动使用 Google Drive 存储或分享等联网功能时才需要登录与另外授权；云端内容与权限都保留在用户自己的 Google Drive 文件。
+Infinite Studio 是 PETFASHION 的免费、本地优先无限画布。图片、视频、文字、SVG、版本与输出主要在浏览器内处理；无需登录也能编辑、保存、打开与导出。建议直接使用[在线版](https://infinite.petfashion.tw/)，并定期下载可再次编辑的 `.studio` 工作文件；旧版 `.moodboard` 文件仍可打开。只有主动使用 Google Drive 存储或分享等联网功能时才需要登录与另外授权；云端内容与权限都保留在用户自己的 Google Drive 文件。
 
 下载的 `self-hosted.zip` 是供自行部署的静态网页版本，不是桌面安装程序。数据与权限边界请阅读 [PRIVACY.md](PRIVACY.md)。

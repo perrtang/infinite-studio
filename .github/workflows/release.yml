@@ -36,10 +36,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            release/Infinite-Moodboard-"$GITHUB_REF_NAME"-self-hosted.zip \
-            release/Infinite-Moodboard-"$GITHUB_REF_NAME"-release-notes.html \
+            release/Infinite-Studio-"$GITHUB_REF_NAME"-self-hosted.zip \
+            release/Infinite-Studio-"$GITHUB_REF_NAME"-release-notes.html \
             release/SHA256SUMS.txt \
             --verify-tag \
             --generate-notes \
-            --title "Infinite Moodboard $GITHUB_REF_NAME" \
-            --notes "Recommended: use the hosted app at https://moodboard.petfashion.tw/. The attached ZIP is a self-hosted static web build, not a native desktop installer."
+            --title "Infinite Studio $GITHUB_REF_NAME" \
+            --notes "Recommended: use the hosted app at https://infinite.petfashion.tw/. The attached ZIP is a self-hosted static web build, not a native desktop installer."

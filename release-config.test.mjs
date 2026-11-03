@@ -58,7 +58,9 @@ test("GitHub release assets are built from a verified tag without cloud rule dep
   assert.match(pagesWorkflow, /Verify public update channel/);
   assert.match(pagesWorkflow, /EXPECTED_VERSION:\s*\$\{\{ needs\.build\.outputs\.version \}\}/);
   assert.match(pagesWorkflow, /\$\{UPDATE_MANIFEST_URL\}\?deployment=\$\{GITHUB_SHA\}-\$\{attempt\}/);
-  assert.match(releaseWorkflow, /https:\/\/moodboard\.petfashion\.tw\//);
+  assert.match(releaseWorkflow, /https:\/\/infinite\.petfashion\.tw\//);
+  assert.match(releaseWorkflow, /Infinite-Studio-/);
+  assert.match(packageScript, /Infinite-Studio-v\$version/);
   assert.match(packageScript, /VITE_BASE_PATH=\.\/ npm run build/);
   assert.match(packageScript, /verify-release-notes\.mjs/);
   assert.match(checkpointScript, /verify-release-notes\.mjs/);

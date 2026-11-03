@@ -20,13 +20,13 @@ cd "$repo_dir"
 node ./scripts/verify-release-notes.mjs "$version"
 
 release_dir="$repo_dir/release"
-archive_name="Infinite-Moodboard-v$version-self-hosted.zip"
+archive_name="Infinite-Studio-v$version-self-hosted.zip"
 archive_path="$release_dir/$archive_name"
-notes_name="Infinite-Moodboard-v$version-release-notes.html"
+notes_name="Infinite-Studio-v$version-release-notes.html"
 notes_path="$release_dir/$notes_name"
 checksum_path="$release_dir/SHA256SUMS.txt"
 staging_dir="$(mktemp -d)"
-package_dir="$staging_dir/Infinite-Moodboard-v$version"
+package_dir="$staging_dir/Infinite-Studio-v$version"
 
 cleanup() {
   rm -rf "$staging_dir"
@@ -51,7 +51,7 @@ node --input-type=module -e 'await import(process.argv[1]); await import(process
 cp "public/release-notes/v$version.html" "$notes_path"
 
 cd "$staging_dir"
-zip -q -r "$archive_path" "Infinite-Moodboard-v$version"
+zip -q -r "$archive_path" "Infinite-Studio-v$version"
 
 cd "$release_dir"
 if command -v sha256sum >/dev/null 2>&1; then

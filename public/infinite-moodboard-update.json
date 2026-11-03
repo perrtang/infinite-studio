@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.30",
+  "version": "0.56.31",
   "releasedAt": "2026-11-04",
-  "summary": "修正下載版 AI 本機工具的啟動問題。",
-  "notesUrl": "release-notes/v0.56.30.html",
+  "summary": "統一下載版名稱與正式網站資訊。",
+  "notesUrl": "release-notes/v0.56.31.html",
   "url": "https://infinite.petfashion.tw/"
 }
