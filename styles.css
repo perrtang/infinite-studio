@@ -9208,6 +9208,29 @@ button.status-label:hover {
 .moodboard-app[data-interface-mode="dark"] .app-update-trigger { color: #ffd16b; }
 .app-update-trigger:hover { text-decoration: underline; }
 .app-update-trigger:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
+.app-update-toast {
+  align-items: center;
+  background: var(--modal-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .22);
+  color: var(--text);
+  display: flex;
+  font-size: calc(12px + var(--ui-font-offset, 0px));
+  gap: 9px;
+  max-width: calc(100vw - 24px);
+  padding: 8px 10px;
+  position: fixed;
+  right: 12px;
+  top: 60px;
+  z-index: 89;
+}
+.app-update-toast > svg { color: #a15b00; flex: 0 0 auto; }
+.moodboard-app[data-interface-mode="dark"] .app-update-toast > svg { color: #ffd16b; }
+.app-update-toast button { background: transparent; border: 0; color: inherit; cursor: pointer; font: inherit; }
+.app-update-toast-details { font-weight: 700 !important; text-decoration: underline; }
+.app-update-toast-close { align-items: center; display: flex; justify-content: center; min-height: 32px; min-width: 32px; padding: 0; }
+.app-update-toast button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 @media (max-width: 1250px) { .app-update-trigger { min-height: 44px; } }
 @media (max-width: 620px) { .app-update-trigger { font-size: 11px; padding-inline: 4px; } }
 

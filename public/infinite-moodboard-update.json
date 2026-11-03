@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.19",
+  "version": "0.56.20",
   "releasedAt": "2026-11-03",
-  "summary": "將素材、文件、形狀和 Grid 整合至工具列選單。",
-  "notesUrl": "release-notes/v0.56.19.html",
+  "summary": "新增自動收起的更新提示，並保留隨時查看更新的入口。",
+  "notesUrl": "release-notes/v0.56.20.html",
   "url": "https://infinite.petfashion.tw/"
 }

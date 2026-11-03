@@ -6489,6 +6489,13 @@ function AppUpdateNotice({
   onSnooze,
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  useEffect(() => {
+    if (updateCheck.status !== "available" || !updateCheck.manifest?.version) return undefined;
+    setToastVisible(true);
+    const timer = window.setTimeout(() => setToastVisible(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [updateCheck.status, updateCheck.manifest?.version]);
   useEffect(() => {
     if (!expanded) return undefined;
     const closeOnEscape = (event) => {
@@ -6503,9 +6510,15 @@ function AppUpdateNotice({
 
   return (
     <>
-    <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
+    <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => { setToastVisible(false); setExpanded((value) => !value); }}>
       <Info size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
+    {toastVisible && !expanded ? <div className="app-update-toast" role="status">
+      <Info size={17} aria-hidden="true" />
+      <span>有新版本可更新</span>
+      <button type="button" className="app-update-toast-details" onClick={() => { setToastVisible(false); setExpanded(true); }}>查看</button>
+      <button type="button" className="app-update-toast-close" aria-label="關閉更新提示" onClick={() => setToastVisible(false)}><X size={16} /></button>
+    </div> : null}
     {expanded ? <Modal title="有新版本可更新" onClose={() => setExpanded(false)} busy={busy} className="update-details-dialog"><aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
         <span className="app-update-notice-icon" aria-hidden="true"><Download size={19} /></span>

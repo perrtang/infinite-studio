@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.20](./public/release-notes/v0.56.20.html) — add a dismissible five-second update toast.
+
 - [v0.56.19](./public/release-notes/v0.56.19.html) — consolidate canvas insert actions in an accessible menu.
 
 - [v0.56.18](./public/release-notes/v0.56.18.html) — improve default canvas text contrast in light mode and refine the brand wordmark.

@@ -20,6 +20,12 @@ test("an available update starts as an accessible, collapsed header action", () 
   assert.match(main, /className="topbar-secondary">[\s\S]*?<AppUpdateNotice[\s\S]*?className=\{`topbar-save-button/);
 });
 
+test("update toast is temporary and can be dismissed without hiding the update entry", () => {
+  assert.match(main, /setTimeout\(\(\) => setToastVisible\(false\), 5000\)/);
+  assert.match(main, /aria-label="關閉更新提示" onClick=\{\(\) => setToastVisible\(false\)\}/);
+  assert.match(main, /app-update-toast-details[\s\S]*?setExpanded\(true\)/);
+});
+
 test("the update notice uses one clear type hierarchy and consistent actions", () => {
   assert.match(styles, /\.app-update-notice-heading strong \{[\s\S]*font-size: calc\(14px \+ var\(--ui-font-offset, 0px\)\)/);
   assert.match(styles, /\.app-update-notice-heading small,[\s\S]*\.app-update-notice > p \{[\s\S]*font-size: calc\(11px \+ var\(--ui-font-offset, 0px\)\)/);
