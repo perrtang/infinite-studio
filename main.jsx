@@ -2593,10 +2593,14 @@ function InsertToolbar({ open, disabled = false, onToggle, onClose, onAddText, o
         <Type size={17} />
       </button>
       <div className="insert-menu-wrap">
-        <button ref={triggerRef} className={`toolbar-action insert-tool ${open ? "is-active" : ""}`} type="button"
-          aria-label="加入素材與形狀" title="加入素材、形狀或 Grid" aria-haspopup="menu"
+        <button className="toolbar-action insert-tool" type="button" aria-label="加入圖片" title="加入圖片"
+          onClick={() => activate(onChooseImage)} disabled={disabled}>
+          <ImagePlus size={17} />
+        </button>
+        <button ref={triggerRef} className={`toolbar-action insert-tool insert-menu-trigger ${open ? "is-active" : ""}`} type="button"
+          aria-label="加入素材與形狀" title="加入其他素材、形狀或 Grid" aria-haspopup="menu"
           aria-expanded={open} aria-controls="insert-tools-menu" onClick={onToggle} disabled={disabled}>
-          <Plus size={17} /><ChevronDown size={12} aria-hidden="true" />
+          <ChevronDown size={12} aria-hidden="true" />
         </button>
         {open ? (
           <div ref={menuRef} id="insert-tools-menu" className="insert-menu shape-menu" role="menu" aria-label="加入素材、形狀或 Grid" onKeyDown={onMenuKeyDown}>

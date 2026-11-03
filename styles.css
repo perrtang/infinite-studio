@@ -4014,6 +4014,10 @@ html[lang="en"] .sidebar-tabs button svg {
   position: relative;
 }
 
+.insert-menu-trigger {
+  min-width: 22px;
+}
+
 .insert-menu {
   background: var(--panel-bg);
   border: 1px solid var(--border-strong);

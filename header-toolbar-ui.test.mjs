@@ -18,6 +18,7 @@ test("the header keeps only the centered board name as visible text", () => {
 
 test("insert actions share an accessible compact menu while text stays direct", () => {
   assert.match(main, /aria-label="加入文字" title="加入文字"/);
+  assert.match(main, /aria-label="加入圖片" title="加入圖片"[\s\S]*?onClick=\{\(\) => activate\(onChooseImage\)\}[\s\S]*?<ImagePlus/);
   assert.match(main, /aria-label="加入素材與形狀"[\s\S]*?aria-haspopup="menu"/);
   for (const label of ["匯入文字文件", "加入圖片", "加入影片", "建立 Grid", "匯入 SVG", "基本形狀"]) {
     assert.ok(main.includes(label));

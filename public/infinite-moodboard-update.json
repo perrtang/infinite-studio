@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.21",
+  "version": "0.56.22",
   "releasedAt": "2026-11-03",
-  "summary": "修正 Google Drive 更新時的永久保留版本錯誤。",
-  "notesUrl": "release-notes/v0.56.21.html",
+  "summary": "工具列新增圖片可直接使用，其他素材由選單開啟。",
+  "notesUrl": "release-notes/v0.56.22.html",
   "url": "https://infinite.petfashion.tw/"
 }
