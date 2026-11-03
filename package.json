@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test *.test.mjs",
+    "test:drive-worker": "npm test --prefix cloudflare",
     "drive-picker:verify": "node ./scripts/verify-drive-picker-config.mjs",
     "release:verify": "node ./scripts/verify-release-notes.mjs",
     "release:package": "./scripts/package-release.sh"

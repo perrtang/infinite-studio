@@ -23,8 +23,12 @@ jobs:
         run: npm ci
       - name: Install MCP test dependencies
         run: npm ci --prefix mcp
+      - name: Install Drive authorization service dependencies
+        run: npm ci --prefix cloudflare
       - name: Run tests
         run: npm test
+      - name: Test Drive authorization service
+        run: npm run test:drive-worker
       - name: Package self-hosted build
         run: ./scripts/package-release.sh "${GITHUB_REF_NAME#v}"
       - name: Publish GitHub Release

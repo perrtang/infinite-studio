@@ -31,6 +31,8 @@ jobs:
         run: npm ci
       - name: Install MCP test dependencies
         run: npm ci --prefix mcp
+      - name: Install Drive authorization service dependencies
+        run: npm ci --prefix cloudflare
       - name: Read release version
         id: release-version
         run: |
@@ -38,6 +40,8 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
       - name: Run tests
         run: npm test
+      - name: Test Drive authorization service
+        run: npm run test:drive-worker
       - name: Verify Google Drive Picker production configuration
         run: npm run drive-picker:verify
         env:
