@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.11",
+  "version": "0.56.12",
   "releasedAt": "2026-11-03",
-  "summary": "新增依單位的方向鍵移動、畫面內吸附、文字行高與介面顯示調整。",
-  "notesUrl": "release-notes/v0.56.11.html",
+  "summary": "未編輯的雲端工作畫布會偵測並載入其他分頁或裝置已儲存的更新。",
+  "notesUrl": "release-notes/v0.56.12.html",
   "url": "https://infinite.petfashion.tw/"
 }

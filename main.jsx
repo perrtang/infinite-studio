@@ -1,3 +1,4 @@
+import { shouldAutoLoadDriveChange } from "./drive-live-refresh.js";
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
 import { connectCanvasAgent } from "./mcp-live-client.js";
 import { assertUpdateSnapshotUnchanged, savePrimaryBeforeUpdate } from "./update-safety.js";
@@ -10089,7 +10090,7 @@ function App({ initialProtectedShare = null }) {
     setShapeMenuOpen(false);
   };
 
-  const importBoardFile = useCallback(async (file, handle = null, { shouldCommit = () => true, broadcast = true, onCommit = null } = {}) => {
+  const importBoardFile = useCallback(async (file, handle = null, { shouldCommit = () => true, broadcast = true, onCommit = null, preserveView = false } = {}) => {
     try {
       const parsedBoard = parseBoardFile(await file.text(), file.name || "");
       const imported = !onCommit && loadDriveState(localStorage).links[parsedBoard.id]
@@ -10099,7 +10100,7 @@ function App({ initialProtectedShare = null }) {
       boardRef.current = imported;
       setBoard(imported);
       setDirty(false);
-      setView(imported.view || { x: 0, y: 0, zoom: 1 });
+      if (!preserveView) setView(imported.view || { x: 0, y: 0, zoom: 1 });
       setSelectedIds([]);
       setFilters(DEFAULT_FILTERS);
       setSelectedCaptureId(null);
@@ -10791,7 +10792,7 @@ function App({ initialProtectedShare = null }) {
     return operation;
   }, [announce, authReady, authSession.user?.email, authSession.user?.uid, boardSnapshot, cancelDriveRead, cloudReadOnly, currentDriveAccessToken, driveSession.conflict, driveSettings.autoSync, driveSettings.connectionEmail, driveSettings.connectionOwnerUid, driveSettings.enabled, driveSettings.folderId, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, requestAdvancedFeature, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
 
-  const openGoogleDriveFile = useCallback(async (file, { sharedLink = false } = {}) => {
+  const openGoogleDriveFile = useCallback(async (file, { sharedLink = false, automatic = false } = {}) => {
     if (driveSavePromiseRef.current) {
       announce("正在儲存目前內容；完成後再開啟其他檔案。", "info");
       if (sharedLink) setDriveSharing((current) => ({ ...current, status: "error", message: "正在儲存目前內容；完成後請重新嘗試開啟。" }));
@@ -10801,7 +10802,7 @@ function App({ initialProtectedShare = null }) {
     driveRefreshEpochRef.current += 1;
     const readEpoch = ++driveReadEpochRef.current;
     const startingBoard = boardRef.current;
-    const readIsCurrent = () => workspaceReadIsCurrent(startingBoard, boardRef.current, readEpoch, driveReadEpochRef.current, operationEpoch, driveOperationEpochRef.current);
+    const readIsCurrent = () => workspaceReadIsCurrent(startingBoard, boardRef.current, readEpoch, driveReadEpochRef.current, operationEpoch, driveOperationEpochRef.current) && (!automatic || (!activePointerGestureRef.current && !textEditSessionRef.current && document.visibilityState === "visible" && !document.querySelector('[role="dialog"][aria-modal="true"]')));
     const assertReadIsCurrent = () => {
       if (!readIsCurrent()) throw new DriveApiError("已保留目前編輯內容，未套用較早開始讀取的 Drive 檔案。", { code: "drive/open-superseded" });
     };
@@ -10828,7 +10829,7 @@ function App({ initialProtectedShare = null }) {
       const imported = await importBoardFile(
         new File([content], metadata.name, { type: "application/json" }),
         null,
-        { shouldCommit: readIsCurrent, broadcast: false, onCommit: (openedBoard) => {
+        { shouldCommit: readIsCurrent, broadcast: false, preserveView: automatic, onCommit: (openedBoard) => {
       // Canvas, permissions and file identity change together, before any await.
       committed = true;
       driveReadPendingRef.current = null;
@@ -10867,8 +10868,8 @@ function App({ initialProtectedShare = null }) {
         files: session.files.map((entry) => entry.id === metadata.id ? metadata : entry),
         lastSyncedAt: new Date().toISOString(),
       }));
-      setShowDriveLibrary(false);
-      announce(`已從 Google Drive 開啟「${openedBoard.name}」；載入前版本已保留。`, "success");
+      if (!automatic) setShowDriveLibrary(false);
+      announce(automatic ? "已載入 Google Drive 的最新內容；更新前版本已保留。" : `已從 Google Drive 開啟「${openedBoard.name}」；載入前版本已保留。`, "success");
         } },
       );
       if (!imported && !readIsCurrent()) assertReadIsCurrent();
@@ -10927,6 +10928,45 @@ function App({ initialProtectedShare = null }) {
       if (driveReadPendingRef.current === readEpoch) driveReadPendingRef.current = null;
     }
   }, [announce, boardSnapshot, currentDriveAccessToken, importBoardFile, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
+
+  // Only replace a clean workspace after confirming the exact linked Drive file changed.
+  // The existing open path creates a recovery version and rejects reads superseded by edits.
+  useEffect(() => {
+    if (!hydrated || !online || !driveSession.connected || !driveSettings.enabled) return undefined;
+    const link = driveSettings.links[board.id];
+    if (!link?.fileId || (!link.version && !link.headRevisionId)) return undefined;
+    let cancelled = false;
+    let checking = false;
+    let warnedVersion = "";
+    const check = async () => {
+      if (cancelled || checking || document.visibilityState !== "visible" || driveSavePromiseRef.current || driveReadPendingRef.current || activePointerGestureRef.current || textEditSessionRef.current || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      const token = currentDriveAccessToken();
+      if (!token) return;
+      const snapshot = boardRef.current;
+      if (snapshot.id !== board.id) return;
+      checking = true;
+      try {
+        const { getGoogleDriveFile } = await loadDriveRuntime();
+        const remote = await getGoogleDriveFile(token, link.fileId, {resourceKey:link.resourceKey || ""});
+        if (cancelled || boardRef.current !== snapshot || !remoteContentChanged(link, remote)) return;
+        const clean = shouldAutoLoadDriveChange({ link, remote, board: snapshot, dirty });
+        if (!clean) {
+          const revision = `${remote.version || ""}:${remote.headRevisionId || ""}`;
+          if (warnedVersion !== revision) { warnedVersion = revision; announce("雲端有更新；此分頁仍有編輯，已保留目前內容。", "warning"); }
+          return;
+        }
+        if (driveSavePromiseRef.current || driveReadPendingRef.current || activePointerGestureRef.current || textEditSessionRef.current) return;
+        await openGoogleDriveFile({...remote, resourceKey:remote.resourceKey || link.resourceKey || ""}, {automatic:true});
+      } catch { /* Keep the current canvas when offline or authorization expires. */ }
+      finally { checking = false; }
+    };
+    const timer = window.setInterval(check, 15000);
+    const onVisible = () => { if (document.visibilityState === "visible") void check(); };
+    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onVisible);
+    void check();
+    return () => { cancelled = true; window.clearInterval(timer); window.removeEventListener("focus", onVisible); document.removeEventListener("visibilitychange", onVisible); };
+  }, [announce, board.id, board.revision, board.updatedAt, currentDriveAccessToken, dirty, driveSession.connected, driveSettings, hydrated, online, openGoogleDriveFile]);
 
   const refreshDriveSharing = useCallback(async (target = null, { onRole = null } = {}) => {
     const requestId = driveSharingRequestRef.current + 1;
