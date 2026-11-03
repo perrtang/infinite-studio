@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.26",
-  "releasedAt": "2026-11-03",
-  "summary": "改善分享檔案的 Email 登入接續流程。",
-  "notesUrl": "release-notes/v0.56.26.html",
+  "version": "0.56.27",
+  "releasedAt": "2026-11-04",
+  "summary": "重試 Drive 連線時保留原先的登入偏好。",
+  "notesUrl": "release-notes/v0.56.27.html",
   "url": "https://infinite.petfashion.tw/"
 }

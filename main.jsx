@@ -8802,7 +8802,7 @@ function App({ initialProtectedShare = null }) {
       const receipt = saveMoodboardAccessConsent(localStorage, authSession.user, {
         feature: pendingAdvancedFeature,
         marketingOptIn,
-        rememberSession: false,
+        rememberSession: authReceipt?.authPersistence === "local",
       });
       setAuthReceipt(receipt);
       setAuthConsentGranted(true);
@@ -8824,7 +8824,7 @@ function App({ initialProtectedShare = null }) {
     } finally {
       setAuthBusy(false);
     }
-  }, [announce, authSession.user, connectGoogleDrive, pendingAdvancedFeature]);
+  }, [announce, authReceipt?.authPersistence, authSession.user, connectGoogleDrive, pendingAdvancedFeature]);
 
   const signInToMoodboard = useCallback(async ({ marketingOptIn = false, rememberSession = false } = {}) => {
     setAuthBusy(true);

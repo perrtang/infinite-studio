@@ -38,6 +38,15 @@ test("Google sign-in can request drive.file in the same user-initiated flow", ()
   assert.equal(googleDriveTokenFromOAuthAccessToken("  "), null);
 });
 
+test("Drive retry preserves the prior remember-login preference", () => {
+  const start = main.indexOf("const acceptMoodboardAccess = useCallback");
+  const end = main.indexOf("const signInToMoodboard", start);
+  const retry = main.slice(start, end);
+  assert.match(retry, /rememberSession: authReceipt\?\.authPersistence === "local"/);
+  assert.match(retry, /pendingAdvancedFeature === "drive-onboarding"[\s\S]*connectGoogleDrive/);
+  assert.match(retry, /if \(!result\) setAuthMessage/);
+});
+
 test("Drive becomes primary only after verified connection success and then returns to the workspace", () => {
   const completionStart = main.indexOf("const driveConnectionReady = driveSession.connected");
   const completionEnd = main.indexOf("const closeDriveLibrary = useCallback", completionStart);
