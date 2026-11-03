@@ -52,6 +52,13 @@ import {
   viewWorldRectInViewport,
 } from "./model.js";
 import { createPortableHtml } from "./portable.js";
+
+test("unnamed portable views use Infinite Studio terminology", () => {
+  const html = createPortableHtml(null, { locale: "en" });
+  assert.match(html, /Untitled Infinite Studio/);
+  assert.match(html, /Canvas object/);
+  assert.doesNotMatch(html, /mood[ -]?board/i);
+});
 import {
   buildImagePdf,
   compositionOutputFormat,

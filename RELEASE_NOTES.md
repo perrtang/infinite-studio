@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.15](./public/release-notes/v0.56.15.html) — update unnamed shared-view labels to Infinite Studio.
+
 - [v0.56.14](./public/release-notes/v0.56.14.html) — correct legacy product wording in English workspace and Drive messages.
 
 - [v0.56.13](./public/release-notes/v0.56.13.html) — default to optional session-scoped AI edits.

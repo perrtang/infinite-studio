@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.14",
+  "version": "0.56.15",
   "releasedAt": "2026-11-03",
-  "summary": "修正英文介面中工作檔與 Google Drive 訊息殘留的舊名稱。",
-  "notesUrl": "release-notes/v0.56.14.html",
+  "summary": "修正分享檢視器未命名工作檔與替代文字中的舊名稱。",
+  "notesUrl": "release-notes/v0.56.15.html",
   "url": "https://infinite.petfashion.tw/"
 }

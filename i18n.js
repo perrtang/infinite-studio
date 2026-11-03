@@ -551,6 +551,7 @@ const EN_EXACT = Object.freeze({
   "Infinite Studio 唯讀畫布": "Infinite Studio read-only canvas",
   "拖曳平移 · Ctrl／⌘＋滾輪縮放": "Drag to pan · Ctrl/⌘ + wheel to zoom",
   "文字物件": "Text object",
+  "畫布物件": "Canvas object",
   "形狀物件": "Shape object",
   "Mood board 物件": "Mood board object",
   "這份 Infinite Studio 目前沒有可見物件": "This Infinite Studio has no visible objects",

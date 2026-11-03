@@ -40,9 +40,9 @@ export function createPortableHtml(board, options = {}) {
   const locale = normalizeInterfaceLocale(options.locale || "zh-Hant");
   const shared = options.shared === true;
   const translate = (value) => translateInterfaceText(value, locale);
-  const sourceBoard = board && typeof board === "object" ? board : { name: "Mood board", objects: [] };
+  const sourceBoard = board && typeof board === "object" ? board : { name: "", objects: [] };
   const viewerBoard = {
-    name: sourceBoard.name || "Mood board",
+    name: sourceBoard.name || translate("未命名 Infinite Studio"),
     view: {
       x: Number(sourceBoard.view?.x) || 0,
       y: Number(sourceBoard.view?.y) || 0,
@@ -93,7 +93,7 @@ export function createPortableHtml(board, options = {}) {
   const viewerCopy = {
     textObject: translate("文字物件"),
     shapeObject: translate("形狀物件"),
-    moodboardObject: translate("Mood board 物件"),
+    canvasObject: translate("畫布物件"),
     objectSuffix: locale === "en" ? " objects" : locale === "zh-Hans" ? " 个对象" : " 個物件",
     emptyTitle: translate("這份 Infinite Studio 目前沒有可見物件"),
     emptyBody: translate("這是唯讀瀏覽檔；請回到 Infinite Studio 編輯原始 .studio 檔。"),
@@ -275,13 +275,13 @@ export function createPortableHtml(board, options = {}) {
           } else {
             const media = document.createElement(isVideo ? "video" : "img");
             media.src = object.src || "";
-            media.setAttribute("aria-label", object.name || copy.moodboardObject);
+            media.setAttribute("aria-label", object.name || copy.canvasObject);
             if (isVideo) {
               media.controls = true;
               media.playsInline = true;
               media.preload = "metadata";
             } else {
-              media.alt = object.name || copy.moodboardObject;
+              media.alt = object.name || copy.canvasObject;
               media.draggable = false;
             }
             frame.appendChild(media);
