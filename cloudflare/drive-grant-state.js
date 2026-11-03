@@ -123,8 +123,8 @@ export async function invalidateDriveGrantIfCurrent(storage, snapshot) {
   });
 }
 
-// The future Durable Object alarm must invoke this after each transaction's
-// deadline; fixed slots also bound storage when an alarm has not yet fired.
+// The Durable Object alarm invokes this after the transaction deadline;
+// fixed slots also bound storage when an alarm has not yet fired.
 export async function pruneExpiredDriveAuthorization(storage, now = Date.now()) {
   return storage.transaction(async (tx) => {
     for (const key of ["pending", "exchange", "staged"]) {

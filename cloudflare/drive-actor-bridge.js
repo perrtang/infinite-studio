@@ -5,7 +5,7 @@ import { invalidateDriveGrant } from "./drive-grant-state.js";
 
 // A storage instance belongs to exactly one Firebase UID. Actor methods are
 // internal RPC endpoints; the public router authenticates and routes callers.
-export function createDriveActor({ uid, storage, identity, clientId, clientSecret, stateKey, vaultKey, vaultKeyId, previousKeys = {}, exchange, refresh }) {
+export function createDriveActor({ uid, storage, identity, clientId, clientSecret, stateKey, vaultKey, vaultKeyId, previousKeys = {}, exchange, refresh, scheduleExpiry = async () => {} }) {
   if (typeof uid !== "string" || !uid || uid.length > 128) throw new Error("Invalid actor identity");
   const storageForUid = requested => {
     if (requested !== uid) throw new Error("Actor identity mismatch");
@@ -15,7 +15,12 @@ export function createDriveActor({ uid, storage, identity, clientId, clientSecre
   const coordinator = createDriveAuthCoordinator({ identity, clientId, clientSecret, stateKey, vaultKey, vaultKeyId, storageForUid, resolveVaultKey, ...(exchange ? { exchange } : {}) });
   const refreshService = createDriveRefreshService({ storage, uid, clientId, clientSecret, activeKeyId: vaultKeyId, resolveVaultKey, ...(refresh ? { refresh } : {}) });
   return {
-    begin: token => coordinator.begin(token),
+    begin: async token => {
+      // Schedule before creating a pending transaction, so a crash cannot
+      // leave an uncollected sealed credential without a cleanup alarm.
+      await scheduleExpiry();
+      return coordinator.begin(token);
+    },
     callback: args => coordinator.callback(args),
     complete: args => coordinator.complete(args),
     refresh: () => refreshService.refresh(),

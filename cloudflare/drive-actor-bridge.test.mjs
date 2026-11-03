@@ -8,6 +8,12 @@ function storage() {
   const values = new Map(); let queue = Promise.resolve();
   return { values, transaction(fn) { const result = queue.then(() => fn({ get: async k => values.get(k), put: async (k, v) => { values.set(k, v); }, delete: async k => { values.delete(k); } })); queue = result.catch(() => {}); return result; } };
 }
+test("a failed cleanup alarm prevents creating an authorization transaction", async () => {
+  const db = storage();
+  const actor = createDriveActor({ uid: "a", storage: db, identity: { firebase: async () => ({ uid: "a" }), google: async () => ({}) }, clientId: "client", clientSecret: "secret", stateKey: new Uint8Array(32), vaultKey: "A".repeat(43), vaultKeyId: "v1", scheduleExpiry: async () => { throw new Error("alarm unavailable"); } });
+  await assert.rejects(actor.begin("a"), /alarm unavailable/);
+  assert.equal(db.values.has("pending"), false);
+});
 test("router and per-account actor bridge complete a bound authorization and restore across calls", async () => {
   const stateKey = crypto.getRandomValues(new Uint8Array(32));
   const vaultKey = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");

@@ -97,3 +97,22 @@ test("authorization storage stays bounded and expiry pruning preserves grants", 
   assert.equal(storage.values.has("pending"), false);
   assert.equal(storage.values.has("grant"), true);
 });
+
+test("alarm pruning removes expired staged credentials but keeps a completed grant and newer attempts", async () => {
+  const storage = transactionalStorage();
+  await beginDriveAuthorization(storage, params(hashA), 1);
+  const first = await consumeDriveAuthorization(storage, { stateHash: hashA, browserHash: browser }, 2);
+  await stageDriveGrantIfCurrent(storage, grant(first), 3);
+  await completeDriveAuthorization(storage, { stateHash: hashA, browserHash: browser }, 4);
+  await beginDriveAuthorization(storage, params(hashB), 5);
+  const second = await consumeDriveAuthorization(storage, { stateHash: hashB, browserHash: browser }, 6);
+  await stageDriveGrantIfCurrent(storage, grant(second, hashB), 7);
+  await pruneExpiredDriveAuthorization(storage, 99_999);
+  assert.equal(storage.values.has("staged"), true);
+  await pruneExpiredDriveAuthorization(storage, 100_000);
+  assert.equal(storage.values.has("staged"), false);
+  assert.equal(storage.values.get("grant").generation, first.generation);
+  await beginDriveAuthorization(storage, { ...params(hashA), expiresAt: 200_000 }, 100_001);
+  await pruneExpiredDriveAuthorization(storage, 100_002);
+  assert.equal(storage.values.has("pending"), true);
+});

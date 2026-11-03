@@ -6,6 +6,11 @@ import { createDriveActor, createDriveActorBridge, createDriveActorEndpoint } fr
 import { createDriveAuthRouter } from "./drive-auth-router.js";
 import { createDriveIdentityVerifier } from "./drive-identity.js";
 import { createFirebaseAccountCheck } from "./firebase-account-check.js";
+import { pruneExpiredDriveAuthorization } from "./drive-grant-state.js";
+
+// The transaction itself lasts at most five minutes. A later alarm provides
+// room for identity verification while bounding abandoned sealed credentials.
+const CLEANUP_DELAY_MS = 15 * 60 * 1000;
 
 function identityFor(config) { return createDriveIdentityVerifier({ firebaseProjectId: "pet-fashion-tw", googleClientId: config.clientId, checkFirebaseAccount: createFirebaseAccountCheck({ apiKey: config.firebaseApiKey }) }); }
 
@@ -14,13 +19,14 @@ export class DriveGrant extends DurableObject {
     super(ctx, env);
     const uid = ctx.id.name;
     const config = readDriveWorkerConfig(env);
-    this.endpoint = createDriveActorEndpoint(createDriveActor({ ...config, uid, storage: ctx.storage, identity: identityFor(config) }));
+    this.endpoint = createDriveActorEndpoint(createDriveActor({ ...config, uid, storage: ctx.storage, identity: identityFor(config), scheduleExpiry: () => ctx.storage.setAlarm(Date.now() + CLEANUP_DELAY_MS) }));
   }
   begin(token) { return this.endpoint.begin(token); }
   callback(args) { return this.endpoint.callback(args); }
   complete(args) { return this.endpoint.complete(args); }
   refresh() { return this.endpoint.refresh(); }
   revoke() { return this.endpoint.revoke(); }
+  async alarm() { await pruneExpiredDriveAuthorization(this.ctx.storage); }
 }
 
 export default {
