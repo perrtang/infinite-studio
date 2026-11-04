@@ -6936,16 +6936,6 @@ function SettingsModal({
               </div>
               <p className="drive-inline-message">{localLibrarySummary.storage.quota !== null ? `瀏覽器估計上限：${formatStorageSize(localLibrarySummary.storage.quota)}；實際可用空間由瀏覽器決定。` : "瀏覽器未提供空間上限；實際可用空間由瀏覽器決定。"}</p>
               <button className="secondary-button" type="button" onClick={onOpenVersions}><History size={15} />檢視與整理本機版本</button>
-              {(() => {
-                const status = driveStatusPresentation(driveSession);
-                const StatusIcon = status.icon;
-                return (
-                  <div className={`settings-drive-status is-${status.tone}`}>
-                    <span aria-hidden="true"><StatusIcon size={20} className={["connecting", "syncing", "checking"].includes(driveSession.status) ? "is-spinning" : ""} /></span>
-                    <div><strong>{status.label}</strong><small>{driveSession.message || (driveSession.user?.emailAddress ? `目前 Drive 帳號：${driveSession.user.emailAddress}` : "PETFASHION 身分與 Drive 權限彼此獨立，但會在同一個連結流程完成。")}</small></div>
-                  </div>
-                );
-              })()}
               <div className="settings-account-boundary settings-drive-boundary">
                 <ShieldCheck size={20} />
                 <div><strong>只要求 drive.file 最小權限</strong><p>{DRIVE_GRANT_BACKEND_ENABLED ? "Infinite Studio 只能存取本服務建立或你指定的檔案；為了自動連線，伺服器會加密保存授權。" : "Infinite Studio 只能存取本服務建立的檔案；不會掃描整個 Google Drive，也不會保存 Google 存取權杖。"}</p></div>
@@ -6972,6 +6962,16 @@ function SettingsModal({
                   <button className="primary-button" type="button" onClick={onConnectDrive} disabled={driveSession.status === "connecting"}><Cloud size={16} />連結 Google Drive</button>
                 </div>
               )}
+              {(() => {
+                const status = driveStatusPresentation(driveSession);
+                const StatusIcon = status.icon;
+                return (
+                  <div className={`settings-drive-status is-${status.tone}`} role="status" aria-live="polite">
+                    <span aria-hidden="true"><StatusIcon size={20} className={["connecting", "syncing", "checking"].includes(driveSession.status) ? "is-spinning" : ""} /></span>
+                    <div><strong>{status.label}</strong><small>{driveSession.message || (driveSession.user?.emailAddress ? `目前 Drive 帳號：${driveSession.user.emailAddress}` : "PETFASHION 身分與 Drive 權限彼此獨立，但會在同一個連結流程完成。")}</small></div>
+                  </div>
+                );
+              })()}
               <div className="settings-account-links settings-storage-file-actions">
                 <button className="secondary-button" type="button" onClick={onOpenDriveLibrary}><FolderOpen size={15} />我的工作檔</button>
                 <button className="quiet-button" type="button" onClick={onDownloadBackup}><Download size={15} />下載 `.studio` 備份</button>
