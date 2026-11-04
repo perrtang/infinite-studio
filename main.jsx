@@ -8832,8 +8832,7 @@ function App({ initialProtectedShare = null }) {
 
   const setDriveAutoSync = useCallback((enabled) => {
     updateDriveSettings((current) => ({ ...current, autoSync: Boolean(enabled) }));
-    announce(enabled ? "已開啟 Google Drive 自動同步。" : "已關閉自動同步；仍可隨時手動同步。", "success");
-  }, [announce, updateDriveSettings]);
+  }, [updateDriveSettings]);
 
   const completeAdvancedFeature = useCallback((feature) => {
     if (feature === "collaboration" || feature === "shared-moodboard") {
@@ -9213,8 +9212,7 @@ function App({ initialProtectedShare = null }) {
 
   const setCanvasBackgroundMode = useCallback((mode) => {
     setCanvasBackground((current) => changeCanvasBackgroundMode(current, mode));
-    announce({ dots: "畫布背景已切換為格點。", lines: "畫布背景已切換為格線。", hidden: "畫布輔助背景已隱藏。" }[mode]);
-  }, [announce]);
+  }, []);
 
   const updateCanvasBackgroundAppearance = useCallback((patch) => {
     setCanvasBackground((current) => normalizeCanvasBackground({ ...current, ...patch }));
@@ -9314,10 +9312,7 @@ function App({ initialProtectedShare = null }) {
     setPreviewTheme(null);
     setInterfaceModePreference(nextPreference);
     setActiveThemeId(theme.id);
-    announce(nextPreference === "system"
-      ? `已切換為自動跟隨裝置；目前使用${nextResolvedMode === "dark" ? "深色" : "淺色"}模式。`
-      : `已切換為${nextResolvedMode === "light" ? "淺色" : "深色"}模式。`, "success");
-  }, [announce, systemInterfaceMode, themeForResolvedMode]);
+  }, [systemInterfaceMode, themeForResolvedMode]);
 
   const saveCustomInterfaceTheme = useCallback((draft) => {
     const theme = normalizeInterfaceTheme({
