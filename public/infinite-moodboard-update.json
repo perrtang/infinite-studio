@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.38",
+  "version": "0.56.39",
   "releasedAt": "2026-11-05",
-  "summary": "改善檢視者申請編輯權限的流程。",
-  "notesUrl": "release-notes/v0.56.38.html",
+  "summary": "統一雲端載入提示並保留版本復原入口。",
+  "notesUrl": "release-notes/v0.56.39.html",
   "url": "https://infinite.petfashion.tw/"
 }

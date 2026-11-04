@@ -4,6 +4,7 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.39](./public/release-notes/v0.56.39.html) — unify cloud-load feedback and retain recovery access.
 - [v0.56.38](./public/release-notes/v0.56.38.html) — clarify viewer edit access requests.
 - [v0.56.37](./public/release-notes/v0.56.37.html) — keep AI readback current after consecutive edits.
 - [v0.56.36](./public/release-notes/v0.56.36.html) — reduce duplicate settings notifications.

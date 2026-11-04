@@ -9361,6 +9361,25 @@ button.status-label:hover {
   color: var(--success);
 }
 
+.toast > span { min-width: 0; flex: 1; }
+.toast .quiet-button { flex: 0 0 auto; white-space: nowrap; }
+.toast .toast-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.toast .toast-dismiss svg { color: inherit; }
+.toast .toast-dismiss:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
 .toast-error {
   border-color: rgb(var(--danger-rgb) / 0.5);
 }

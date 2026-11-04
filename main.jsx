@@ -8306,7 +8306,7 @@ function App({ initialProtectedShare = null }) {
     setToast({ message, tone });
   }, []);
 
-  const toastPause = useToastPause(toast, 3600, () => setToast(null));
+  const toastPause = useToastPause(toast, 5000, () => setToast(null));
 
   const resetPanelWidths = useCallback(() => {
     const left = normalizeLeftPanelWidth(LEFT_PANEL_MIN_WIDTH, 304);
@@ -11119,7 +11119,7 @@ function App({ initialProtectedShare = null }) {
         lastSyncedAt: new Date().toISOString(),
       }));
       if (!automatic) setShowDriveLibrary(false);
-      announce(automatic ? "已載入 Google Drive 的最新內容；更新前版本已保留。" : `已從 Google Drive 開啟「${openedBoard.name}」；載入前版本已保留。`, "success");
+      setToast({ message: "已載入雲端內容；載入前的畫面已保留。", tone: "success", recoveryBoardId: openedBoard.id });
         } },
       );
       if (!imported && !readIsCurrent()) assertReadIsCurrent();
@@ -14674,16 +14674,12 @@ function App({ initialProtectedShare = null }) {
         />
 
         <section className="canvas-column">
-          {!hasBlockingDialog && !sourceModeActive && (driveIncomingVersion?.boardId === board.id || driveLoadRecovery?.loadedBoardId === board.id || (driveUploadPaused && currentPrimaryStorageTarget === "drive")) ? (
+          {!hasBlockingDialog && !sourceModeActive && (driveIncomingVersion?.boardId === board.id || (driveUploadPaused && currentPrimaryStorageTarget === "drive")) ? (
             <div className="workspace-storage-notice" role="status">
               {driveIncomingVersion?.boardId === board.id ? <>
                 <span><strong>雲端與目前內容不同</strong><small>載入前會備份目前畫布，可隨時復原。</small></span>
                 <button className="secondary-button" disabled={driveSession.busy} onClick={() => openGoogleDriveFile(driveIncomingVersion)}>載入雲端版本</button>
                 <button className="quiet-button" onClick={() => setDriveIncomingVersion(null)}>保留目前工作</button>
-              </> : driveLoadRecovery?.loadedBoardId === board.id ? <>
-                <span><strong>已載入雲端版本</strong><small>載入前的畫面已保留。</small></span>
-                <button className="secondary-button" disabled={versionBusy || driveSession.busy} onClick={restoreBeforeDriveLoad}>復原載入前內容</button>
-                <button className="quiet-button" onClick={() => setDriveLoadRecovery(null)}>暫時隱藏提示</button>
               </> : <>
                 <span><strong>自動上傳已暫停</strong><small>已復原目前內容，確認後請按上方「更新至雲端」。</small></span>
               </>}
@@ -15067,7 +15063,7 @@ function App({ initialProtectedShare = null }) {
       </div>
 
       {mobilePanel ? <button className="mobile-scrim" type="button" aria-label="關閉面板" onClick={() => setMobilePanel(null)} /> : null}
-      {toast ? <div className={`toast toast-${toast.tone}`} role="status" tabIndex={0} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span></div> : null}
+      {toast ? <div className={`toast toast-${toast.tone}`} role="status" tabIndex={0} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span>{toast.recoveryBoardId === board.id && driveLoadRecovery?.loadedBoardId === board.id ? <button className="quiet-button" type="button" onClick={() => { setToast(null); void openVersionModal(); }}>版本紀錄</button> : null}<button className="toast-dismiss" type="button" aria-label="關閉提示" onClick={() => setToast(null)}><X size={16} /></button></div> : null}
 
       {escapeCancellationRequest ? (
         <EscapeCancellationModal

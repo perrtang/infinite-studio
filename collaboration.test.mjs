@@ -130,7 +130,7 @@ test("shared links compare their Drive file id before replacing the active Moodb
   assert.match(appSource, /currentLink\?\.fileId === incoming\.fileId/);
   assert.match(appSource, /status: "needs-picker-access"/);
   assert.match(appSource, /expectedFileId: incoming\.fileId/);
-  assert.match(appSource, /載入前版本已保留/);
+  assert.match(appSource, /載入前的畫面已保留/);
 });
 
 test("every opened Drive file applies its edit capability before canvas interaction", () => {
