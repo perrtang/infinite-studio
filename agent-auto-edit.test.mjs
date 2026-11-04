@@ -12,3 +12,13 @@ test('automatic edits default on but remain optional and end on disconnect or pr
   assert.match(source, /useEffect\(\(\) => \(\) => \{ disconnectAgent\(\); \}, \[board\.id, disconnectAgent\]\)/);
   assert.match(source, /status === "disconnected"[\s\S]*?setAgentAutoEdit\(true\)/);
 });
+
+test('board writes keep the agent snapshot current without a stale passive-effect overwrite', () => {
+  assert.doesNotMatch(source, /useEffect\(\(\) => \{\s*boardRef\.current\s*=\s*board;/);
+  const writes = [...source.matchAll(/setBoard\((\w+)\);/g)];
+  assert.ok(writes.length > 0);
+  for (const write of writes) {
+    const preceding = source.slice(Math.max(0, write.index - 700), write.index);
+    assert.match(preceding, new RegExp(`boardRef\\.current\\s*=\\s*${write[1]}\\s*;`));
+  }
+});

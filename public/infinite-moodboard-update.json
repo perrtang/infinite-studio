@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.36",
+  "version": "0.56.37",
   "releasedAt": "2026-11-04",
-  "summary": "減少設定操作中重複出現的通知。",
-  "notesUrl": "release-notes/v0.56.36.html",
+  "summary": "修正 AI 連續編輯時讀回舊內容的問題。",
+  "notesUrl": "release-notes/v0.56.37.html",
   "url": "https://infinite.petfashion.tw/"
 }

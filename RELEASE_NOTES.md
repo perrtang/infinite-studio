@@ -4,6 +4,7 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.37](./public/release-notes/v0.56.37.html) — keep AI readback current after consecutive edits.
 - [v0.56.36](./public/release-notes/v0.56.36.html) — reduce duplicate settings notifications.
 - [v0.56.35](./public/release-notes/v0.56.35.html) — avoid duplicate Drive save notifications.
 

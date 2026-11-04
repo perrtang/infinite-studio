@@ -8223,7 +8223,8 @@ function App({ initialProtectedShare = null }) {
     localStorage.setItem(storageKey, activeTheme.id);
   }, [activeTheme, resolvedInterfaceMode]);
 
-  useEffect(() => { boardRef.current = board; }, [board]);
+  // Every board write updates boardRef synchronously before setBoard. A passive
+  // effect could restore an older render between consecutive agent commands.
   useEffect(() => { viewRef.current = view; }, [view]);
   useEffect(() => { selectedIdsRef.current = selectedIds; }, [selectedIds]);
   useEffect(() => { selectedGuideIdsRef.current = selectedGuideIds; }, [selectedGuideIds]);
