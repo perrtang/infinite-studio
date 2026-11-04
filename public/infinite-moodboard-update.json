@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.34",
+  "version": "0.56.35",
   "releasedAt": "2026-11-04",
-  "summary": "釐清共享工作檔開啟時的本機備份錯誤。",
-  "notesUrl": "release-notes/v0.56.34.html",
+  "summary": "減少重複的雲端儲存通知。",
+  "notesUrl": "release-notes/v0.56.35.html",
   "url": "https://infinite.petfashion.tw/"
 }

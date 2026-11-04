@@ -10675,7 +10675,6 @@ function App({ initialProtectedShare = null }) {
       return Promise.resolve(false);
     }
     if (driveSavePromiseRef.current) {
-      if (!silent) announce("正在上傳目前內容至 Google Drive…", "info");
       return driveSavePromiseRef.current;
     }
     const accessToken = currentDriveAccessToken();
@@ -10916,7 +10915,7 @@ function App({ initialProtectedShare = null }) {
           setSyncJobs((current) => current.filter((job) => String(job.boardId || job.id) !== String(snapshot.id)));
         }
         if (!asCopy && boardRef.current.id === snapshot.id && boardRef.current.revision === snapshot.revision && boardRef.current.updatedAt === snapshot.updatedAt) setDirty(false);
-        if (!silent) {
+        if (!silent && (asCopy || postSyncWarning)) {
           const successMessage = asCopy
             ? "已儲存為新的 Drive 檔案；原檔與目前內容都已保留。"
             : forceOverwrite

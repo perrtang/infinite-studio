@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.35](./public/release-notes/v0.56.35.html) — avoid duplicate Drive save notifications.
+
 - [v0.56.34](./public/release-notes/v0.56.34.html) — distinguish shared-file recovery errors from Drive errors.
 
 - [v0.56.33](./public/release-notes/v0.56.33.html) — place Drive update feedback next to its action.
