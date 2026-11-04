@@ -251,5 +251,5 @@ export function driveErrorMessage(error) {
   if (error?.code === "drive/timeout") return "Google Drive 回應逾時；本機版本已保留，請稍後再試。";
   if (error?.code === "drive/offline") return "目前離線；變更已保存在這台裝置，連線後可再同步。";
   if (error?.name === "AbortError" || error?.code === "drive/cancelled") return "Google Drive 操作已取消；本機版本未受影響。";
-  return error?.message || "Google Drive 暫時無法使用；畫布仍保存在這台裝置。";
+  return error?.message || "Google Drive 暫時無法使用；請稍後再試。";
 }

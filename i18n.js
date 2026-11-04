@@ -1205,6 +1205,7 @@ const EN_EXACT = Object.freeze({
   "目前離線，請檢查網路連線後再試。": "You are offline. Check your connection and retry.",
   "Google Drive 暫時忙碌，請稍後再試。": "Google Drive is temporarily busy. Try again later.",
   "Google Drive 暫時無法使用，請稍後再試。": "Google Drive is temporarily unavailable. Try again later.",
+  "Google Drive 暫時無法使用；請稍後再試。": "Google Drive is temporarily unavailable. Try again later.",
   "正在準備本機復原副本，並檢查雲端空間與版本。": "Preparing local recovery and checking cloud storage and version.",
   "正在上傳並確認雲端版本；確認完成後會自動關閉此視窗。": "Uploading and verifying the cloud version. This dialog closes automatically after confirmation.",
   "目前編輯畫面仍保留，不會載入雲端內容。": "Your current canvas is preserved. Cloud content will not be loaded.",

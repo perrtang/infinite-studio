@@ -6311,7 +6311,7 @@ function DriveSharingModal({
   useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
-  const preparationIsError = ["error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
+  const preparationIsError = ["error", "local-recovery-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
   const accessUrl = googleDriveFileAccessUrl(sharing);
   const restrictedLink = sharing.permissionsVisible && !sharing.generalAccess.enabled;
   const publicCanEdit = sharing.permissionsVisible && sharing.generalAccess.enabled && sharing.generalAccess.role === "editor";
@@ -6323,6 +6323,7 @@ function DriveSharingModal({
     "opening-shared-file": "正在讀取共享工作檔…",
     "picker-unconfigured": "網站尚未完成共享檔案設定",
     "shared-file-denied": "共享檔案尚未開啟",
+    "local-recovery-error": "本機復原版本無法建立",
     "needs-drive": "先儲存到 Google Drive",
     error: "無法讀取 Drive 分享權限",
   }[sharing.status] || "正在讀取 Google Drive…";
@@ -6551,7 +6552,7 @@ function DriveSharingModal({
                 {["needs-picker-access", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />選取這份共享檔案</button> : null}
                 {!busy && sharing.status !== "shared-file-denied" && accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查存取權</a> : null}
                 {sharing.status === "needs-drive" ? <button className="primary-button" type="button" onClick={onSaveToDrive} disabled={busy}><CloudUpload size={15} />儲存並準備分享</button> : null}
-                {sharing.status === "error" ? <button className="primary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新嘗試</button> : null}
+                {["error", "local-recovery-error"].includes(sharing.status) ? <button className="primary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新嘗試</button> : null}
               </div>
             </div>
           </div>
@@ -11055,7 +11056,11 @@ function App({ initialProtectedShare = null }) {
       const { content, metadata } = await downloadCurrentGoogleDriveMoodboard(accessToken, file.id, { resourceKey });
       assertReadIsCurrent();
       // Preserve the outgoing document immediately before the replacement.
-      recovery = await saveVersion(boardSnapshot(), translateInterfaceText("載入雲端前"), "automatic", { pinned: true });
+      try {
+        recovery = await saveVersion(boardSnapshot(), translateInterfaceText("載入雲端前"), "automatic", { pinned: true });
+      } catch (error) {
+        throw new DriveApiError(`${describeLocalPersistenceError(error)} 為保護目前畫面，尚未開啟雲端版本；請先下載 .studio 備份。`, { code: "drive/local-recovery", details: error });
+      }
       assertReadIsCurrent();
       const recoveryPreferences = loadStoragePreferences(localStorage);
       const recoveryTarget = recoveryPreferences.targets[recovery.boardId] === "pending" ? "pending" : storageTargetForBoard(recoveryPreferences, recovery.boardId);
@@ -11139,7 +11144,7 @@ function App({ initialProtectedShare = null }) {
         const authorizationRequired = isGoogleDriveAuthorizationError(error);
         if (authorizationRequired) driveTokenRef.current = null;
         const message = isConflict ? "共享檔案在讀取期間已變更；目前畫布未變更，請重新嘗試開啟。" : driveErrorMessage(error);
-        setDriveSharing((current) => ({ ...current, status: authorizationRequired ? "authorization-required" : "error", message }));
+        setDriveSharing((current) => ({ ...current, status: authorizationRequired ? "authorization-required" : error?.code === "drive/local-recovery" ? "local-recovery-error" : "error", message }));
         setDriveSession((current) => ({ ...current, status: authorizationRequired ? "authorization-required" : current.conflict ? "conflict" : "ready", connected: authorizationRequired ? false : current.connected, busy: false, message }));
         announce(message, "error");
         return null;
