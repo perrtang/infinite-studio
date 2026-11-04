@@ -6522,10 +6522,10 @@ function DriveSharingModal({
                   <span className="collaboration-permission-icon"><Eye size={17} /></span>
                   <div>
                     <strong id="drive-viewer-access-title">目前只能檢視</strong>
-                    <small>如需編輯，請到 Google Drive 的「共用」申請權限；由檔案擁有者決定是否核准。</small>
+                    <small>如需編輯，請聯絡檔案擁有者，請對方將你的 Google 帳號設為編輯者。</small>
                   </div>
                 </div>
-                {accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />到 Google Drive 申請編輯權</a> : null}
+                <DriveEditRequest sharing={sharing} />
               </section>
             ) : null}
 
@@ -6566,12 +6566,29 @@ function DriveSharingModal({
   );
 }
 
+function DriveEditRequest({ sharing }) {
+  const [feedback, setFeedback] = useState("");
+  const fileId = sharing?.fileId;
+  let request = "";
+  try {
+    const link = createGoogleDriveMoodboardUrl({ fileId, resourceKey: sharing?.resourceKey }, `${window.location.origin}/`);
+    request = `你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：\n${link}\n我的 Google 帳號：`;
+  } catch { /* No valid file ID: show the manual route. */ }
+  const copyRequest = async () => {
+    try { await navigator.clipboard.writeText(request); setFeedback("已複製，請貼給擁有者並填上你的 Google 帳號。"); }
+    catch { setFeedback("無法自動複製；請選取下方文字後複製。"); }
+  };
+  return <div className="drive-save-confirmation">
+    <p>請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。</p>
+    {request ? <><label>給擁有者的訊息<textarea readOnly value={request} onFocus={(event) => event.currentTarget.select()} rows={3} style={{ width: "100%", resize: "vertical" }} /></label><button className="secondary-button" type="button" onClick={copyRequest}>{feedback.startsWith("已複製") ? "已複製請求" : "複製請求訊息"}</button><p role="status">{feedback}</p></> : <p>請將工作檔連結與你的 Google 帳號直接傳給擁有者。</p>}
+  </div>;
+}
+
 function DriveEditPermissionModal({ sharing, onClose }) {
-  const accessUrl = googleDriveFileAccessUrl(sharing);
   return <Modal title="需要編輯權限" description="你目前可以檢視這份工作檔；編輯與儲存需要檔案擁有者授權。" onClose={onClose}>
     <div className="drive-save-confirmation">
-      <p>前往 Google Drive 申請編輯權限；擁有者核准後，請回到分享面板重新整理權限。</p>
-      <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={onClose}>稍後</button>{accessUrl ? <a className="primary-button" href={accessUrl} target="_blank" rel="noreferrer">前往 Google Drive 申請</a> : null}</div>
+      <DriveEditRequest sharing={sharing} />
+      <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={onClose}>關閉</button></div>
     </div>
   </Modal>;
 }

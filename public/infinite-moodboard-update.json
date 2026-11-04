@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.37",
-  "releasedAt": "2026-11-04",
-  "summary": "修正 AI 連續編輯時讀回舊內容的問題。",
-  "notesUrl": "release-notes/v0.56.37.html",
+  "version": "0.56.38",
+  "releasedAt": "2026-11-05",
+  "summary": "改善檢視者申請編輯權限的流程。",
+  "notesUrl": "release-notes/v0.56.38.html",
   "url": "https://infinite.petfashion.tw/"
 }
