@@ -416,3 +416,43 @@ test("local persistence failures are classified into actionable messages", () =>
   assert.match(describeLocalPersistenceError(new Error("Storage access failure")), /未能更新/);
   assert.match(describeLocalPersistenceError(new Error("unknown")), /未能更新/);
 });
+
+test("saving an identical snapshot avoids rewriting the board and active pointer", async (t) => {
+  await deleteDatabase();
+  const initial = board("unchanged", { objects: [{ id: "large", src: `data:image/png;base64,${"a".repeat(10000)}` }] });
+  await saveCurrentBoard(initial);
+  const originalPut = IDBObjectStore.prototype.put;
+  const writes = [];
+  IDBObjectStore.prototype.put = function (...args) { writes.push(this.name); return originalPut.apply(this, args); };
+  t.after(() => { IDBObjectStore.prototype.put = originalPut; });
+  await saveCurrentBoard(structuredClone(initial));
+  assert.equal(writes.includes("boards"), false);
+  assert.equal(writes.includes("meta"), false);
+  await saveCurrentBoard({ ...initial, view: { x: 1, y: 0, zoom: 1 } });
+  assert.equal(writes.includes("boards"), true);
+  assert.equal((await loadCurrentBoard()).view.x, 1);
+});
+
+test("identical board still updates the active pointer when switching files", async () => {
+  await deleteDatabase();
+  const first = board("first-active");
+  await saveCurrentBoard(first);
+  await saveCurrentBoard(board("second-active"));
+  await saveCurrentBoard(structuredClone(first));
+  assert.equal(await getActiveBoardId(), first.id);
+});
+
+test("quota failure preserves the prior snapshot while identical saves avoid a board write", async (t) => {
+  await deleteDatabase();
+  const initial = board("quota-idempotent", { objects: [{ id: "one" }] });
+  await saveCurrentBoard(initial);
+  const originalPut = IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put = function (...args) {
+    if (this.name === "boards") throw new DOMException("quota", "QuotaExceededError");
+    return originalPut.apply(this, args);
+  };
+  t.after(() => { IDBObjectStore.prototype.put = originalPut; });
+  await saveCurrentBoard(structuredClone(initial));
+  await assert.rejects(saveCurrentBoard({ ...initial, revision: 2 }), { name: "QuotaExceededError" });
+  assert.equal((await loadCurrentBoard()).revision, initial.revision);
+});

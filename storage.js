@@ -310,13 +310,33 @@ export async function saveCurrentBoard(board) {
   const savedAt = new Date().toISOString();
   const record = localBoardRecord(board, savedAt);
   await compactLocalRecoveryStorage(record.id).catch(() => undefined);
+  let saved = record;
   await withDatabase(async (database) => {
     const transaction = database.transaction([BOARD_STORE, META_STORE], "readwrite");
-    transaction.objectStore(BOARD_STORE).put(record);
-    transaction.objectStore(META_STORE).put({ key: ACTIVE_BOARD_KEY, value: record.id, updatedAt: savedAt });
-    await transactionToPromise(transaction);
+    const boardStore = transaction.objectStore(BOARD_STORE);
+    const metaStore = transaction.objectStore(META_STORE);
+    const boardRequest = boardStore.get(record.id);
+    const metaRequest = metaStore.get(ACTIVE_BOARD_KEY);
+    let existing;
+    let active;
+    let remaining = 2;
+    let operationError = null;
+    const updateIfNeeded = () => {
+      if (--remaining) return;
+      try {
+        // Compare the complete snapshot. Revision alone cannot detect view,
+        // metadata, or older clients that reuse a revision number.
+        if (existing?.board && JSON.stringify(existing.board) === JSON.stringify(board)) saved = existing;
+        else boardStore.put(record);
+        if (active?.value !== record.id) metaStore.put({ key: ACTIVE_BOARD_KEY, value: record.id, updatedAt: savedAt });
+      } catch (error) { operationError = error; transaction.abort(); }
+    };
+    boardRequest.onsuccess = () => { existing = boardRequest.result; updateIfNeeded(); };
+    metaRequest.onsuccess = () => { active = metaRequest.result; updateIfNeeded(); };
+    try { await transactionToPromise(transaction); }
+    catch (error) { throw operationError || error; }
   });
-  return record;
+  return saved;
 }
 
 export async function deleteLocalBoard(boardId, { deleteVersions = true } = {}) {
