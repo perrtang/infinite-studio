@@ -2009,6 +2009,11 @@ function FileMenu({
   const [open, setOpen] = useState(false);
   const [recentExpanded, setRecentExpanded] = useState(false);
   const [recentBusy, setRecentBusy] = useState("");
+  const [recentPosition, setRecentPosition] = useState({ left: 8, top: 60, width: 300 });
+  const recentTriggerRef = useRef(null);
+  const recentMenuRef = useRef(null);
+  const recentExpandedRef = useRef(false);
+  recentExpandedRef.current = recentExpanded;
   const [recentError, setRecentError] = useState("");
   const wrapperRef = useRef(null);
   const triggerRef = useRef(null);
@@ -2026,8 +2031,13 @@ function FileMenu({
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      setOpen(false);
-      window.requestAnimationFrame(() => triggerRef.current?.focus());
+      if (recentExpandedRef.current) {
+        setRecentExpanded(false);
+        window.requestAnimationFrame(() => recentTriggerRef.current?.focus());
+      } else {
+        setOpen(false);
+        window.requestAnimationFrame(() => triggerRef.current?.focus());
+      }
     };
     window.addEventListener("pointerdown", closeFromOutside);
     window.addEventListener("keydown", closeWithEscape, true);
@@ -2037,6 +2047,23 @@ function FileMenu({
       window.removeEventListener("keydown", closeWithEscape, true);
     };
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || !recentExpanded) return undefined;
+    const positionRecentMenu = () => {
+      const parent = menuRef.current?.getBoundingClientRect();
+      const trigger = recentTriggerRef.current?.getBoundingClientRect();
+      if (!parent || !trigger) return;
+      const width = Math.min(300, window.innerWidth - 16);
+      setRecentPosition({ left: Math.max(8, parent.left - width - 6), top: Math.max(8, Math.min(trigger.top, window.innerHeight - 120)), width });
+    };
+    positionRecentMenu();
+    window.addEventListener("resize", positionRecentMenu);
+    menuRef.current?.addEventListener("scroll", positionRecentMenu);
+    return () => { window.removeEventListener("resize", positionRecentMenu); menuRef.current?.removeEventListener("scroll", positionRecentMenu); };
+  }, [open, recentExpanded]);
+
+  useEffect(() => { if (!open) { setRecentExpanded(false); setRecentError(""); } }, [open]);
 
   const activate = (callback) => {
     setOpen(false);
@@ -2097,19 +2124,9 @@ function FileMenu({
             <button type="button" role="menuitem" onClick={() => activate(onOpenFile)}>
               <FileUp size={17} /><span><strong>開啟工作檔…</strong><small>支援 .studio 與舊版工作檔</small></span><kbd>{platformShortcutLabel("mod+o")}</kbd>
             </button>
-            <button type="button" role="menuitem" aria-expanded={recentExpanded} onClick={() => { setRecentExpanded((value) => !value); setRecentError(""); }}>
-              <History size={17} /><span><strong>最近開啟…</strong><small>這台裝置最近使用的工作檔</small></span><ChevronDown size={15} />
+            <button type="button" role="menuitem" ref={recentTriggerRef} aria-haspopup="menu" aria-expanded={recentExpanded} onClick={() => { setRecentExpanded((value) => !value); setRecentError(""); }}>
+              <History size={17} /><span><strong>最近開啟…</strong><small>這台裝置最近使用的工作檔</small></span><ChevronLeft size={15} />
             </button>
-            {recentExpanded ? <div className="file-menu-recent" role="group" aria-label="最近開啟的工作檔">
-              {recentFiles.length ? recentFiles.slice(0, 8).map((item) => <button type="button" role="menuitem" key={`${item.kind}:${item.id}`} aria-disabled={Boolean(recentBusy)} onClick={async () => {
-                if (recentBusy) return;
-                setRecentBusy(item.id); setRecentError("");
-                try { const result = await onOpenRecent(item); if (result === true) setOpen(false); else setRecentError(result || "無法開啟；目前畫布未受影響。"); }
-                catch { setRecentError("無法開啟；目前畫布未受影響，請稍後再試。"); }
-                finally { setRecentBusy(""); }
-              }}>{item.kind === "drive" ? <Cloud size={15} /> : <HardDrive size={15} />}<span><strong data-l10n-ignore title={item.name}>{item.name}</strong><small>{recentBusy === item.id ? "開啟中…" : item.kind === "drive" ? "Google Drive" : "這台裝置"}</small></span></button>) : <p>尚無最近開啟紀錄。開啟工作檔後會顯示在這裡。</p>}
-              {recentError ? <p role="alert">{recentError}</p> : null}
-            </div> : null}
             <button type="button" role="menuitem" title={saveTitle} onClick={() => activate(onSave)}>
               <Save size={17} /><span><strong>{saveLabel}</strong><small>{saveTitle}</small></span><kbd>{platformShortcutLabel("mod+s")}</kbd>
             </button>
@@ -2159,6 +2176,25 @@ function FileMenu({
           </div>
         </div>
       ) : null}
+      {open && recentExpanded ? <div className="file-menu-recent" ref={recentMenuRef} style={{ left: recentPosition.left, top: recentPosition.top, width: recentPosition.width, maxHeight: `calc(100vh - ${recentPosition.top + 8}px)` }} role="menu" aria-label="最近開啟的工作檔" onKeyDown={(event) => {
+        if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+        const items = [...recentMenuRef.current.querySelectorAll('[role="menuitem"]')];
+        if (!items.length) return;
+        event.preventDefault();
+        const index = items.indexOf(document.activeElement);
+        const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : event.key === "ArrowDown" ? (index + 1 + items.length) % items.length : (index - 1 + items.length) % items.length;
+        items[next].focus();
+      }}>
+        <div className="file-menu-recent-heading">最近開啟 <button type="button" aria-label="關閉最近開啟" onClick={() => { setRecentExpanded(false); recentTriggerRef.current?.focus(); }}>×</button></div>
+              {recentFiles.length ? recentFiles.slice(0, 8).map((item) => <button type="button" role="menuitem" key={`${item.kind}:${item.id}`} aria-disabled={Boolean(recentBusy)} onClick={async () => {
+                if (recentBusy) return;
+                setRecentBusy(item.id); setRecentError("");
+                try { const result = await onOpenRecent(item); if (result === true) setOpen(false); else setRecentError(result || "無法開啟；目前畫布未受影響。"); }
+                catch { setRecentError("無法開啟；目前畫布未受影響，請稍後再試。"); }
+                finally { setRecentBusy(""); }
+              }}>{item.kind === "drive" ? <Cloud size={15} /> : <HardDrive size={15} />}<span><strong data-l10n-ignore title={item.name}>{item.name}</strong><small>{recentBusy === item.id ? "開啟中…" : item.kind === "drive" ? "Google Drive" : "這台裝置"}</small></span></button>) : <p>尚無最近開啟紀錄。開啟工作檔後會顯示在這裡。</p>}
+              {recentError ? <p role="alert">{recentError}</p> : null}
+      </div> : null}
     </div>
   );
 }

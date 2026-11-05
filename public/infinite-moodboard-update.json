@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.41",
+  "version": "0.56.42",
   "releasedAt": "2026-11-05",
-  "summary": "在主選單中直接開啟最近使用的工作檔，並改善切換失敗提示。",
-  "notesUrl": "release-notes/v0.56.41.html",
+  "summary": "「最近開啟」改為主選單左側展開的次選單。",
+  "notesUrl": "release-notes/v0.56.42.html",
   "url": "https://infinite.petfashion.tw/"
 }
