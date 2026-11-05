@@ -11287,3 +11287,7 @@ button.status-label:hover {
 .account-menu-profile small { color: var(--text-muted); font-size: 12px; overflow-wrap: anywhere; }
 .account-menu-popover .file-menu-section > button { min-height: 40px; }
 @media (max-width: 900px) { .topbar-secondary > .account-menu { display: none; } }
+
+.drive-file-list article > .drive-open-recovery { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px; font-size: calc(12px + var(--ui-font-offset, 0px)); line-height: 1.5; }
+.drive-open-recovery > span { flex: 1 1 200px; }
+.drive-open-recovery > [role="alert"] { flex-basis: 100%; color: var(--danger); }

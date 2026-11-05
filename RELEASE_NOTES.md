@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.43](./public/release-notes/v0.56.43.html) — verify an external backup before opening Drive when browser recovery storage fails.
+
 - [v0.56.42](./public/release-notes/v0.56.42.html) — show recent files in a side submenu.
 
 - [v0.56.41](./public/release-notes/v0.56.41.html) — add recent files to the main menu and improve safe switching feedback.

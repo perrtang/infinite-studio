@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.42",
+  "version": "0.56.43",
   "releasedAt": "2026-11-05",
-  "summary": "「最近開啟」改為主選單左側展開的次選單。",
-  "notesUrl": "release-notes/v0.56.42.html",
+  "summary": "本機復原副本無法寫入時，可先儲存並驗證備份再開啟雲端檔案。",
+  "notesUrl": "release-notes/v0.56.43.html",
   "url": "https://infinite.petfashion.tw/"
 }

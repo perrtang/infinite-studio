@@ -1,3 +1,4 @@
+import { openAfterVerifiedRecovery, recoveryMatchesCurrent } from "./external-recovery.js";
 import { readRecentFiles, recordRecentFile } from "./recent-files.js";
 import { protectBeforeWorkspaceSwitch } from "./workspace-switch.js";
 import { shouldAutoLoadDriveChange } from "./drive-live-refresh.js";
@@ -6168,6 +6169,10 @@ function DriveLibraryModal({
   localBoards,
   syncJobs,
   switchFailure,
+  pendingDriveOpen,
+  backupBusy,
+  backupError,
+  onBackupAndOpen,
   onConnect,
   onCreateLocal,
   onDisconnect,
@@ -6326,8 +6331,9 @@ function DriveLibraryModal({
                   <div>{renameKey === item.key ? <form className="drive-rename-form" onSubmit={async (event) => { event.preventDefault(); const name = renameValue.trim(); if (!name) { setRenameError("請輸入名稱。"); return; } setRenameBusy(true); setRenameError(""); try { const result = await onRename(item, name); if (result) setRenameKey(""); else setRenameError("名稱尚未完成儲存；請查看同步狀態並重試。"); } catch (error) { setRenameError(error?.message || "無法更新名稱，請重試。"); } finally { setRenameBusy(false); } }}><input aria-label="工作檔名稱" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus disabled={renameBusy} /><button type="submit" className="quiet-button" disabled={renameBusy}>{renameBusy ? "儲存中…" : "儲存"}</button><button type="button" className="quiet-button" disabled={renameBusy} onClick={() => setRenameKey("")}>取消</button>{renameError ? <small role="alert">{renameError}</small> : null}</form> : <strong data-l10n-ignore title={item.name}>{item.name}</strong>}<small>{detail}</small></div>
                   <span className={`drive-file-badge is-${itemStatus.tone}`}>{itemStatus.tone === "success" ? <Check size={13} /> : itemStatus.tone === "error" ? <AlertTriangle size={13} /> : item.remote ? <Cloud size={13} /> : <HardDrive size={13} />}{isCurrent ? "目前檔案" : itemStatus.label}</span>
                   <button className="icon-button" type="button" title="重新命名" aria-label={`重新命名 ${item.name}`} disabled={busy || renameBusy} onClick={() => { setRenameValue(item.name); setRenameError(""); setRenameKey(item.key); }}><Pencil size={15} /></button>
-                  {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy}>開啟</button> : null}
+                  {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy || backupBusy}>開啟</button> : null}
                   {item.remote?.webViewLink ? <a className="icon-button" href={item.remote.webViewLink} target="_blank" rel="noreferrer" aria-label="在 Google Drive 查看" title="在 Google Drive 查看"><ExternalLink size={15} /></a> : null}
+                  {pendingDriveOpen?.id && item.remote?.id === pendingDriveOpen.id ? <div className="drive-open-recovery" role="status"><span>無法建立瀏覽器復原副本。先將目前畫面存成備份，確認寫入後再開啟這份雲端檔案。</span><button className="secondary-button" type="button" disabled={backupBusy || busy} onClick={onBackupAndOpen}>{backupBusy ? "正在儲存備份…" : "儲存備份並開啟"}</button>{backupError ? <span role="alert">{backupError}</span> : null}</div> : null}
                 </article>
               );
             })}
@@ -7724,6 +7730,9 @@ function App({ initialProtectedShare = null }) {
   const [localBoards, setLocalBoards] = useState([]);
   const [recentFiles, setRecentFiles] = useState(() => readRecentFiles(localStorage));
   const [switchFailure, setSwitchFailure] = useState("");
+  const [pendingDriveOpen, setPendingDriveOpen] = useState(null);
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupError, setBackupError] = useState("");
   const rememberRecentFile = useCallback((entry) => setRecentFiles(recordRecentFile(localStorage, entry)), []);
   const [syncJobs, setSyncJobs] = useState([]);
   const [customThemes, setCustomThemes] = useState(loadStoredInterfaceThemes);
@@ -11099,7 +11108,8 @@ function App({ initialProtectedShare = null }) {
     return operation;
   }, [announce, authReady, authSession.user?.email, authSession.user?.uid, boardSnapshot, cancelDriveRead, cloudReadOnly, currentDriveAccessToken, driveSession.conflict, driveSettings.autoSync, driveSettings.connectionEmail, driveSettings.connectionOwnerUid, driveSettings.enabled, driveSettings.folderId, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, requestAdvancedFeature, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
 
-  const openGoogleDriveFile = useCallback(async (file, { sharedLink = false, automatic = false } = {}) => {
+  const openGoogleDriveFile = useCallback(async (file, { sharedLink = false, automatic = false, externalRecovery = null } = {}) => {
+    if (!externalRecovery) { setPendingDriveOpen(null); setBackupError(""); }
     if (driveSavePromiseRef.current) {
       announce("正在儲存目前內容；完成後再開啟其他檔案。", "info");
       if (sharedLink) setDriveSharing((current) => ({ ...current, status: "error", message: "正在儲存目前內容；完成後請重新嘗試開啟。" }));
@@ -11109,7 +11119,7 @@ function App({ initialProtectedShare = null }) {
     driveRefreshEpochRef.current += 1;
     const readEpoch = ++driveReadEpochRef.current;
     const startingBoard = boardRef.current;
-    const readIsCurrent = () => workspaceReadIsCurrent(startingBoard, boardRef.current, readEpoch, driveReadEpochRef.current, operationEpoch, driveOperationEpochRef.current) && (!automatic || (!activePointerGestureRef.current && !textEditSessionRef.current && document.visibilityState === "visible" && !document.querySelector('[role="dialog"][aria-modal="true"]')));
+    const readIsCurrent = () => (!externalRecovery || recoveryMatchesCurrent(externalRecovery, boardSnapshot())) && workspaceReadIsCurrent(startingBoard, boardRef.current, readEpoch, driveReadEpochRef.current, operationEpoch, driveOperationEpochRef.current) && (!automatic || (!activePointerGestureRef.current && !textEditSessionRef.current && document.visibilityState === "visible" && !document.querySelector('[role="dialog"][aria-modal="true"]')));
     const assertReadIsCurrent = () => {
       if (!readIsCurrent()) throw new DriveApiError("已保留目前編輯內容，未套用較早開始讀取的 Drive 檔案。", { code: "drive/open-superseded" });
     };
@@ -11130,7 +11140,7 @@ function App({ initialProtectedShare = null }) {
       assertReadIsCurrent();
       // Preserve the outgoing document immediately before the replacement.
       try {
-        recovery = await saveVersion(boardSnapshot(), translateInterfaceText("載入雲端前"), "automatic", { pinned: true });
+        recovery = externalRecovery ? { boardId: startingBoard.id, external: true } : await saveVersion(boardSnapshot(), translateInterfaceText("載入雲端前"), "automatic", { pinned: true });
       } catch (error) {
         throw new DriveApiError(`${describeLocalPersistenceError(error)} 為保護目前畫面，尚未開啟雲端版本；請先下載 .studio 備份。`, { code: "drive/local-recovery", details: error });
       }
@@ -11147,10 +11157,12 @@ function App({ initialProtectedShare = null }) {
       updateDriveSettings((state) => linkDriveFile(state, openedBoard, metadata));
       setBoardPrimaryStorage(openedBoard.id, "drive");
       setDriveIncomingVersion(null);
-      setDriveLoadRecovery({ version: recovery, target: recoveryTarget, loadedBoardId: openedBoard.id });
+      setDriveLoadRecovery(recovery.external ? null : { version: recovery, target: recoveryTarget, loadedBoardId: openedBoard.id });
+      setPendingDriveOpen(null);
+      setBackupError("");
       const previousRecovery = loadStoragePreferences(localStorage).loadRecoveries[openedBoard.id];
       if (previousRecovery) void setVersionPinned(previousRecovery.versionId, false).catch(() => undefined);
-      updateStoragePreferences((current) => ({ ...current, loadRecoveries: { ...current.loadRecoveries, [openedBoard.id]: { boardId: recovery.boardId, versionId: recovery.id, target: recoveryTarget } } }));
+      updateStoragePreferences((current) => { const loadRecoveries = { ...current.loadRecoveries }; if (recovery.external) delete loadRecoveries[openedBoard.id]; else loadRecoveries[openedBoard.id] = { boardId: recovery.boardId, versionId: recovery.id, target: recoveryTarget }; return { ...current, loadRecoveries }; });
       const resolvedResourceKey = metadata.resourceKey || resourceKey;
       rememberRecentFile({ kind: "drive", id: metadata.id, name: openedBoard.name, resourceKey: resolvedResourceKey });
       const role = driveFileRole(metadata);
@@ -11181,7 +11193,7 @@ function App({ initialProtectedShare = null }) {
         lastSyncedAt: new Date().toISOString(),
       }));
       if (!automatic) setShowDriveLibrary(false);
-      setToast({ message: "已載入雲端內容；載入前的畫面已保留。", tone: "success", recoveryBoardId: openedBoard.id });
+      setToast({ message: recovery.external ? `已開啟雲端檔案；先前畫面已備份至「${externalRecovery.name}」。` : "已載入雲端內容；載入前的畫面已保留。", tone: "success", recoveryBoardId: recovery.external ? "" : openedBoard.id });
         } },
       );
       if (!imported && !readIsCurrent()) assertReadIsCurrent();
@@ -11195,6 +11207,7 @@ function App({ initialProtectedShare = null }) {
         return null;
       }
       const isConflict = error?.code === "drive/conflict";
+      if (error?.code === "drive/local-recovery" && !automatic && !sharedLink) { setPendingDriveOpen(file); setBackupError(""); }
       if (sharedLink && isSharedDriveFileAccessError(error)) {
         const message = "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權，再回來選取同一份檔案授權 App。";
         setDriveSharing((current) => ({
@@ -11236,7 +11249,7 @@ function App({ initialProtectedShare = null }) {
       announce(driveErrorMessage(error), "error");
       return null;
     } finally {
-      if (recovery && !committed) void setVersionPinned(recovery.id, false).catch(() => undefined);
+      if (recovery?.id && !committed) void setVersionPinned(recovery.id, false).catch(() => undefined);
       if (driveReadPendingRef.current === readEpoch) driveReadPendingRef.current = null;
     }
   }, [announce, boardSnapshot, currentDriveAccessToken, importBoardFile, rememberRecentFile, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
@@ -15349,6 +15362,29 @@ function App({ initialProtectedShare = null }) {
           localBoards={localBoards}
           syncJobs={syncJobs}
           switchFailure={switchFailure}
+          pendingDriveOpen={pendingDriveOpen}
+          backupBusy={backupBusy}
+          backupError={backupError}
+          onBackupAndOpen={async () => {
+            if (backupBusy || !pendingDriveOpen) return;
+            const snapshot = boardSnapshot();
+            const backupEpoch = driveReadEpochRef.current;
+            setBackupBusy(true); setBackupError("");
+            try {
+              const result = await openAfterVerifiedRecovery({
+                snapshot,
+                picker: window.showSaveFilePicker?.bind(window),
+                suggestedName: `${safeFilename(snapshot.name, "studio")}-backup.studio`,
+                getCurrentSnapshot: boardSnapshot,
+                isCurrent: () => backupEpoch === driveReadEpochRef.current,
+                open: (backup) => openGoogleDriveFile(pendingDriveOpen, { externalRecovery: backup }),
+              });
+              if (result.changed) setBackupError("畫面或開啟操作已變更；備份已儲存，但未切換檔案。");
+              else if (!result.opened) setBackupError("備份已儲存；雲端檔案尚未開啟，請檢查連線或重新操作。");
+            } catch (error) {
+              setBackupError(error?.name === "AbortError" ? "已取消備份；目前畫面保持不變。" : `${error?.message || "備份未完成"}；目前畫面保持不變。`);
+            } finally { setBackupBusy(false); }
+          }}
           onConnect={connectGoogleDrive}
           onCreateLocal={createLocalMoodboard}
           onDisconnect={disconnectGoogleDrive}
