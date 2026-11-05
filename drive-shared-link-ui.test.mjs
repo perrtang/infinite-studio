@@ -48,7 +48,8 @@ test("successfully opened share is no longer the target of later board sharing a
 test("the public viewer observes an existing session before labeling its editor action", () => {
   const viewer = source.slice(source.indexOf("function PublicSharedViewer"), source.indexOf("function DriveSharingPreview"));
   assert.match(viewer, /observeMoodboardSession/);
-  assert.match(viewer, /viewerSignedIn\s*\?\s*"開啟編輯"/);
+  assert.match(viewer, /useState\("checking"\)/);
+  assert.match(viewer, /sharedViewerEditorLabel\(viewerSessionStatus, state\.status\)/);
 });
 
 

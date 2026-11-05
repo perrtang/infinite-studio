@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.45",
-  "releasedAt": "2026-11-05",
-  "summary": "避免重複寫入未變更的本機工作檔，減少儲存空間壓力。",
-  "notesUrl": "release-notes/v0.56.45.html",
+  "version": "0.56.46",
+  "releasedAt": "2026-11-06",
+  "summary": "修正分享檢視頁在確認登入時的按鈕提示。",
+  "notesUrl": "release-notes/v0.56.46.html",
   "url": "https://infinite.petfashion.tw/"
 }

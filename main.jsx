@@ -247,6 +247,7 @@ import {
   googleDriveMembers,
   parseGoogleDriveMoodboardLink,
   sharedEditorUrl,
+  sharedViewerEditorLabel,
 } from "./drive-share.js";
 import {
   completeMoodboardEmailSignInLink,
@@ -15506,15 +15507,15 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
     return localizeInterfaceDom(viewerRef.current, locale);
   }, [locale]);
   const [state, setState] = useState({ status: "loading", html: "", name: "" });
-  const [viewerSignedIn, setViewerSignedIn] = useState(false);
+  const [viewerSessionStatus, setViewerSessionStatus] = useState("checking");
   const [retryCount, setRetryCount] = useState(0);
   useEffect(() => {
     let active = true;
     let unsubscribe = () => {};
     observeMoodboardSession((session) => {
-      if (active) setViewerSignedIn(session.status === "signed-in" && isMoodboardIdentityEligible(session.user));
+      if (active) setViewerSessionStatus(session.status === "error" ? "error" : session.status === "signed-in" && isMoodboardIdentityEligible(session.user) ? "signed-in" : "signed-out");
     }).then((stop) => { if (active) unsubscribe = stop; else stop(); }).catch(() => {
-      if (active) setViewerSignedIn(false);
+      if (active) setViewerSessionStatus("error");
     });
     return () => { active = false; unsubscribe(); };
   }, []);
@@ -15549,7 +15550,7 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
     <header>
       <div className="public-share-brand" aria-label="Infinite Studio"><StudioBrandMark /></div>
       <strong className="public-share-title" title={state.name || "分享的工作檔"} data-l10n-ignore={state.name ? true : undefined}>{state.name || "分享的工作檔"}</strong>
-      <div className="public-share-actions"><span><span>僅檢視</span>{preview ? <span> · 模擬資料</span> : null}</span><button className="primary-button" type="button" onClick={openEditor}>{viewerSignedIn ? "開啟編輯" : state.status === "error" ? "登入以開啟" : "登入後編輯"}</button></div>
+      <div className="public-share-actions"><span><span>僅檢視</span>{preview ? <span> · 模擬資料</span> : null}</span><button className="primary-button" type="button" onClick={openEditor}>{sharedViewerEditorLabel(viewerSessionStatus, state.status)}</button></div>
     </header>
     {state.status === "ready" ? <iframe title="工作檔檢視畫面" sandbox="allow-scripts" srcDoc={state.html} /> : <div className="public-share-message" role="status"><strong>{state.status === "loading" ? "正在開啟分享內容…" : "無法免登入開啟"}</strong>{state.status === "error" ? <><p>{state.message}</p><button className="secondary-button" type="button" onClick={() => setRetryCount((count) => count + 1)}>重新嘗試</button></> : null}{state.status === "error" && googleDriveFileAccessUrl(incoming || {}) ? <p><a href={googleDriveFileAccessUrl(incoming)} target="_blank" rel="noreferrer">在 Google Drive 檢查或申請存取權</a></p> : null}</div>}
   </main>;

@@ -11,6 +11,7 @@ import {
   parseGoogleDriveMoodboardLink,
   preserveGoogleDriveResourceKey,
   sharedEditorUrl,
+  sharedViewerEditorLabel,
 } from "./drive-share.js";
 import { linkDriveFile } from "./drive-state.js";
 import {
@@ -19,6 +20,14 @@ import {
   listGoogleDrivePermissions,
   updateGoogleDrivePermission,
 } from "./drive-storage.js";
+
+test("shared viewer never assumes sign-out while session is unresolved or unavailable", () => {
+  assert.equal(sharedViewerEditorLabel("checking", "ready"), "開啟編輯");
+  assert.equal(sharedViewerEditorLabel("error", "ready"), "開啟編輯");
+  assert.equal(sharedViewerEditorLabel("signed-in", "ready"), "開啟編輯");
+  assert.equal(sharedViewerEditorLabel("signed-out", "ready"), "登入後編輯");
+  assert.equal(sharedViewerEditorLabel("signed-out", "error"), "登入以開啟");
+});
 
 test("every recipient gets a native recovery link for the exact file without account-specific access", () => {
   for (const fileId of ["file_alpha-1234567890", "file_beta_0987654321"]) {

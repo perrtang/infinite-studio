@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.46](./public/release-notes/v0.56.46.html) — avoid a misleading sign-in prompt while the shared viewer restores account state.
+
 - [v0.56.45](./public/release-notes/v0.56.45.html) — avoid rewriting identical local workspaces while preserving recovery data.
 
 - [v0.56.44](./public/release-notes/v0.56.44.html) — add verified backup recovery to local file switching and highlight actionable errors.

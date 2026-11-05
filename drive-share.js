@@ -112,6 +112,11 @@ export function googleDriveGeneralAccess(permissions = []) {
 
 // Preserve the exact shared-file URL and unrelated navigation context when
 // switching from public viewing to the editor.
+export function sharedViewerEditorLabel(sessionStatus, shareStatus) {
+  if (sessionStatus !== 'signed-out') return '開啟編輯';
+  return shareStatus === 'error' ? '登入以開啟' : '登入後編輯';
+}
+
 export function sharedEditorUrl(href, { requestEdit = true } = {}) {
   const url = new URL(href);
   url.searchParams.set('sharedEdit', '1');
