@@ -822,6 +822,10 @@ button:disabled {
 .workspace-storage-notice small { font-size: calc(12px + var(--ui-font-offset, 0px)); color: var(--text-muted); }
 .workspace-storage-notice button { min-height: 44px; }
 
+.recent-file-section { margin: 24px 0 20px; }
+.recent-file-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.recent-file-heading small { color: var(--text-muted); margin-left: auto; }
+
 .topbar-secondary {
   justify-self: end;
   min-width: 0;

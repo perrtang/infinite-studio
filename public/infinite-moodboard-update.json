@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.39",
+  "version": "0.56.40",
   "releasedAt": "2026-11-05",
-  "summary": "統一雲端載入提示並保留版本復原入口。",
-  "notesUrl": "release-notes/v0.56.39.html",
+  "summary": "在我的工作檔中加入最近開啟紀錄。",
+  "notesUrl": "release-notes/v0.56.40.html",
   "url": "https://infinite.petfashion.tw/"
 }

@@ -1,3 +1,4 @@
+import { readRecentFiles, recordRecentFile } from "./recent-files.js";
 import { shouldAutoLoadDriveChange } from "./drive-live-refresh.js";
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
 import { connectCanvasAgent } from "./mcp-live-client.js";
@@ -6111,6 +6112,7 @@ function DriveLibraryModal({
   primaryStorageTarget,
   localBoards,
   syncJobs,
+  recentFiles,
   onConnect,
   onCreateLocal,
   onDisconnect,
@@ -6135,6 +6137,12 @@ function DriveLibraryModal({
   const StatusIcon = status.icon;
   const files = driveSession.files || [];
   const libraryItems = mergeMoodboardLibrary({ localBoards, remoteFiles: files, syncJobs, links: driveSettings.links });
+  const recentSeen = new Set();
+  const recentItems = recentFiles.map((entry) => {
+    const item = libraryItems.find((candidate) => entry.kind === "drive" ? candidate.remote?.id === entry.id || candidate.linkedFileId === entry.id : candidate.boardId === entry.id);
+    if (entry.kind === "local" && !item?.local) return null;
+    return { ...entry, identity: item?.boardId || `drive:${entry.id}`, name: item?.name || entry.name, local: item?.local, remote: entry.kind === "drive" ? { ...item?.remote, id: entry.id, name: item?.remote?.name || entry.name, resourceKey: item?.remote?.resourceKey || entry.resourceKey } : item?.remote, current: entry.kind === "local" ? entry.id === board.id : currentLink?.fileId === entry.id };
+  }).filter((item) => { if (!item || recentSeen.has(item.identity)) return false; recentSeen.add(item.identity); return true; }).slice(0, 8);
   const listedItems = libraryItems.filter((item) => matchesListQuery([
     item.name,
     libraryItemPresentation(item).label,
@@ -6242,6 +6250,14 @@ function DriveLibraryModal({
           </>
         )}
 
+        {recentItems.length ? <section className="recent-file-section" aria-label="最近開啟的工作檔">
+          <div className="recent-file-heading"><History size={16} /><strong>最近開啟</strong><small>僅記錄在這台裝置</small></div>
+          <div className="drive-file-list">{recentItems.map((item) => <article key={`${item.kind}:${item.id}`}>
+            <span className="drive-file-icon" aria-hidden="true">{item.kind === "drive" ? <Cloud size={19} /> : <HardDrive size={19} />}</span>
+            <div><strong data-l10n-ignore title={item.name}>{item.name}</strong><small>{`${item.kind === "drive" ? "Google Drive" : "這台裝置"} · ${formatTime(item.openedAt)}`}</small></div>
+            {item.current ? <span className="drive-file-badge">目前檔案</span> : item.kind === "drive" && !driveSession.connected ? <button className="quiet-button" type="button" onClick={onConnect} disabled={busy || !configured}>連結 Drive</button> : <button className="quiet-button" type="button" disabled={busy} onClick={() => item.kind === "drive" ? onOpenFile(item.remote) : onOpenLocal(item.local)}>開啟</button>}
+          </article>)}</div>
+        </section> : null}
         <div className="modal-list-toolbar moodboard-library-toolbar">
           <strong>{`${listedItems.length} / ${libraryItems.length} 份工作檔`}</strong>
           <div className="drive-library-list-actions">
@@ -7664,6 +7680,8 @@ function App({ initialProtectedShare = null }) {
     storage: { usage: null, quota: null, persisted: null },
   });
   const [localBoards, setLocalBoards] = useState([]);
+  const [recentFiles, setRecentFiles] = useState(() => readRecentFiles(localStorage));
+  const rememberRecentFile = useCallback((entry) => setRecentFiles(recordRecentFile(localStorage, entry)), []);
   const [syncJobs, setSyncJobs] = useState([]);
   const [customThemes, setCustomThemes] = useState(loadStoredInterfaceThemes);
   const [activeThemeId, setActiveThemeId] = useState(() => localStorage.getItem(ACTIVE_THEME_STORAGE_KEY) || DEFAULT_INTERFACE_THEME_ID);
@@ -10355,7 +10373,7 @@ function App({ initialProtectedShare = null }) {
         setLocalFileBinding(canUseFileSystemPicker ? { status: "unlinked", name: "" } : { status: "unsupported", name: "" });
       }
       if (onCommit) onCommit(imported);
-      else setBoardPrimaryStorage(imported.id, "local");
+      else { setBoardPrimaryStorage(imported.id, "local"); rememberRecentFile({ kind: "local", id: imported.id, name: imported.name }); }
       try {
         await persistBoardLocally(imported);
         if (boardRef.current === imported) setDirty(false);
@@ -10371,7 +10389,7 @@ function App({ initialProtectedShare = null }) {
       announce(error.message || "Infinite Studio 檔案無法開啟。", "error");
       return null;
     }
-  }, [announce, canUseFileSystemPicker, persistBoardLocally, publishBoard, pushUndo, setBoardPrimaryStorage]);
+  }, [announce, canUseFileSystemPicker, persistBoardLocally, publishBoard, pushUndo, rememberRecentFile, setBoardPrimaryStorage]);
 
   const importLocalBoardFile = useCallback(async (file, handle = null) => {
     if (driveSavePromiseRef.current) { announce("正在儲存目前內容；完成後再開啟其他檔案。", "info"); return null; }
@@ -10533,6 +10551,7 @@ function App({ initialProtectedShare = null }) {
       catch { if (boardRef.current.id === next.id) { setDirty(true); setSaveState("本機復原副本寫入失敗"); } }
       await refreshLocalLibrarySummary();
       if (boardRef.current.id !== next.id) return null;
+      rememberRecentFile({ kind: "local", id: next.id, name: next.name });
       setShowDriveLibrary(false);
       announce(message || `已開啟「${next.name}」。`, "success");
       return next;
@@ -10540,7 +10559,7 @@ function App({ initialProtectedShare = null }) {
       announce(error?.message || "無法切換工作檔；目前畫布未受影響。", "error");
       return null;
     }
-  }, [announce, boardSnapshot, cancelDriveOperations, dirty, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, setBoardPrimaryStorage, storagePreferences]);
+  }, [announce, boardSnapshot, cancelDriveOperations, dirty, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, rememberRecentFile, setBoardPrimaryStorage, storagePreferences]);
 
   const openLocalMoodboard = useCallback((record) => {
     if (!record?.board) {
@@ -11091,6 +11110,7 @@ function App({ initialProtectedShare = null }) {
       if (previousRecovery) void setVersionPinned(previousRecovery.versionId, false).catch(() => undefined);
       updateStoragePreferences((current) => ({ ...current, loadRecoveries: { ...current.loadRecoveries, [openedBoard.id]: { boardId: recovery.boardId, versionId: recovery.id, target: recoveryTarget } } }));
       const resolvedResourceKey = metadata.resourceKey || resourceKey;
+      rememberRecentFile({ kind: "drive", id: metadata.id, name: openedBoard.name, resourceKey: resolvedResourceKey });
       const role = driveFileRole(metadata);
       setDriveSharing({
         ...EMPTY_DRIVE_SHARING,
@@ -11177,7 +11197,7 @@ function App({ initialProtectedShare = null }) {
       if (recovery && !committed) void setVersionPinned(recovery.id, false).catch(() => undefined);
       if (driveReadPendingRef.current === readEpoch) driveReadPendingRef.current = null;
     }
-  }, [announce, boardSnapshot, currentDriveAccessToken, importBoardFile, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
+  }, [announce, boardSnapshot, currentDriveAccessToken, importBoardFile, rememberRecentFile, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
 
   // Only replace a clean workspace after confirming the exact linked Drive file changed.
   // The existing open path creates a recovery version and rejects reads superseded by edits.
@@ -15272,6 +15292,7 @@ function App({ initialProtectedShare = null }) {
           primaryStorageTarget={currentPrimaryStorageTarget}
           localBoards={localBoards}
           syncJobs={syncJobs}
+          recentFiles={recentFiles}
           onConnect={connectGoogleDrive}
           onCreateLocal={createLocalMoodboard}
           onDisconnect={disconnectGoogleDrive}
