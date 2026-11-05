@@ -11291,3 +11291,9 @@ button.status-label:hover {
 .drive-file-list article > .drive-open-recovery { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px; font-size: calc(12px + var(--ui-font-offset, 0px)); line-height: 1.5; }
 .drive-open-recovery > span { flex: 1 1 200px; }
 .drive-open-recovery > [role="alert"] { flex-basis: 100%; color: var(--danger); }
+
+/* Explicit warning colours remain legible in both interface themes. */
+.drive-inline-message.is-error { background: #3b290c; color: #ffdf96; border: 1px solid #b77916; font-size: calc(12px + var(--ui-font-offset, 0px)); font-weight: 600; }
+.drive-file-list article > .drive-open-recovery { background: #3b290c; color: #ffdf96; border: 1px solid #b77916; border-radius: 7px; }
+.drive-open-recovery > svg { flex: none; }
+.drive-open-recovery > [role="alert"] { color: #ffdf96; }

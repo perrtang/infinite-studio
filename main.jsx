@@ -6170,6 +6170,7 @@ function DriveLibraryModal({
   syncJobs,
   switchFailure,
   pendingDriveOpen,
+  pendingLocalOpen,
   backupBusy,
   backupError,
   onBackupAndOpen,
@@ -6304,7 +6305,7 @@ function DriveLibraryModal({
           </>
         )}
 
-        {switchFailure ? <p className="drive-inline-message is-error" role="alert">{switchFailure}</p> : null}
+        {switchFailure && !pendingLocalOpen ? <p className="drive-inline-message is-error" role="alert"><AlertTriangle size={17} aria-hidden="true" />{switchFailure}</p> : null}
         <div className="modal-list-toolbar moodboard-library-toolbar">
           <strong>{`${listedItems.length} / ${libraryItems.length} 份工作檔`}</strong>
           <div className="drive-library-list-actions">
@@ -6331,9 +6332,9 @@ function DriveLibraryModal({
                   <div>{renameKey === item.key ? <form className="drive-rename-form" onSubmit={async (event) => { event.preventDefault(); const name = renameValue.trim(); if (!name) { setRenameError("請輸入名稱。"); return; } setRenameBusy(true); setRenameError(""); try { const result = await onRename(item, name); if (result) setRenameKey(""); else setRenameError("名稱尚未完成儲存；請查看同步狀態並重試。"); } catch (error) { setRenameError(error?.message || "無法更新名稱，請重試。"); } finally { setRenameBusy(false); } }}><input aria-label="工作檔名稱" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus disabled={renameBusy} /><button type="submit" className="quiet-button" disabled={renameBusy}>{renameBusy ? "儲存中…" : "儲存"}</button><button type="button" className="quiet-button" disabled={renameBusy} onClick={() => setRenameKey("")}>取消</button>{renameError ? <small role="alert">{renameError}</small> : null}</form> : <strong data-l10n-ignore title={item.name}>{item.name}</strong>}<small>{detail}</small></div>
                   <span className={`drive-file-badge is-${itemStatus.tone}`}>{itemStatus.tone === "success" ? <Check size={13} /> : itemStatus.tone === "error" ? <AlertTriangle size={13} /> : item.remote ? <Cloud size={13} /> : <HardDrive size={13} />}{isCurrent ? "目前檔案" : itemStatus.label}</span>
                   <button className="icon-button" type="button" title="重新命名" aria-label={`重新命名 ${item.name}`} disabled={busy || renameBusy} onClick={() => { setRenameValue(item.name); setRenameError(""); setRenameKey(item.key); }}><Pencil size={15} /></button>
-                  {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy || backupBusy}>開啟</button> : null}
+                  {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy || backupBusy}>{item.local && item.remote ? "開啟本機" : "開啟"}</button> : null}
                   {item.remote?.webViewLink ? <a className="icon-button" href={item.remote.webViewLink} target="_blank" rel="noreferrer" aria-label="在 Google Drive 查看" title="在 Google Drive 查看"><ExternalLink size={15} /></a> : null}
-                  {pendingDriveOpen?.id && item.remote?.id === pendingDriveOpen.id ? <div className="drive-open-recovery" role="status"><span>無法建立瀏覽器復原副本。先將目前畫面存成備份，確認寫入後再開啟這份雲端檔案。</span><button className="secondary-button" type="button" disabled={backupBusy || busy} onClick={onBackupAndOpen}>{backupBusy ? "正在儲存備份…" : "儲存備份並開啟"}</button>{backupError ? <span role="alert">{backupError}</span> : null}</div> : null}
+                  {(pendingDriveOpen?.id && item.remote?.id === pendingDriveOpen.id) || (pendingLocalOpen?.id && item.boardId === pendingLocalOpen.id) ? <div className="drive-open-recovery" role="alert"><AlertTriangle size={18} aria-hidden="true" /><span><strong>目前畫面尚未建立復原副本</strong><br />先將目前畫面存成備份，確認寫入後再開啟選取的工作檔。</span><button className="secondary-button" type="button" disabled={backupBusy || busy} onClick={onBackupAndOpen}>{backupBusy ? "正在儲存備份…" : "儲存備份並開啟"}</button>{backupError ? <span role="alert">{backupError}</span> : null}</div> : null}
                 </article>
               );
             })}
@@ -7731,6 +7732,7 @@ function App({ initialProtectedShare = null }) {
   const [recentFiles, setRecentFiles] = useState(() => readRecentFiles(localStorage));
   const [switchFailure, setSwitchFailure] = useState("");
   const [pendingDriveOpen, setPendingDriveOpen] = useState(null);
+  const [pendingLocalOpen, setPendingLocalOpen] = useState(null);
   const [backupBusy, setBackupBusy] = useState(false);
   const [backupError, setBackupError] = useState("");
   const rememberRecentFile = useCallback((entry) => setRecentFiles(recordRecentFile(localStorage, entry)), []);
@@ -10555,7 +10557,7 @@ function App({ initialProtectedShare = null }) {
     applyAppUpdate({ automatic: true });
   }, [applyAppUpdate, hydrated, updateCheck.manifest?.version, updateCheck.status, updateNoticeDismissed, updatePreference]);
 
-  const activateLocalMoodboard = useCallback(async (nextBoard, message, { newBoard = false } = {}) => {
+  const activateLocalMoodboard = useCallback(async (nextBoard, message, { newBoard = false, externalRecovery = null } = {}) => {
     if (driveSavePromiseRef.current) { announce("正在儲存目前內容；完成後再開啟其他檔案。", "info"); return null; }
     cancelDriveOperations();
     const startingBoard = boardRef.current;
@@ -10563,11 +10565,13 @@ function App({ initialProtectedShare = null }) {
     const current = boardSnapshot();
     setSwitchFailure("");
     try {
-      await protectBeforeWorkspaceSwitch({ current, nextBoard, needsCheckpoint: dirty || current.objects.length > 0, persist: persistBoardLocally, checkpoint: (snapshot) => saveVersion(snapshot, translateInterfaceText("切換工作檔前"), "automatic") });
+      await protectBeforeWorkspaceSwitch({ current, nextBoard, externalRecovery, needsCheckpoint: dirty || current.objects.length > 0, persist: persistBoardLocally, checkpoint: (snapshot) => saveVersion(snapshot, translateInterfaceText("切換工作檔前"), "automatic") });
       if (boardRef.current !== startingBoard || operationEpoch !== driveOperationEpochRef.current) {
         announce("目前內容已變更；未切換檔案，請再試一次。", "info");
         return null;
       }
+      if (externalRecovery && !recoveryMatchesCurrent(externalRecovery, boardSnapshot())) throw new Error("畫面已變更，備份不再符合目前內容。");
+      setPendingLocalOpen(null);
       setDriveSharing(EMPTY_DRIVE_SHARING);
       const next = ensureBoard(nextBoard);
       setDriveSession((current) => ({
@@ -10599,14 +10603,15 @@ function App({ initialProtectedShare = null }) {
       setSaveState("已從本機資料庫開啟");
       try { await persistBoardLocally(next); }
       catch { if (boardRef.current.id === next.id) { setDirty(true); setSaveState("本機復原副本寫入失敗"); } }
-      await refreshLocalLibrarySummary();
+      await refreshLocalLibrarySummary().catch(() => undefined);
       if (boardRef.current.id !== next.id) return null;
       rememberRecentFile({ kind: "local", id: next.id, name: next.name });
       setShowDriveLibrary(false);
       announce(message || `已開啟「${next.name}」。`, "success");
       return next;
     } catch (error) {
-      const reason = `${describeLocalPersistenceError(error)} 目前畫布未受影響；請先下載 .studio 備份後再試。`;
+      const reason = `${describeLocalPersistenceError(error)} 目前畫布未受影響。`;
+      if (!newBoard && !externalRecovery && nextBoard?.id) { setPendingDriveOpen(null); setPendingLocalOpen({ id: nextBoard.id, board: nextBoard }); setBackupError(""); }
       setSwitchFailure(reason);
       return null;
     }
@@ -11109,7 +11114,7 @@ function App({ initialProtectedShare = null }) {
   }, [announce, authReady, authSession.user?.email, authSession.user?.uid, boardSnapshot, cancelDriveRead, cloudReadOnly, currentDriveAccessToken, driveSession.conflict, driveSettings.autoSync, driveSettings.connectionEmail, driveSettings.connectionOwnerUid, driveSettings.enabled, driveSettings.folderId, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, requestAdvancedFeature, setBoardPrimaryStorage, updateDriveSettings, updateStoragePreferences]);
 
   const openGoogleDriveFile = useCallback(async (file, { sharedLink = false, automatic = false, externalRecovery = null } = {}) => {
-    if (!externalRecovery) { setPendingDriveOpen(null); setBackupError(""); }
+    if (!externalRecovery) { setPendingDriveOpen(null); setPendingLocalOpen(null); setBackupError(""); }
     if (driveSavePromiseRef.current) {
       announce("正在儲存目前內容；完成後再開啟其他檔案。", "info");
       if (sharedLink) setDriveSharing((current) => ({ ...current, status: "error", message: "正在儲存目前內容；完成後請重新嘗試開啟。" }));
@@ -14641,13 +14646,15 @@ function App({ initialProtectedShare = null }) {
                 if (entry.kind === "drive") {
                   if (!currentDriveAccessToken()) return "請先到「我的工作檔」連結 Google Drive，再開啟此檔案。";
                   const opened = await openGoogleDriveFile({ id: entry.id, name: entry.name, resourceKey: entry.resourceKey });
-                  return opened ? true : "無法開啟雲端檔案；請檢查連線或權限。目前畫布未受影響。";
+                  if (!opened) setShowDriveLibrary(true);
+                  return opened ? true : "無法開啟雲端檔案；請在「我的工作檔」查看提示。目前畫布未受影響。";
                 }
                 try {
                   const record = (await listLocalBoards()).find((item) => item.id === entry.id);
                   if (!record?.board) return "找不到這份本機工作檔；請從檔案或 Google Drive 開啟。";
                   const opened = await openLocalMoodboard(record);
-                  return opened ? true : "無法保護目前畫布，請先下載 .studio 備份後再試。";
+                  if (!opened) setShowDriveLibrary(true);
+                  return opened ? true : "無法保護目前畫布；請在「我的工作檔」中儲存備份並開啟。";
                 } catch (error) { return `${describeLocalPersistenceError(error)} 目前畫布未受影響。`; }
               }}
               onSave={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
@@ -15363,10 +15370,12 @@ function App({ initialProtectedShare = null }) {
           syncJobs={syncJobs}
           switchFailure={switchFailure}
           pendingDriveOpen={pendingDriveOpen}
+          pendingLocalOpen={pendingLocalOpen}
           backupBusy={backupBusy}
           backupError={backupError}
           onBackupAndOpen={async () => {
-            if (backupBusy || !pendingDriveOpen) return;
+            if (backupBusy || (!pendingDriveOpen && !pendingLocalOpen)) return;
+            const target = pendingLocalOpen ? { kind: "local", ...pendingLocalOpen } : { kind: "drive", file: pendingDriveOpen };
             const snapshot = boardSnapshot();
             const backupEpoch = driveReadEpochRef.current;
             setBackupBusy(true); setBackupError("");
@@ -15377,10 +15386,10 @@ function App({ initialProtectedShare = null }) {
                 suggestedName: `${safeFilename(snapshot.name, "studio")}-backup.studio`,
                 getCurrentSnapshot: boardSnapshot,
                 isCurrent: () => backupEpoch === driveReadEpochRef.current,
-                open: (backup) => openGoogleDriveFile(pendingDriveOpen, { externalRecovery: backup }),
+                open: (backup) => target.kind === "local" ? activateLocalMoodboard(target.board, `已開啟工作檔；先前畫面已備份至「${backup.name}」。`, { externalRecovery: backup }) : openGoogleDriveFile(target.file, { externalRecovery: backup }),
               });
               if (result.changed) setBackupError("畫面或開啟操作已變更；備份已儲存，但未切換檔案。");
-              else if (!result.opened) setBackupError("備份已儲存；雲端檔案尚未開啟，請檢查連線或重新操作。");
+              else if (!result.opened) setBackupError("備份已儲存；工作檔尚未開啟，請重新操作。");
             } catch (error) {
               setBackupError(error?.name === "AbortError" ? "已取消備份；目前畫面保持不變。" : `${error?.message || "備份未完成"}；目前畫面保持不變。`);
             } finally { setBackupBusy(false); }
@@ -15640,6 +15649,22 @@ function ProtectedShareGate({ token }) {
   </form></main>;
 }
 
+// Isolated local design preview: no account or real work files are accessed.
+function DriveRecoveryPreview() {
+  const [notice, setNotice] = useState("");
+  const current = { id: "preview-current", name: "目前工作檔", objects: [] };
+  const record = { id: "preview-target", name: "範例工作檔", revision: 12, board: { id: "preview-target", name: "範例工作檔", objects: [] } };
+  const noop = () => {};
+  return <DriveLibraryModal board={current} currentContentBytes={0} currentLink={null}
+    driveSession={{ status: "ready", connected: true, files: [] }} driveSettings={{ links: {}, autoSync: false }}
+    primaryStorageTarget="drive" localBoards={[record]} syncJobs={[]} switchFailure=""
+    pendingLocalOpen={{ id: record.id }} pendingDriveOpen={null} backupBusy={false} backupError={notice}
+    onBackupAndOpen={() => setNotice("本機介面預覽，不會儲存或切換真正的工作檔。")}
+    onConnect={noop} onCreateLocal={noop} onDisconnect={noop} onDownloadBackup={noop} onOpenDeviceFile={noop}
+    onOpenLocal={noop} onOpenFile={noop} onRecoverRemote={noop} onRefresh={noop} onRename={noop}
+    onSave={noop} onSaveCopy={noop} onSetAutoSync={noop} onClose={noop} />;
+}
+
 const rootElement = document.getElementById("root");
 const moodboardRoot = rootElement.__moodboardRoot || createRoot(rootElement);
 rootElement.__moodboardRoot = moodboardRoot;
@@ -15648,4 +15673,4 @@ const currentUrl = new URL(window.location.href);
 const publicPreview = import.meta.env.DEV && currentUrl.searchParams.has("publicPreview");
 const incomingPublicShare = parseGoogleDriveMoodboardLink(currentUrl.href);
 const protectedShareToken = currentUrl.searchParams.get("lockedShare");
-moodboardRoot.render(publicPreview ? <PublicSharedViewer preview /> : sharingPreviewMode ? <DriveSharingPreview initialMode={sharingPreviewMode} /> : protectedShareToken !== null ? <ProtectedShareGate token={protectedShareToken} /> : incomingPublicShare && currentUrl.searchParams.get("sharedEdit") !== "1" ? <PublicSharedViewer incoming={incomingPublicShare} /> : <App />);
+moodboardRoot.render(import.meta.env.DEV && currentUrl.searchParams.has("recoveryPreview") ? <DriveRecoveryPreview /> : publicPreview ? <PublicSharedViewer preview /> : sharingPreviewMode ? <DriveSharingPreview initialMode={sharingPreviewMode} /> : protectedShareToken !== null ? <ProtectedShareGate token={protectedShareToken} /> : incomingPublicShare && currentUrl.searchParams.get("sharedEdit") !== "1" ? <PublicSharedViewer incoming={incomingPublicShare} /> : <App />);

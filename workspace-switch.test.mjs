@@ -18,3 +18,14 @@ test('failed outgoing save prevents the switch and does not discard its error', 
 test('replacing the same file requires a successful recovery checkpoint', async () => {
   await assert.rejects(protectBeforeWorkspaceSwitch({ current: { id: 'a' }, nextBoard: { id: 'a' }, needsCheckpoint: true, persist: async () => {}, checkpoint: async () => { throw new Error('checkpoint failed'); } }), /checkpoint failed/);
 });
+
+test('verified external backup permits a local switch only for the exact snapshot', async () => {
+  const current = { id: 'a', objects: [{ id: 'one' }] };
+  const backup = { text: `${JSON.stringify(current, null, 2)}\n` };
+  let writes = 0;
+  const args = { current, nextBoard: { id: 'b' }, needsCheckpoint: true, persist: async () => { writes++; throw new Error('quota'); }, checkpoint: async () => { writes++; } };
+  await protectBeforeWorkspaceSwitch({ ...args, externalRecovery: backup });
+  assert.equal(writes, 0);
+  await assert.rejects(protectBeforeWorkspaceSwitch({ ...args, current: { ...current, id: 'changed' }, externalRecovery: backup }), /畫面已變更/);
+  assert.equal(writes, 0);
+});
