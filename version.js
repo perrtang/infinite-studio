@@ -1,4 +1,4 @@
-export const APP_VERSION = "0.56.46";
+export const APP_VERSION = "0.56.47";
 export const APP_VERSION_LABEL = `App v${APP_VERSION}`;
 export const APP_RELEASE_DATE = "2026-11-06";
 export const APP_UPDATE_PREFERENCE_STORAGE_KEY = "infinite-moodboard-update-preference-v1";

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.46",
+  "version": "0.56.47",
   "releasedAt": "2026-11-06",
-  "summary": "修正分享檢視頁在確認登入時的按鈕提示。",
-  "notesUrl": "release-notes/v0.56.46.html",
+  "summary": "改善最近開啟選單在不同螢幕尺寸下的顯示與操作。",
+  "notesUrl": "release-notes/v0.56.47.html",
   "url": "https://infinite.petfashion.tw/"
 }

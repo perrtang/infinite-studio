@@ -1017,11 +1017,10 @@ button:disabled {
   border-radius: 9px;
   box-shadow: 0 16px 40px rgb(0 0 0 / 0.34);
   right: 0;
-  max-height: min(680px, calc(100vh - 68px));
+  max-height: calc(100vh - 68px);
   overflow: auto;
   padding: 6px;
-  position: absolute;
-  top: calc(100% + 7px);
+  position: fixed;
   width: min(350px, calc(100vw - 16px));
   z-index: 160;
 }
@@ -1073,6 +1072,7 @@ button:disabled {
 }
 
 .file-menu-section > button:hover,
+.file-menu-section > button[aria-expanded="true"],
 .file-menu-section > button:focus-visible {
   background: var(--quiet-bg);
   outline: none;
@@ -1098,9 +1098,8 @@ button:disabled {
   min-width: 0;
 }
 
-.file-menu-recent { position: fixed; z-index: 161; display: grid; gap: 2px; max-height: calc(100vh - 80px); overflow: auto; padding: 6px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--modal-bg); box-shadow: 0 16px 40px rgb(0 0 0 / 0.34); }
-.file-menu-recent-heading { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; color: var(--text-muted); font-size: 12px; font-weight: 700; }
-.file-menu-recent-heading button { border: 0; background: transparent; color: inherit; font: inherit; font-size: 18px; cursor: pointer; }
+.file-menu-recent { position: fixed; z-index: 161; display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 80px); overflow: auto; padding: 6px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--modal-bg); box-shadow: 0 16px 40px rgb(0 0 0 / 0.34); }
+.file-menu-recent > .file-menu-recent-back { min-height: 36px; color: var(--text-muted); border-bottom: 1px solid var(--border); border-radius: 0; }
 .file-menu-recent > button { display: flex; align-items: center; gap: 10px; min-height: 44px; width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .file-menu-recent > button:hover, .file-menu-recent > button:focus-visible { background: var(--quiet-bg); }
 .file-menu-recent > button:focus-visible { outline: 2px solid var(--accent-strong); }

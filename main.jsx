@@ -2011,6 +2011,7 @@ function FileMenu({
   const [open, setOpen] = useState(false);
   const [recentExpanded, setRecentExpanded] = useState(false);
   const [recentBusy, setRecentBusy] = useState("");
+  const [menuPosition, setMenuPosition] = useState({ top: 56, right: 8 });
   const [recentPosition, setRecentPosition] = useState({ left: 8, top: 60, width: 300 });
   const recentTriggerRef = useRef(null);
   const recentMenuRef = useRef(null);
@@ -2020,6 +2021,19 @@ function FileMenu({
   const wrapperRef = useRef(null);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const positionMenu = () => {
+      const trigger = triggerRef.current?.getBoundingClientRect();
+      if (!trigger) return;
+      const width = Math.min(350, window.innerWidth - 16);
+      setMenuPosition({ top: trigger.bottom + 7, right: Math.max(8, Math.min(window.innerWidth - trigger.right, window.innerWidth - width - 8)) });
+    };
+    positionMenu();
+    window.addEventListener("resize", positionMenu);
+    return () => window.removeEventListener("resize", positionMenu);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -2056,8 +2070,9 @@ function FileMenu({
       const parent = menuRef.current?.getBoundingClientRect();
       const trigger = recentTriggerRef.current?.getBoundingClientRect();
       if (!parent || !trigger) return;
-      const width = Math.min(300, window.innerWidth - 16);
-      setRecentPosition({ left: Math.max(8, parent.left - width - 6), top: Math.max(8, Math.min(trigger.top, window.innerHeight - 120)), width });
+      const compact = parent.left < 208;
+      const width = compact ? Math.min(parent.width, window.innerWidth - 16) : Math.min(300, parent.left - 12);
+      setRecentPosition({ left: compact ? Math.max(8, parent.left) : parent.left - width - 4, top: compact ? parent.top : Math.max(8, Math.min(trigger.top, window.innerHeight - 120)), width, compact });
     };
     positionRecentMenu();
     window.addEventListener("resize", positionRecentMenu);
@@ -2116,6 +2131,7 @@ function FileMenu({
           role="menu"
           aria-label="主選單"
           ref={menuRef}
+          style={{ top: menuPosition.top, right: menuPosition.right, maxHeight: `calc(100vh - ${menuPosition.top + 8}px)` }}
           onKeyDown={navigateMenu}
         >
           <div className="file-menu-section" aria-label="檔案操作">
@@ -2126,7 +2142,7 @@ function FileMenu({
             <button type="button" role="menuitem" onClick={() => activate(onOpenFile)}>
               <FileUp size={17} /><span><strong>開啟工作檔…</strong><small>支援 .studio 與舊版工作檔</small></span><kbd>{platformShortcutLabel("mod+o")}</kbd>
             </button>
-            <button type="button" role="menuitem" ref={recentTriggerRef} aria-haspopup="menu" aria-expanded={recentExpanded} onClick={() => { setRecentExpanded((value) => !value); setRecentError(""); }}>
+            <button type="button" role="menuitem" ref={recentTriggerRef} aria-haspopup="menu" aria-expanded={recentExpanded} aria-controls={recentExpanded ? "recent-files-menu" : undefined} onKeyDown={(event) => { if (event.key === "ArrowLeft") { event.preventDefault(); setRecentExpanded(true); window.requestAnimationFrame(() => recentMenuRef.current?.querySelector('[role="menuitem"]')?.focus()); } }} onClick={() => { setRecentExpanded((value) => !value); setRecentError(""); }}>
               <History size={17} /><span><strong>最近開啟…</strong><small>這台裝置最近使用的工作檔</small></span><ChevronLeft size={15} />
             </button>
             <button type="button" role="menuitem" title={saveTitle} onClick={() => activate(onSave)}>
@@ -2178,7 +2194,8 @@ function FileMenu({
           </div>
         </div>
       ) : null}
-      {open && recentExpanded ? <div className="file-menu-recent" ref={recentMenuRef} style={{ left: recentPosition.left, top: recentPosition.top, width: recentPosition.width, maxHeight: `calc(100vh - ${recentPosition.top + 8}px)` }} role="menu" aria-label="最近開啟的工作檔" onKeyDown={(event) => {
+      {open && recentExpanded ? <div id="recent-files-menu" className="file-menu-recent" ref={recentMenuRef} style={{ left: recentPosition.left, top: recentPosition.top, width: recentPosition.width, maxHeight: `calc(100vh - ${recentPosition.top + 8}px)` }} role="menu" aria-label="最近開啟的工作檔" onKeyDown={(event) => {
+        if (event.key === "ArrowRight") { event.preventDefault(); setRecentExpanded(false); recentTriggerRef.current?.focus(); return; }
         if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
         const items = [...recentMenuRef.current.querySelectorAll('[role="menuitem"]')];
         if (!items.length) return;
@@ -2187,7 +2204,7 @@ function FileMenu({
         const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : event.key === "ArrowDown" ? (index + 1 + items.length) % items.length : (index - 1 + items.length) % items.length;
         items[next].focus();
       }}>
-        <div className="file-menu-recent-heading">最近開啟 <button type="button" aria-label="關閉最近開啟" onClick={() => { setRecentExpanded(false); recentTriggerRef.current?.focus(); }}>×</button></div>
+        {recentPosition.compact ? <button type="button" className="file-menu-recent-back" onClick={() => { setRecentExpanded(false); recentTriggerRef.current?.focus(); }}>返回主選單</button> : null}
               {recentFiles.length ? recentFiles.slice(0, 8).map((item) => <button type="button" role="menuitem" key={`${item.kind}:${item.id}`} aria-disabled={Boolean(recentBusy)} onClick={async () => {
                 if (recentBusy) return;
                 setRecentBusy(item.id); setRecentError("");
