@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.41](./public/release-notes/v0.56.41.html) — add recent files to the main menu and improve safe switching feedback.
+
 - [v0.56.40](./public/release-notes/v0.56.40.html) — add recently opened files.
 - [v0.56.39](./public/release-notes/v0.56.39.html) — unify cloud-load feedback and retain recovery access.
 - [v0.56.38](./public/release-notes/v0.56.38.html) — clarify viewer edit access requests.

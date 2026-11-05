@@ -1,4 +1,5 @@
 import { readRecentFiles, recordRecentFile } from "./recent-files.js";
+import { protectBeforeWorkspaceSwitch } from "./workspace-switch.js";
 import { shouldAutoLoadDriveChange } from "./drive-live-refresh.js";
 import { driveHeaderIndicator } from "./drive-header-indicator.js";
 import { connectCanvasAgent } from "./mcp-live-client.js";
@@ -1985,6 +1986,8 @@ function AccountAvatar({ user, size = 28 }) {
 function FileMenu({
   onOpenLibrary,
   onOpenFile,
+  recentFiles = [],
+  onOpenRecent,
   onSave,
   onSaveAs,
   onExportBrowser,
@@ -2004,6 +2007,9 @@ function FileMenu({
   collaborationCount = 0,
 }) {
   const [open, setOpen] = useState(false);
+  const [recentExpanded, setRecentExpanded] = useState(false);
+  const [recentBusy, setRecentBusy] = useState("");
+  const [recentError, setRecentError] = useState("");
   const wrapperRef = useRef(null);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
@@ -2091,6 +2097,19 @@ function FileMenu({
             <button type="button" role="menuitem" onClick={() => activate(onOpenFile)}>
               <FileUp size={17} /><span><strong>開啟工作檔…</strong><small>支援 .studio 與舊版工作檔</small></span><kbd>{platformShortcutLabel("mod+o")}</kbd>
             </button>
+            <button type="button" role="menuitem" aria-expanded={recentExpanded} onClick={() => { setRecentExpanded((value) => !value); setRecentError(""); }}>
+              <History size={17} /><span><strong>最近開啟…</strong><small>這台裝置最近使用的工作檔</small></span><ChevronDown size={15} />
+            </button>
+            {recentExpanded ? <div className="file-menu-recent" role="group" aria-label="最近開啟的工作檔">
+              {recentFiles.length ? recentFiles.slice(0, 8).map((item) => <button type="button" role="menuitem" key={`${item.kind}:${item.id}`} aria-disabled={Boolean(recentBusy)} onClick={async () => {
+                if (recentBusy) return;
+                setRecentBusy(item.id); setRecentError("");
+                try { const result = await onOpenRecent(item); if (result === true) setOpen(false); else setRecentError(result || "無法開啟；目前畫布未受影響。"); }
+                catch { setRecentError("無法開啟；目前畫布未受影響，請稍後再試。"); }
+                finally { setRecentBusy(""); }
+              }}>{item.kind === "drive" ? <Cloud size={15} /> : <HardDrive size={15} />}<span><strong data-l10n-ignore title={item.name}>{item.name}</strong><small>{recentBusy === item.id ? "開啟中…" : item.kind === "drive" ? "Google Drive" : "這台裝置"}</small></span></button>) : <p>尚無最近開啟紀錄。開啟工作檔後會顯示在這裡。</p>}
+              {recentError ? <p role="alert">{recentError}</p> : null}
+            </div> : null}
             <button type="button" role="menuitem" title={saveTitle} onClick={() => activate(onSave)}>
               <Save size={17} /><span><strong>{saveLabel}</strong><small>{saveTitle}</small></span><kbd>{platformShortcutLabel("mod+s")}</kbd>
             </button>
@@ -6112,7 +6131,7 @@ function DriveLibraryModal({
   primaryStorageTarget,
   localBoards,
   syncJobs,
-  recentFiles,
+  switchFailure,
   onConnect,
   onCreateLocal,
   onDisconnect,
@@ -6137,12 +6156,6 @@ function DriveLibraryModal({
   const StatusIcon = status.icon;
   const files = driveSession.files || [];
   const libraryItems = mergeMoodboardLibrary({ localBoards, remoteFiles: files, syncJobs, links: driveSettings.links });
-  const recentSeen = new Set();
-  const recentItems = recentFiles.map((entry) => {
-    const item = libraryItems.find((candidate) => entry.kind === "drive" ? candidate.remote?.id === entry.id || candidate.linkedFileId === entry.id : candidate.boardId === entry.id);
-    if (entry.kind === "local" && !item?.local) return null;
-    return { ...entry, identity: item?.boardId || `drive:${entry.id}`, name: item?.name || entry.name, local: item?.local, remote: entry.kind === "drive" ? { ...item?.remote, id: entry.id, name: item?.remote?.name || entry.name, resourceKey: item?.remote?.resourceKey || entry.resourceKey } : item?.remote, current: entry.kind === "local" ? entry.id === board.id : currentLink?.fileId === entry.id };
-  }).filter((item) => { if (!item || recentSeen.has(item.identity)) return false; recentSeen.add(item.identity); return true; }).slice(0, 8);
   const listedItems = libraryItems.filter((item) => matchesListQuery([
     item.name,
     libraryItemPresentation(item).label,
@@ -6250,14 +6263,7 @@ function DriveLibraryModal({
           </>
         )}
 
-        {recentItems.length ? <section className="recent-file-section" aria-label="最近開啟的工作檔">
-          <div className="recent-file-heading"><History size={16} /><strong>最近開啟</strong><small>僅記錄在這台裝置</small></div>
-          <div className="drive-file-list">{recentItems.map((item) => <article key={`${item.kind}:${item.id}`}>
-            <span className="drive-file-icon" aria-hidden="true">{item.kind === "drive" ? <Cloud size={19} /> : <HardDrive size={19} />}</span>
-            <div><strong data-l10n-ignore title={item.name}>{item.name}</strong><small>{`${item.kind === "drive" ? "Google Drive" : "這台裝置"} · ${formatTime(item.openedAt)}`}</small></div>
-            {item.current ? <span className="drive-file-badge">目前檔案</span> : item.kind === "drive" && !driveSession.connected ? <button className="quiet-button" type="button" onClick={onConnect} disabled={busy || !configured}>連結 Drive</button> : <button className="quiet-button" type="button" disabled={busy} onClick={() => item.kind === "drive" ? onOpenFile(item.remote) : onOpenLocal(item.local)}>開啟</button>}
-          </article>)}</div>
-        </section> : null}
+        {switchFailure ? <p className="drive-inline-message is-error" role="alert">{switchFailure}</p> : null}
         <div className="modal-list-toolbar moodboard-library-toolbar">
           <strong>{`${listedItems.length} / ${libraryItems.length} 份工作檔`}</strong>
           <div className="drive-library-list-actions">
@@ -7681,6 +7687,7 @@ function App({ initialProtectedShare = null }) {
   });
   const [localBoards, setLocalBoards] = useState([]);
   const [recentFiles, setRecentFiles] = useState(() => readRecentFiles(localStorage));
+  const [switchFailure, setSwitchFailure] = useState("");
   const rememberRecentFile = useCallback((entry) => setRecentFiles(recordRecentFile(localStorage, entry)), []);
   const [syncJobs, setSyncJobs] = useState([]);
   const [customThemes, setCustomThemes] = useState(loadStoredInterfaceThemes);
@@ -10509,11 +10516,9 @@ function App({ initialProtectedShare = null }) {
     const startingBoard = boardRef.current;
     const operationEpoch = driveOperationEpochRef.current;
     const current = boardSnapshot();
+    setSwitchFailure("");
     try {
-      await persistBoardLocally(current);
-      if (dirty || current.objects.length) {
-        await saveVersion(current, translateInterfaceText("切換工作檔前"), "automatic");
-      }
+      await protectBeforeWorkspaceSwitch({ current, nextBoard, needsCheckpoint: dirty || current.objects.length > 0, persist: persistBoardLocally, checkpoint: (snapshot) => saveVersion(snapshot, translateInterfaceText("切換工作檔前"), "automatic") });
       if (boardRef.current !== startingBoard || operationEpoch !== driveOperationEpochRef.current) {
         announce("目前內容已變更；未切換檔案，請再試一次。", "info");
         return null;
@@ -10556,22 +10561,23 @@ function App({ initialProtectedShare = null }) {
       announce(message || `已開啟「${next.name}」。`, "success");
       return next;
     } catch (error) {
-      announce(error?.message || "無法切換工作檔；目前畫布未受影響。", "error");
+      const reason = `${describeLocalPersistenceError(error)} 目前畫布未受影響；請先下載 .studio 備份後再試。`;
+      setSwitchFailure(reason);
       return null;
     }
   }, [announce, boardSnapshot, cancelDriveOperations, dirty, driveSettings.links, persistBoardLocally, refreshLocalLibrarySummary, rememberRecentFile, setBoardPrimaryStorage, storagePreferences]);
 
-  const openLocalMoodboard = useCallback((record) => {
+  const openLocalMoodboard = useCallback(async (record) => {
     if (!record?.board) {
-      announce("找不到這份本機工作檔的內容。", "error");
-      return;
+      setSwitchFailure("找不到這份本機工作檔，請從檔案或 Google Drive 開啟。");
+      return null;
     }
     if (record.id === boardRef.current.id) {
       setShowDriveLibrary(false);
-      return;
+      return record.board;
     }
-    activateLocalMoodboard(record.board);
-  }, [activateLocalMoodboard, announce]);
+    return activateLocalMoodboard(record.board);
+  }, [activateLocalMoodboard]);
 
   const createLocalMoodboard = useCallback(() => {
     const next = createBoard({ name: localizedDefaultBoardName(interfaceLocale) });
@@ -14581,6 +14587,20 @@ function App({ initialProtectedShare = null }) {
             <FileMenu
               onOpenLibrary={openGoogleDriveLibrary}
               onOpenFile={openBoardFile}
+              recentFiles={recentFiles}
+              onOpenRecent={async (entry) => {
+                if (entry.kind === "drive") {
+                  if (!currentDriveAccessToken()) return "請先到「我的工作檔」連結 Google Drive，再開啟此檔案。";
+                  const opened = await openGoogleDriveFile({ id: entry.id, name: entry.name, resourceKey: entry.resourceKey });
+                  return opened ? true : "無法開啟雲端檔案；請檢查連線或權限。目前畫布未受影響。";
+                }
+                try {
+                  const record = (await listLocalBoards()).find((item) => item.id === entry.id);
+                  if (!record?.board) return "找不到這份本機工作檔；請從檔案或 Google Drive 開啟。";
+                  const opened = await openLocalMoodboard(record);
+                  return opened ? true : "無法保護目前畫布，請先下載 .studio 備份後再試。";
+                } catch (error) { return `${describeLocalPersistenceError(error)} 目前畫布未受影響。`; }
+              }}
               onSave={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
               saveLabel={currentPrimaryStorageTarget === "drive" ? "更新至雲端" : "儲存"}
               onSaveAs={() => saveBoardFile(true)}
@@ -15292,7 +15312,7 @@ function App({ initialProtectedShare = null }) {
           primaryStorageTarget={currentPrimaryStorageTarget}
           localBoards={localBoards}
           syncJobs={syncJobs}
-          recentFiles={recentFiles}
+          switchFailure={switchFailure}
           onConnect={connectGoogleDrive}
           onCreateLocal={createLocalMoodboard}
           onDisconnect={disconnectGoogleDrive}

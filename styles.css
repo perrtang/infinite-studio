@@ -1098,6 +1098,15 @@ button:disabled {
   min-width: 0;
 }
 
+.file-menu-recent { display: grid; gap: 2px; margin: 0 4px 4px 34px; }
+.file-menu-recent > button { display: flex; align-items: center; gap: 10px; min-height: 44px; width: 100%; padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.file-menu-recent > button:hover, .file-menu-recent > button:focus-visible { background: var(--quiet-bg); }
+.file-menu-recent > button:focus-visible { outline: 2px solid var(--accent-strong); }
+.file-menu-recent > button > span { display: grid; min-width: 0; gap: 2px; }
+.file-menu-recent strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(12px + var(--ui-font-offset, 0px)); }
+.file-menu-recent small, .file-menu-recent p { color: var(--text-muted); font-size: calc(11px + var(--ui-font-offset, 0px)); }
+.file-menu-recent p { margin: 6px 10px; line-height: 1.5; }
+
 .file-menu-section > button strong {
   font-size: calc(13px + var(--ui-font-offset, 0px));
   font-weight: 650;
