@@ -1086,6 +1086,11 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
 }
+.file-menu-copy-form { display: grid; gap: 8px; padding: 8px 10px 10px 44px; }
+.file-menu-copy-form label { display: grid; gap: 5px; color: var(--text-muted); font-size: 12px; }
+.file-menu-copy-form input { min-width: 0; width: 100%; padding: 7px 8px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--modal-bg); color: var(--text); font: inherit; }
+.file-menu-copy-form div { display: flex; justify-content: flex-end; gap: 8px; }
+.file-menu-copy-form button { padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--quiet-bg); color: var(--text); font: inherit; cursor: pointer; }
 
 .file-menu-section > button > svg {
   color: var(--text-muted);

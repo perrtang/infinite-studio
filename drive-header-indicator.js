@@ -10,6 +10,7 @@ export function driveHeaderIndicator({ status, busy, dirty, paused } = {}) {
   return ({
     synced: "已儲存",
     "synced-local-warning": "本機備份未更新",
+    "synced-history-warning": "本機版本紀錄未更新",
     pending: "尚未儲存",
     offline: "目前離線",
     quota: "空間不足",

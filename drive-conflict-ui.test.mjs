@@ -20,7 +20,7 @@ test("Drive conflict keeps upload primary and uses one target-bound confirmation
 });
 
 test("saving a Drive copy creates an independent board and keeps the current Drive link", () => {
-  assert.match(source, /const uploadSnapshot = asCopy \? createRecoveredMoodboard\(snapshot, \{ label: "Drive 複本" \}\) : snapshot/);
+  assert.match(source, /const uploadSnapshot = asCopy \? \{ \.\.\.createRecoveredMoodboard\(snapshot, \{ label: "Drive 複本" \}\), \.\.\.\(copyName \? \{ name: copyName \} : \{\}\) \} : snapshot/);
   assert.match(source, /if \(!asCopy\) \{\s*updateDriveSettings\([\s\S]*?setBoardPrimaryStorage\(snapshot\.id, "drive"\);[\s\S]*?await withOperationTimeout\(removeSyncJob\(snapshot\.id\), DRIVE_QUEUE_TIMEOUT_MS/);
   assert.match(source, /conflict: asCopy \? current\.conflict : null/);
   assert.match(source, /if \(!asCopy\) \{\s*let queuePreparationActive = true;\s*try \{\s*await withOperationTimeout\([\s\S]*?const queuedJob = await getSyncJob/);

@@ -21,7 +21,7 @@ test("a confirmed upload stops the spinner before optional Drive metadata refres
   const backgroundRefreshIndex = main.indexOf("void Promise.all([", syncedStateIndex);
   assert.ok(syncedStateIndex > -1);
   assert.ok(backgroundRefreshIndex > syncedStateIndex);
-  assert.match(main.slice(syncedStateIndex, backgroundRefreshIndex), /status: asCopy[\s\S]*"synced-local-warning" : "synced"[\s\S]*busy: false/);
+  assert.match(main.slice(syncedStateIndex, backgroundRefreshIndex), /status: asCopy[\s\S]*"synced-local-warning"[\s\S]*"synced-history-warning"[\s\S]*"synced"[\s\S]*busy: false/);
 });
 
 test("autosync waits while Drive is busy and retries recoverable errors on the queued deadline", () => {
@@ -82,5 +82,6 @@ test("cloud save indicator distinguishes saved, pending, working and recoverable
   assert.equal(driveHeaderIndicator({ status: "conflict" }), "需處理衝突");
   assert.equal(driveHeaderIndicator({ status: "error", dirty: true }), "更新失敗");
   assert.equal(driveHeaderIndicator({ status: "synced-local-warning" }), "本機備份未更新");
+  assert.equal(driveHeaderIndicator({ status: "synced-history-warning" }), "本機版本紀錄未更新");
   assert.equal(driveHeaderIndicator({ status: "ready", paused: true }), "待更新");
 });

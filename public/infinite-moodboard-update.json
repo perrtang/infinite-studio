@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.47",
+  "version": "0.56.48",
   "releasedAt": "2026-11-06",
-  "summary": "改善最近開啟選單在不同螢幕尺寸下的顯示與操作。",
-  "notesUrl": "release-notes/v0.56.47.html",
+  "summary": "區分本機復原與版本紀錄的儲存狀態，並新增另存雲端新檔。",
+  "notesUrl": "release-notes/v0.56.48.html",
   "url": "https://infinite.petfashion.tw/"
 }

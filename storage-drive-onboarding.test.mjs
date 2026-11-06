@@ -66,7 +66,7 @@ test("Drive becomes primary only after verified connection success and then retu
   const choice = main.slice(choiceStart, choiceEnd);
 
   assert.match(completion, /!driveSession\.busy/);
-  assert.match(completion, /\["ready", "synced", "synced-local-warning"\]\.includes\(driveSession\.status\)/);
+  assert.match(completion, /\["ready", "synced", "synced-local-warning", "synced-history-warning"\]\.includes\(driveSession\.status\)/);
   assert.match(completion, /driveSession\.status === "conflict"/);
   assert.match(completion, /driveConflictNeedsDecision[\s\S]*setShowDriveLibrary\(true\)/);
   assert.match(completion, /setBoardPrimaryStorage\(driveOnboardingIntent\.boardId, "drive"\)/);
@@ -78,7 +78,7 @@ test("Drive becomes primary only after verified connection success and then retu
   assert.match(choice, /if \(target === "local"\) \{[\s\S]*setBoardPrimaryStorage\(boardId, target\)/);
   assert.match(choice, /setDriveOnboardingIntent\(\{ boardId, operationEpoch \}\)/);
   assert.match(choice, /requestAdvancedFeature\("drive-onboarding"\)/);
-  assert.match(choice, /driveSession\.connected && existingDriveToken && \["ready", "synced", "synced-local-warning"\]\.includes\(driveSession\.status\)/);
+  assert.match(choice, /driveSession\.connected && existingDriveToken && \["ready", "synced", "synced-local-warning", "synced-history-warning"\]\.includes\(driveSession\.status\)/);
   assert.match(choice, /if \(existingDriveToken\) \{[\s\S]*await refreshGoogleDrive\(\)/);
   assert.match(choice, /await connectGoogleDrive\(\{ onboarding: true \}\)/);
   assert.doesNotMatch(choice, /saveBoardToGoogleDrive/);
