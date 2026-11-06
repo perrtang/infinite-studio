@@ -6,10 +6,11 @@ import test from "node:test";
 const main = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("./styles.css", import.meta.url), "utf8");
 
-test("cloud status remains inside the existing save button", () => {
+test("cloud status is placed beside the existing save button", () => {
   const header = main.slice(main.indexOf('<div className="topbar-secondary">'), main.indexOf('label={sourceModeActive ? "回到畫布後復原'));
   assert.doesNotMatch(header, /topbar-cloud-status/);
   assert.match(header, /topbar-save-status/);
+  assert.ok(header.indexOf('className={`topbar-save-status') < header.indexOf('className={`topbar-save-button'));
   assert.match(header, /DriveStatusIcon/);
   assert.match(header, /is-spinning/);
   assert.match(header, /savePreferredBoard/);

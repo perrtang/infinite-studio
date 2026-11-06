@@ -14596,6 +14596,9 @@ function App({ initialProtectedShare = null }) {
   const cloudHeaderStatus = localSaveNeedsAttention && !driveSession.busy
     ? driveSession.status === "synced-history-warning" && saveState === "本機復原副本寫入失敗" ? "本機復原與版本紀錄需檢查" : saveState
     : driveHeaderIndicator({ status: driveSession.status, busy: driveSession.busy, dirty, paused: driveUploadPaused });
+  const saveStatusText = currentPrimaryStorageTarget === "drive"
+    ? (!driveSession.busy && !driveNeedsAttention && !localSaveNeedsAttention && /^(本機|安全暫存)/.test(saveState) ? saveState : cloudHeaderStatus)
+    : saveState;
   const preferLocalSaveState = localSaveNeedsAttention || (!storagePreferences.autoSave && dirty);
   const topbarSaveState = currentPrimaryStorageTarget === "drive"
     ? (preferLocalSaveState
@@ -14672,14 +14675,13 @@ function App({ initialProtectedShare = null }) {
               autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
               onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
           ) : null}
+          {saveStatusText ? <span className={`topbar-save-status ${localSaveNeedsAttention || driveNeedsAttention ? "is-warning" : ""}`} title={[saveStatusText, currentPrimaryStorageTarget === "drive" ? driveSession.message : ""].filter(Boolean).join("；")} role="status" aria-live="polite">{saveStatusText}</span> : null}
           <button className={`topbar-save-button ${currentPrimaryStorageTarget === "drive" ? `is-${localSaveNeedsAttention && !driveSession.busy ? "warning" : drivePresentation.tone}` : localSaveNeedsAttention ? "is-warning" : ""}`} type="button" onClick={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
             disabled={sourceModeActive || driveSession.busy}
             title={cloudReadOnly ? "申請編輯權限" : currentPrimaryStorageTarget === "drive" ? `上傳目前畫布至 Google Drive；不會載入雲端內容。 ${driveSession.message || drivePresentation.label}${localSaveNeedsAttention ? ` ${saveState}。` : ""}` : topbarSaveState}>
             {currentPrimaryStorageTarget === "drive" ? (driveSession.busy ? <RefreshCw size={16} className="is-spinning" aria-hidden="true" /> : <DriveStatusIcon size={16} aria-hidden="true" />) : localSaveNeedsAttention ? <AlertTriangle size={16} aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
             <span>{cloudReadOnly ? "申請編輯權" : currentPrimaryStorageTarget === "drive" ? "更新至雲端" : "儲存"}</span>
-            {(currentPrimaryStorageTarget === "drive" ? cloudHeaderStatus : localSaveNeedsAttention ? saveState : "") ? <span className="topbar-save-status">{currentPrimaryStorageTarget === "drive" ? cloudHeaderStatus : saveState}</span> : null}
           </button>
-          <span className="sr-only" role="status" aria-live="polite">{currentPrimaryStorageTarget === "drive" ? `${drivePresentation.label}${localSaveNeedsAttention ? `；${saveState}` : ""}` : saveState}</span>
           <IconButton
             label={sourceModeActive ? "回到畫布後復原 ⌘Z" : "復原 ⌘Z"}
             onClick={undo}
