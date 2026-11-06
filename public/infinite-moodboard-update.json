@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.48",
+  "version": "0.56.49",
   "releasedAt": "2026-11-06",
-  "summary": "區分本機復原與版本紀錄的儲存狀態，並新增另存雲端新檔。",
-  "notesUrl": "release-notes/v0.56.48.html",
+  "summary": "集中儲存狀態，區分本機復原與同步佇列的錯誤。",
+  "notesUrl": "release-notes/v0.56.49.html",
   "url": "https://infinite.petfashion.tw/"
 }

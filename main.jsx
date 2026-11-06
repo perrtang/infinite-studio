@@ -9840,12 +9840,14 @@ function App({ initialProtectedShare = null }) {
           })
             ? await writeBoardToBoundLocalFile(snapshot)
             : false;
+          let queueWarning = false;
           if (storagePreferences.autoSave && primaryTarget === "drive" && driveSettings.enabled && driveSettings.autoSync && link) {
-            await enqueueSync(snapshot, { fileId: link.fileId, expectedVersion: link.version });
+            try { await enqueueSync(snapshot, { fileId: link.fileId, expectedVersion: link.version }); }
+            catch { queueWarning = true; }
           }
           await refreshLocalLibrarySummary();
           const savedAt = new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
-          setSaveState(!storagePreferences.autoSave
+          setSaveState(queueWarning ? "本機復原副本已更新；雲端同步佇列未更新" : !storagePreferences.autoSave
             ? `本機復原副本已更新 · ${savedAt}；主要位置等待手動儲存`
             : primaryTarget === "local"
               ? localFileSaved
@@ -14583,15 +14585,17 @@ function App({ initialProtectedShare = null }) {
   const effectiveLeftPanelVisible = !focusMode && leftPanelVisible;
   const effectiveRightPanelVisible = !focusMode && rightPanelVisible;
   const driveUploadPaused = Boolean(storagePreferences.uploadPaused[board.id]);
+  const localSaveNeedsAttention = ["本機復原副本寫入失敗", "儲存失敗；變更仍留在目前分頁", "自動儲存不可用", "本機復原副本已更新；雲端同步佇列未更新"].includes(saveState);
   const drivePresentation = driveUploadPaused && !driveSession.busy
     ? { icon: CloudUpload, label: "已復原本機內容；請確認後更新至雲端", tone: "warning" }
     : dirty && !driveSession.busy && ["synced", "ready"].includes(driveSession.status)
       ? { icon: CloudUpload, label: "有變更尚未儲存至雲端", tone: "warning" }
       : driveStatusPresentation(driveSession);
-  const DriveStatusIcon = drivePresentation.icon;
+  const DriveStatusIcon = localSaveNeedsAttention && !driveSession.busy ? AlertTriangle : drivePresentation.icon;
   const driveNeedsAttention = ["offline", "quota", "conflict", "authorization-required", "error", "synced-local-warning", "synced-history-warning"].includes(driveSession.status);
-  const cloudHeaderStatus = driveHeaderIndicator({ status: driveSession.status, busy: driveSession.busy, dirty, paused: driveUploadPaused });
-  const localSaveNeedsAttention = ["本機復原副本寫入失敗", "儲存失敗；變更仍留在目前分頁", "自動儲存不可用"].includes(saveState);
+  const cloudHeaderStatus = localSaveNeedsAttention && !driveSession.busy
+    ? driveSession.status === "synced-history-warning" && saveState === "本機復原副本寫入失敗" ? "本機復原與版本紀錄需檢查" : saveState
+    : driveHeaderIndicator({ status: driveSession.status, busy: driveSession.busy, dirty, paused: driveUploadPaused });
   const preferLocalSaveState = localSaveNeedsAttention || (!storagePreferences.autoSave && dirty);
   const topbarSaveState = currentPrimaryStorageTarget === "drive"
     ? (preferLocalSaveState
@@ -14668,14 +14672,14 @@ function App({ initialProtectedShare = null }) {
               autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
               onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
           ) : null}
-          <button className={`topbar-save-button ${currentPrimaryStorageTarget === "drive" ? `is-${drivePresentation.tone}` : ""}`} type="button" onClick={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
+          <button className={`topbar-save-button ${currentPrimaryStorageTarget === "drive" ? `is-${localSaveNeedsAttention && !driveSession.busy ? "warning" : drivePresentation.tone}` : localSaveNeedsAttention ? "is-warning" : ""}`} type="button" onClick={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
             disabled={sourceModeActive || driveSession.busy}
-            title={cloudReadOnly ? "申請編輯權限" : currentPrimaryStorageTarget === "drive" ? `上傳目前畫布至 Google Drive；不會載入雲端內容。 ${driveSession.message || drivePresentation.label}` : topbarSaveState}>
-            {currentPrimaryStorageTarget === "drive" ? (driveSession.busy ? <RefreshCw size={16} className="is-spinning" aria-hidden="true" /> : <DriveStatusIcon size={16} aria-hidden="true" />) : <Save size={16} aria-hidden="true" />}
+            title={cloudReadOnly ? "申請編輯權限" : currentPrimaryStorageTarget === "drive" ? `上傳目前畫布至 Google Drive；不會載入雲端內容。 ${driveSession.message || drivePresentation.label}${localSaveNeedsAttention ? ` ${saveState}。` : ""}` : topbarSaveState}>
+            {currentPrimaryStorageTarget === "drive" ? (driveSession.busy ? <RefreshCw size={16} className="is-spinning" aria-hidden="true" /> : <DriveStatusIcon size={16} aria-hidden="true" />) : localSaveNeedsAttention ? <AlertTriangle size={16} aria-hidden="true" /> : <Save size={16} aria-hidden="true" />}
             <span>{cloudReadOnly ? "申請編輯權" : currentPrimaryStorageTarget === "drive" ? "更新至雲端" : "儲存"}</span>
-            {currentPrimaryStorageTarget === "drive" && cloudHeaderStatus ? <span className="topbar-save-status">{cloudHeaderStatus}</span> : null}
+            {(currentPrimaryStorageTarget === "drive" ? cloudHeaderStatus : localSaveNeedsAttention ? saveState : "") ? <span className="topbar-save-status">{currentPrimaryStorageTarget === "drive" ? cloudHeaderStatus : saveState}</span> : null}
           </button>
-          {currentPrimaryStorageTarget === "drive" ? <span className="sr-only" role="status" aria-live="polite">{drivePresentation.label}</span> : null}
+          <span className="sr-only" role="status" aria-live="polite">{currentPrimaryStorageTarget === "drive" ? `${drivePresentation.label}${localSaveNeedsAttention ? `；${saveState}` : ""}` : saveState}</span>
           <IconButton
             label={sourceModeActive ? "回到畫布後復原 ⌘Z" : "復原 ⌘Z"}
             onClick={undo}
@@ -15098,7 +15102,6 @@ function App({ initialProtectedShare = null }) {
                 <span className="canvas-status-primary">{sourceModeActive ? `${sourceAssets.length} 個來源素材` : `${board.objects.length} 個物件`}</span>
                 {sourceModeActive && activeSourceAsset ? <span className="canvas-status-source" data-l10n-ignore>{activeSourceAsset.representative.originalFilename || activeSourceAsset.representative.name}</span> : null}
                 <span className="canvas-status-revision" title="目前工作檔內容版本">內容 r{board.revision}</span>
-                <span className="canvas-status-save">{saveState}</span>
                 <span className="app-version" aria-label={`Infinite Studio 應用程式版本 ${APP_VERSION}`} title={`Infinite Studio ${APP_VERSION_LABEL}`}>{APP_VERSION_LABEL}</span>
               </div>
 

@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.49](./public/release-notes/v0.56.49.html) — consolidate save status and distinguish local recovery from sync queue errors.
+
 - [v0.56.48](./public/release-notes/v0.56.48.html) — distinguish local recovery and history failures, consolidate cloud-save feedback and add cloud save-as-copy.
 
 - [v0.56.47](./public/release-notes/v0.56.47.html) — refine recent files submenu placement, responsive layout and keyboard navigation.
