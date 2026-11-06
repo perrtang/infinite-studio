@@ -20,12 +20,11 @@ test("an available update starts as an accessible, collapsed header action", () 
   assert.match(main, /className="topbar-secondary">[\s\S]*?<AppUpdateNotice[\s\S]*?className=\{`topbar-save-button/);
 });
 
-test("update toast is temporary and can be dismissed without hiding the update entry", () => {
-  assert.match(main, /useToastPause\(toastVisible && !expanded, 5000/);
+test("update notice remains available in the header without a separate toast", () => {
+  assert.doesNotMatch(main, /className="app-update-toast"/);
   assert.match(main, /onMouseEnter:[\s\S]*onMouseLeave:[\s\S]*onFocus:[\s\S]*onBlur:/);
   assert.match(main, /useToastPause\(toast, 5000/);
-  assert.match(main, /aria-label="關閉更新提示" onClick=\{\(\) => setToastVisible\(false\)\}/);
-  assert.match(main, /app-update-toast-details[\s\S]*?setExpanded\(true\)/);
+  assert.match(main, /className="app-update-trigger"[\s\S]*?setExpanded/);
 });
 
 test("the update notice uses one clear type hierarchy and consistent actions", () => {

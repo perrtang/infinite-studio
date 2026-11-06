@@ -8,6 +8,7 @@ import { assertUpdateSnapshotUnchanged, savePrimaryBeforeUpdate } from "./update
 import { parseObjectClipboard, serializeObjectClipboard } from "./object-clipboard.js";
 import { objectStroke, strokeDashArray, strokeOutlineStyle } from "./object-stroke.js";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { workspaceReadIsCurrent, remoteContentChanged } from "./workspace-read-guard.js";
 import { createProtectedShareLink, unlockProtectedShare } from "./protected-share.js";
@@ -6733,12 +6734,6 @@ function AppUpdateNotice({
   onSnooze,
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
-  useEffect(() => {
-    if (updateCheck.status !== "available" || !updateCheck.manifest?.version) return undefined;
-    setToastVisible(true);
-    return undefined;
-  }, [updateCheck.status, updateCheck.manifest?.version]);
   useEffect(() => {
     if (!expanded) return undefined;
     const closeOnEscape = (event) => {
@@ -6747,22 +6742,15 @@ function AppUpdateNotice({
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [expanded, updateAction.status]);
-  const toastPause = useToastPause(toastVisible && !expanded, 5000, () => setToastVisible(false));
   if (updateCheck.status !== "available" || !updateCheck.manifest) return null;
   const busy = updateAction.status === "saving" || updateAction.status === "reloading";
   const version = updateCheck.manifest.version;
 
   return (
     <>
-    <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => { setToastVisible(false); setExpanded((value) => !value); }}>
+    <button type="button" className="app-update-trigger" aria-expanded={expanded} aria-controls="app-update-details" onClick={() => setExpanded((value) => !value)}>
       <Info size={15} aria-hidden="true" /><span aria-live="polite">有新版本可更新</span>
     </button>
-    {toastVisible && !expanded ? <div className="app-update-toast" role="status" {...toastPause}>
-      <Info size={17} aria-hidden="true" />
-      <span>有新版本可更新</span>
-      <button type="button" className="app-update-toast-details" onClick={() => { setToastVisible(false); setExpanded(true); }}>查看</button>
-      <button type="button" className="app-update-toast-close" aria-label="關閉更新提示" onClick={() => setToastVisible(false)}><X size={16} /></button>
-    </div> : null}
     {expanded ? <Modal title="有新版本可更新" onClose={() => setExpanded(false)} busy={busy} className="update-details-dialog"><aside id="app-update-details" className={`app-update-notice${updateAction.status === "error" ? " is-error" : ""}`} aria-labelledby="app-update-notice-title" aria-live="polite">
       <div className="app-update-notice-heading">
         <span className="app-update-notice-icon" aria-hidden="true"><Download size={19} /></span>
@@ -8415,7 +8403,8 @@ function App({ initialProtectedShare = null }) {
   }, []);
 
   const announce = useCallback((message, tone = "info") => {
-    setToast({ message, tone });
+    const dialogOrigin = document.activeElement?.closest?.('[role="dialog"], [role="alertdialog"]') || null;
+    setToast({ message, tone, dialogOrigin });
   }, []);
 
   const toastPause = useToastPause(toast, 5000, () => setToast(null));
@@ -14638,6 +14627,12 @@ function App({ initialProtectedShare = null }) {
     || preparedDownloads.length,
   );
   agentBlockingRef.current = hasBlockingDialog;
+  const [toastDialogTarget, setToastDialogTarget] = useState(null);
+  useLayoutEffect(() => {
+    const origin = toast?.dialogOrigin;
+    setToastDialogTarget(origin?.isConnected ? (origin.querySelector('.modal-body') || origin) : null);
+  }, [hasBlockingDialog, toast, showSettings, showDriveLibrary, showVersions, showCollaboration]);
+  const toastContent = toast ? <div className={`toast toast-${toast.tone} ${toastDialogTarget ? "is-in-dialog" : "is-in-header"}`} role="status" tabIndex={0} title={toast.message} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span>{toast.recoveryBoardId === board.id && driveLoadRecovery?.loadedBoardId === board.id ? <button className="quiet-button" type="button" onClick={() => { setToast(null); void openVersionModal(); }}>版本紀錄</button> : null}<button className="toast-dismiss" type="button" aria-label="關閉提示" onClick={() => setToast(null)}><X size={16} /></button></div> : null;
 
   return (
     <main
@@ -14675,7 +14670,10 @@ function App({ initialProtectedShare = null }) {
               autoUpdateEnabled={updatePreference === "auto"} onEnableAutoUpdate={() => setAppAutoUpdate(true)}
               onUpdateNow={() => applyAppUpdate()} onSnooze={snoozeCurrentAppUpdate} />
           ) : null}
-          {saveStatusText ? <span className={`topbar-save-status ${localSaveNeedsAttention || driveNeedsAttention ? "is-warning" : ""}`} title={[saveStatusText, currentPrimaryStorageTarget === "drive" ? driveSession.message : ""].filter(Boolean).join("；")} role="status" aria-live="polite">{saveStatusText}</span> : null}
+          {cloudReadOnly && !sourceModeActive ? <span className="topbar-save-status" role="status">僅檢視</span> : null}
+          {loadedTextFlow && !inspectionActive ? <span className="topbar-save-status" role="status" title="在空白畫布點一下建立連結文字框；Esc 取消">已載入溢出文字，點畫布建立連結文字框</span> : null}
+          {!hasBlockingDialog && !sourceModeActive && (driveIncomingVersion?.boardId === board.id || (driveUploadPaused && currentPrimaryStorageTarget === "drive")) ? <details className="topbar-storage-notice"><summary>{driveIncomingVersion?.boardId === board.id ? "雲端與目前內容不同" : "自動上傳已暫停"}</summary><div className="topbar-storage-details">{driveIncomingVersion?.boardId === board.id ? <><p>載入前會備份目前畫布，可隨時復原。</p><button className="secondary-button" disabled={driveSession.busy} onClick={() => openGoogleDriveFile(driveIncomingVersion)}>載入雲端版本</button><button className="quiet-button" onClick={() => setDriveIncomingVersion(null)}>保留目前工作</button></> : <p>已復原目前內容，確認後請按「更新至雲端」。</p>}</div></details> : null}
+          {toastContent && !toastDialogTarget ? toastContent : saveStatusText ? <span className={`topbar-save-status ${localSaveNeedsAttention || driveNeedsAttention ? "is-warning" : ""}`} title={[saveStatusText, currentPrimaryStorageTarget === "drive" ? driveSession.message : ""].filter(Boolean).join("；")} role="status" aria-live="polite">{saveStatusText}</span> : null}
           <button className={`topbar-save-button ${currentPrimaryStorageTarget === "drive" ? `is-${localSaveNeedsAttention && !driveSession.busy ? "warning" : drivePresentation.tone}` : localSaveNeedsAttention ? "is-warning" : ""}`} type="button" onClick={cloudReadOnly ? () => setShowEditPermissionRequest(true) : savePreferredBoard}
             disabled={sourceModeActive || driveSession.busy}
             title={cloudReadOnly ? "申請編輯權限" : currentPrimaryStorageTarget === "drive" ? `上傳目前畫布至 Google Drive；不會載入雲端內容。 ${driveSession.message || drivePresentation.label}${localSaveNeedsAttention ? ` ${saveState}。` : ""}` : topbarSaveState}>
@@ -14828,17 +14826,6 @@ function App({ initialProtectedShare = null }) {
         />
 
         <section className="canvas-column">
-          {!hasBlockingDialog && !sourceModeActive && (driveIncomingVersion?.boardId === board.id || (driveUploadPaused && currentPrimaryStorageTarget === "drive")) ? (
-            <div className="workspace-storage-notice" role="status">
-              {driveIncomingVersion?.boardId === board.id ? <>
-                <span><strong>雲端與目前內容不同</strong><small>載入前會備份目前畫布，可隨時復原。</small></span>
-                <button className="secondary-button" disabled={driveSession.busy} onClick={() => openGoogleDriveFile(driveIncomingVersion)}>載入雲端版本</button>
-                <button className="quiet-button" onClick={() => setDriveIncomingVersion(null)}>保留目前工作</button>
-              </> : <>
-                <span><strong>自動上傳已暫停</strong><small>已復原目前內容，確認後請按上方「更新至雲端」。</small></span>
-              </>}
-            </div>
-          ) : null}
           <div
             ref={canvasToolbarRef}
             className={`canvas-toolbar ${sourceModeActive ? "is-source-toolbar" : ""} ${canvasToolbarPosition ? "has-custom-position" : ""} ${canvasToolbarDragging ? "is-dragging" : ""}`}
@@ -15060,18 +15047,6 @@ function App({ initialProtectedShare = null }) {
             {marquee && !inspectionActive ? <div className="selection-marquee" style={marquee} aria-hidden="true" /> : null}
             {zoomWindowRect && !inspectionActive ? <div className="zoom-window-marquee" style={zoomWindowRect} aria-hidden="true">{zoomWindowRect.width >= 96 && zoomWindowRect.height >= 48 ? <span>{altDown ? "縮小此區域" : "放大此區域"}</span> : null}</div> : null}
 
-            {cloudReadOnly && !sourceModeActive ? (
-              <button className="cloud-read-only-banner" type="button" onClick={() => setShowEditPermissionRequest(true)}>
-                <Eye size={15} /><span><strong>僅檢視</strong><small>申請編輯權限</small></span>
-              </button>
-            ) : null}
-
-            {loadedTextFlow && !inspectionActive ? (
-              <div className="text-flow-placement-status" role="status">
-                <span className="text-flow-cursor-symbol" aria-hidden="true"><Type size={13} /><Plus size={9} /></span>
-                <span><strong>已載入溢出文字</strong><small>在空白畫布點一下建立連結文字框 · Esc 取消</small></span>
-              </div>
-            ) : null}
 
             {!board.objects.length && !inspectionActive ? (
               <div className="canvas-empty">
@@ -15216,7 +15191,7 @@ function App({ initialProtectedShare = null }) {
       </div>
 
       {mobilePanel ? <button className="mobile-scrim" type="button" aria-label="關閉面板" onClick={() => setMobilePanel(null)} /> : null}
-      {toast ? <div className={`toast toast-${toast.tone}`} role="status" tabIndex={0} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span>{toast.recoveryBoardId === board.id && driveLoadRecovery?.loadedBoardId === board.id ? <button className="quiet-button" type="button" onClick={() => { setToast(null); void openVersionModal(); }}>版本紀錄</button> : null}<button className="toast-dismiss" type="button" aria-label="關閉提示" onClick={() => setToast(null)}><X size={16} /></button></div> : null}
+      {toastContent && toastDialogTarget ? createPortal(toastContent, toastDialogTarget) : null}
 
       {escapeCancellationRequest ? (
         <EscapeCancellationModal

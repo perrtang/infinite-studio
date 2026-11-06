@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.50",
+  "version": "0.56.51",
   "releasedAt": "2026-11-06",
-  "summary": "儲存狀態文字改顯示於按鈕左側，讓操作按鈕保持簡潔。",
-  "notesUrl": "release-notes/v0.56.50.html",
+  "summary": "集中畫布外的系統訊息；對話框操作訊息留在對話框內。",
+  "notesUrl": "release-notes/v0.56.51.html",
   "url": "https://infinite.petfashion.tw/"
 }
