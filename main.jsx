@@ -6433,13 +6433,15 @@ function DriveSharingModal({
   const [role, setRole] = useState("viewer");
   const [permissionAction, setPermissionAction] = useState("");
   const [inviteFeedback, setInviteFeedback] = useState(null);
+  const [linkFeedback, setLinkFeedback] = useState(null);
+  const [accessFeedback, setAccessFeedback] = useState(null);
   const [linkPassword, setLinkPassword] = useState("");
   const [confirmLinkPassword, setConfirmLinkPassword] = useState("");
   const [protectedLink, setProtectedLink] = useState("");
   const [protectedLinkMessage, setProtectedLinkMessage] = useState("");
   const [protectedLinkBusy, setProtectedLinkBusy] = useState(false);
   const protectedLinkGeneration = useRef(0);
-  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); }, [sharing.fileId]);
+  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setLinkFeedback(null); setAccessFeedback(null); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
   const preparationIsError = ["error", "local-recovery-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
@@ -6463,6 +6465,7 @@ function DriveSharingModal({
     if (permissionAction) return;
     setPermissionAction(key);
     if (key === "invite") setInviteFeedback(null);
+    if (key === "general" || key === "general-view") setAccessFeedback(null);
     try {
       const succeeded = await action();
       if (key === "invite") {
@@ -6473,9 +6476,17 @@ function DriveSharingModal({
           setInviteFeedback({ ok: false, message: succeeded?.message || "未能完成邀請，請確認 Drive 連線後重試。" });
         }
       }
+      if (key === "general" || key === "general-view") setAccessFeedback(succeeded ? { ok: true, message: "存取權限已更新。" } : { ok: false, message: "無法更新存取權限，請確認 Drive 連線後重試。" });
     } finally {
       setPermissionAction("");
     }
+  };
+
+  const copyShareLink = async (mode = "") => {
+    setLinkFeedback(null);
+    const copied = await onCopyLink(mode);
+    setLinkFeedback(copied ? { ok: true, message: "連結已複製。" } : { ok: false, message: "無法自動複製，請選取連結後手動複製。" });
+    return copied;
   };
 
   return (
@@ -6520,14 +6531,15 @@ function DriveSharingModal({
                     aria-label="目前 Google Drive 工作檔的分享連結"
                     onFocus={(event) => event.currentTarget.select()}
                   />
-                  <button className="primary-button" type="button" onClick={() => restrictedLink && sharing.canShare ? runPermissionAction("enable-viewer-link", async () => (await onSetGeneralAccess(true)) && onCopyLink("viewer")) : onCopyLink()} disabled={!sharing.shareUrl || Boolean(permissionAction)}>
+                  <button className="primary-button" type="button" onClick={() => restrictedLink && sharing.canShare ? runPermissionAction("enable-viewer-link", async () => { const enabled = await onSetGeneralAccess(true); if (!enabled) { setLinkFeedback({ ok: false, message: "無法開啟連結檢視權限，請確認 Drive 連線後重試。" }); return false; } return copyShareLink("viewer"); }) : copyShareLink()} disabled={!sharing.shareUrl || Boolean(permissionAction)}>
                     <Copy size={16} />{restrictedLink && sharing.canShare ? "開啟連結檢視並複製" : restrictedLink ? "複製受限連結" : publicCanEdit ? "複製可編輯連結" : sharing.permissionsVisible && sharing.generalAccess.enabled ? "複製檢視連結" : "複製連結"}
                   </button>
                 </div>
               </label>
+              {linkFeedback ? <div className={`status-banner ${linkFeedback.ok ? "success" : "warning"}`} role={linkFeedback.ok ? "status" : "alert"}>{linkFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{linkFeedback.message}</span></div> : null}
               <p className="collaboration-share-note"><ShieldCheck size={14} />{restrictedLink && sharing.canShare ? "點擊上方按鈕會開放知道連結的人檢視；連結可轉傳，也可改為僅邀請指定帳號。" : "實際存取權仍以 Google Drive 為準；複製連結不會變更權限。"}</p>
-              {restrictedLink && sharing.canShare ? <button className="quiet-button" type="button" onClick={() => onCopyLink("restricted")} disabled={Boolean(permissionAction)}>只複製受限連結</button> : null}
-              {sharing.canShare ? <div className="protected-link-controls">
+              {restrictedLink && sharing.canShare ? <button className="quiet-button" type="button" onClick={() => copyShareLink("restricted")} disabled={Boolean(permissionAction)}>只複製受限連結</button> : null}
+              {sharing.canShare ? <details className="protected-link-disclosure"><summary>進階：建立密碼連結</summary><div className="protected-link-controls">
                 <label className="collaboration-invite-field"><span>建立密碼連結</span><input type="password" autoComplete="new-password" value={linkPassword} onChange={(event) => { setLinkPassword(event.target.value); setProtectedLink(""); }} placeholder="至少 8 個字元" maxLength={128} disabled={protectedLinkBusy} /></label>
                 <label className="collaboration-invite-field"><span>再次輸入密碼</span><input type="password" autoComplete="new-password" value={confirmLinkPassword} onChange={(event) => setConfirmLinkPassword(event.target.value)} maxLength={128} disabled={protectedLinkBusy} /></label>
                 {confirmLinkPassword && confirmLinkPassword !== linkPassword ? <p role="status">兩次輸入的密碼不一致。</p> : null}
@@ -6543,7 +6555,7 @@ function DriveSharingModal({
                 }}>建立密碼連結</button>
                 {protectedLink ? <label className="collaboration-invite-field"><span>密碼連結</span><div><input readOnly value={protectedLink} data-l10n-ignore onFocus={(event) => event.currentTarget.select()} /><button className="secondary-button" type="button" onClick={async () => { try { await navigator.clipboard.writeText(protectedLink); setProtectedLinkMessage("已複製密碼連結。"); } catch { setProtectedLinkMessage("無法自動複製，請選取連結後複製。"); } }}>複製密碼連結</button></div></label> : null}
                 {protectedLinkMessage ? <p role="status">{protectedLinkMessage}</p> : null}
-              </div> : null}
+              </div></details> : null}
             </section>
 
             {sharing.permissionsVisible ? <section className="collaboration-permission-section collaboration-general-access" aria-labelledby="drive-general-access-title">
@@ -6571,6 +6583,7 @@ function DriveSharingModal({
                 )}
               </div>
               <p>{publicCanEdit ? "目前連結具有編輯權。建議改為僅檢視，再以 Email 個別授予編輯權。" : "連結檢視不會讓他人修改檔案；編輯權必須以 Google 帳號 Email 個別授予。"}</p>
+              {accessFeedback ? <div className={`status-banner ${accessFeedback.ok ? "success" : "warning"}`} role={accessFeedback.ok ? "status" : "alert"}>{accessFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{accessFeedback.message}</span></div> : null}
             </section> : null}
 
             {sharing.canShare && sharing.permissionsVisible ? (
@@ -11626,26 +11639,15 @@ function App({ initialProtectedShare = null }) {
     return refreshDriveSharing(link ? { fileId: link.fileId, resourceKey: link.resourceKey } : null);
   }, [currentDriveAccessToken, refreshDriveSharing, saveBoardToGoogleDrive]);
 
-  const copyDriveSharingLink = useCallback(async (newRole = "") => {
+  const copyDriveSharingLink = useCallback(async () => {
     if (!driveSharing.shareUrl) return false;
     try {
       await navigator.clipboard.writeText(driveSharing.shareUrl);
-      announce(
-        newRole === "restricted" ? "受限的工作檔連結已複製；只有已獲 Drive 授權的帳號能開啟。"
-          : newRole === "viewer" ? "工作檔檢視連結已複製；知道連結的人可檢視。"
-          : driveSharing.generalAccess.enabled && driveSharing.generalAccess.role === "editor"
-          ? "可編輯的工作檔連結已複製；知道連結的人可依 Drive 權限編輯。"
-          : driveSharing.generalAccess.enabled
-          ? "工作檔檢視連結已複製；知道連結的人可依 Drive 權限開啟。"
-          : "受限的工作檔連結已複製；只有已獲 Drive 授權的帳號能開啟。",
-        "success",
-      );
       return true;
     } catch {
-      announce("無法自動複製；請選取連結後手動複製。", "warning");
       return false;
     }
-  }, [announce, driveSharing.generalAccess.enabled, driveSharing.generalAccess.role, driveSharing.shareUrl]);
+  }, [driveSharing.shareUrl]);
 
   const setDriveSharingGeneralAccess = useCallback(async (enabled) => {
     const accessToken = currentDriveAccessToken();
@@ -11654,13 +11656,11 @@ function App({ initialProtectedShare = null }) {
       const { setGoogleDriveGeneralAccess } = await loadDriveRuntime();
       await setGoogleDriveGeneralAccess(accessToken, driveSharing.fileId, enabled, { resourceKey: driveSharing.resourceKey });
       await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
-      announce(enabled ? "已允許知道連結的人檢視；編輯權仍需個別授予。" : "已將這份 Drive 檔案改為受限存取。", "success");
       return true;
     } catch (error) {
-      announce(driveErrorMessage(error), "error");
       return false;
     }
-  }, [announce, currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
+  }, [currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
 
   const inviteDriveSharingMember = useCallback(async (email, role) => {
     const accessToken = currentDriveAccessToken();
