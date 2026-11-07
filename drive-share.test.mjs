@@ -5,6 +5,7 @@ import {
   driveFileRole,
   drivePermissionRole,
   drivePermissionRoleLabel,
+  drivePermissionSnapshotMatches,
   googleDriveGeneralAccess,
   googleDriveFileAccessUrl,
   googleDriveMembers,
@@ -20,6 +21,23 @@ import {
   listGoogleDrivePermissions,
   updateGoogleDrivePermission,
 } from "./drive-storage.js";
+
+test("permission readback confirms the requested access rather than just a successful list", () => {
+  const member = { id: "member-1", type: "user", role: "writer" };
+  const viewerLink = { id: "anyone", type: "anyone", role: "reader" };
+  const editorLink = { id: "anyone", type: "anyone", role: "writer" };
+  assert.equal(drivePermissionSnapshotMatches([member], { kind: "member", id: "member-1", role: "writer" }), true);
+  assert.equal(drivePermissionSnapshotMatches([member], { kind: "member", id: "member-1", role: "reader" }), false);
+  assert.equal(drivePermissionSnapshotMatches([], { kind: "member", id: "member-1", role: "writer" }), false);
+  assert.equal(drivePermissionSnapshotMatches([member], { kind: "removed", id: "member-1" }), false);
+  assert.equal(drivePermissionSnapshotMatches([], { kind: "removed", id: "member-1" }), true);
+  assert.equal(drivePermissionSnapshotMatches([viewerLink], { kind: "general", enabled: true }), true);
+  assert.equal(drivePermissionSnapshotMatches([editorLink], { kind: "general", enabled: true }), false);
+  assert.equal(drivePermissionSnapshotMatches([viewerLink], { kind: "general", enabled: false }), false);
+  assert.equal(drivePermissionSnapshotMatches([], { kind: "general", enabled: false }), true);
+  assert.equal(drivePermissionSnapshotMatches(null, { kind: "removed", id: "member-1" }), false);
+  assert.equal(drivePermissionSnapshotMatches([], { kind: "member", id: "", role: "writer" }), false);
+});
 
 test("shared viewer never assumes sign-out while session is unresolved or unavailable", () => {
   assert.equal(sharedViewerEditorLabel("checking", "ready"), "開啟編輯");

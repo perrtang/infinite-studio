@@ -243,6 +243,7 @@ import {
   createGoogleDriveMoodboardUrl,
   driveFileRole,
   drivePermissionRoleLabel,
+  drivePermissionSnapshotMatches,
   googleDriveGeneralAccess,
   googleDriveFileAccessUrl,
   googleDriveMembers,
@@ -11415,7 +11416,7 @@ function App({ initialProtectedShare = null }) {
     return () => { cancelled = true; window.clearInterval(timer); window.removeEventListener("focus", onVisible); document.removeEventListener("visibilitychange", onVisible); };
   }, [announce, board.id, board.revision, board.updatedAt, currentDriveAccessToken, dirty, driveSession.connected, driveSettings, hydrated, online, openGoogleDriveFile]);
 
-  const refreshDriveSharing = useCallback(async (target = null, { onRole = null, permissionChanged = false } = {}) => {
+  const refreshDriveSharing = useCallback(async (target = null, { onRole = null, permissionChanged = false, expectedPermission = null } = {}) => {
     const requestId = driveSharingRequestRef.current + 1;
     driveSharingRequestRef.current = requestId;
     const activeBoardId = boardRef.current.id;
@@ -11471,6 +11472,9 @@ function App({ initialProtectedShare = null }) {
         permissionMessage = "目前帳號可開啟這份檔案，但 Google Drive 未提供完整分享名單；權限仍由 Drive 管理。";
       }
       if (!requestIsCurrent()) return false;
+      if (expectedPermission && (!permissionsVisible || !drivePermissionSnapshotMatches(permissions, expectedPermission))) {
+        throw new Error("drive/permission-change-not-yet-visible");
+      }
       const resolvedResourceKey = metadata.resourceKey || resourceKey;
       const role = driveFileRole(metadata);
       setDriveSettings((state) => {
@@ -11666,7 +11670,7 @@ function App({ initialProtectedShare = null }) {
     try {
       const { setGoogleDriveGeneralAccess } = await loadDriveRuntime();
       await setGoogleDriveGeneralAccess(accessToken, driveSharing.fileId, enabled, { resourceKey: driveSharing.resourceKey });
-      return await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      return await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "general", enabled } });
     } catch (error) {
       return false;
     }
@@ -11677,14 +11681,14 @@ function App({ initialProtectedShare = null }) {
     if (!accessToken || !driveSharing.fileId) return { message: "請先連結 Google Drive，再重新邀請。" };
     try {
       const { createGoogleDrivePermission } = await loadDriveRuntime();
-      await createGoogleDrivePermission(accessToken, driveSharing.fileId, {
+      const created = await createGoogleDrivePermission(accessToken, driveSharing.fileId, {
         type: "user",
         role: role === "editor" ? "writer" : "reader",
         emailAddress: email,
         resourceKey: driveSharing.resourceKey,
         sendNotificationEmail: true,
       });
-      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "member", id: created.id, role: role === "editor" ? "writer" : "reader" } });
       return verified ? true : { message: "邀請已送至 Google Drive，但無法確認最新權限；請先重新整理權限。" };
     } catch (error) {
       return { message: driveErrorMessage(error) };
@@ -11703,7 +11707,7 @@ function App({ initialProtectedShare = null }) {
         role === "editor" ? "writer" : "reader",
         { resourceKey: driveSharing.resourceKey },
       );
-      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "member", id: permissionId, role: role === "editor" ? "writer" : "reader" } });
       if (!verified) return false;
       announce(role === "editor" ? "已允許這位成員編輯。" : "已將這位成員改為僅檢視。", "success");
       return true;
@@ -11720,7 +11724,7 @@ function App({ initialProtectedShare = null }) {
     try {
       const { deleteGoogleDrivePermission } = await loadDriveRuntime();
       await deleteGoogleDrivePermission(accessToken, driveSharing.fileId, member.id, { resourceKey: driveSharing.resourceKey });
-      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "removed", id: member.id } });
       if (!verified) return false;
       announce(`已移除 ${member.name} 的 Drive 存取權。`, "success");
       return true;

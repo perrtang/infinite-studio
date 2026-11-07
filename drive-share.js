@@ -110,6 +110,20 @@ export function googleDriveGeneralAccess(permissions = []) {
   return anyone ? { enabled: true, permissionId: anyone.id, role: drivePermissionRole(anyone) } : { enabled: false, permissionId: "", role: "viewer" };
 }
 
+// A successful list request is not proof that a just-written ACL is visible.
+export function drivePermissionSnapshotMatches(permissions, expected) {
+  if (!Array.isArray(permissions) || !expected) return false;
+  const active = permissions.filter((permission) => permission && !permission.deleted);
+  if (expected.kind === "general") {
+    const links = active.filter((permission) => permission.type === "anyone");
+    return expected.enabled ? links.length > 0 && links.every((permission) => permission.role === "reader") : links.length === 0;
+  }
+  if (!["member", "removed"].includes(expected.kind) || !expected.id) return false;
+  const member = active.find((permission) => permission.id === expected.id);
+  if (expected.kind === "removed") return !member;
+  return Boolean(member && member.role === expected.role);
+}
+
 // Preserve the exact shared-file URL and unrelated navigation context when
 // switching from public viewing to the editor.
 export function sharedViewerEditorLabel(sessionStatus, shareStatus) {

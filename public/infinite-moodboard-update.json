@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.62",
+  "version": "0.56.63",
   "releasedAt": "2026-11-08",
-  "summary": "釐清分享權限變更後無法重新確認時的狀態與恢復方式。",
-  "notesUrl": "release-notes/v0.56.62.html",
+  "summary": "確認分享權限變更已反映在 Google Drive 後再顯示成功。",
+  "notesUrl": "release-notes/v0.56.63.html",
   "url": "https://infinite.petfashion.tw/"
 }
