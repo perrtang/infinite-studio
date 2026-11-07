@@ -6433,6 +6433,8 @@ function DriveSharingModal({
   const [role, setRole] = useState("viewer");
   const [permissionAction, setPermissionAction] = useState("");
   const [inviteFeedback, setInviteFeedback] = useState(null);
+  const [inviteEmailInvalid, setInviteEmailInvalid] = useState(false);
+  const inviteEmailRef = useRef(null);
   const [linkFeedback, setLinkFeedback] = useState(null);
   const [accessFeedback, setAccessFeedback] = useState(null);
   const [linkPassword, setLinkPassword] = useState("");
@@ -6441,7 +6443,7 @@ function DriveSharingModal({
   const [protectedLinkMessage, setProtectedLinkMessage] = useState("");
   const [protectedLinkBusy, setProtectedLinkBusy] = useState(false);
   const protectedLinkGeneration = useRef(0);
-  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setLinkFeedback(null); setAccessFeedback(null); }, [sharing.fileId]);
+  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setInviteEmailInvalid(false); setLinkFeedback(null); setAccessFeedback(null); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
   const preparationIsError = ["error", "local-recovery-error", "picker-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
@@ -6599,7 +6601,7 @@ function DriveSharingModal({
                 <div className="drive-member-invite-row">
                   <label>
                     <span className="sr-only">協作者 Email</span>
-                    <input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setInviteFeedback(null); }} placeholder="name@example.com" autoComplete="email" />
+                    <input ref={inviteEmailRef} type="email" value={email} onChange={(event) => { setEmail(event.target.value); setInviteFeedback(null); setInviteEmailInvalid(false); }} placeholder="name@example.com" autoComplete="email" aria-invalid={inviteEmailInvalid || undefined} aria-describedby={inviteEmailInvalid ? "drive-invite-feedback" : undefined} />
                   </label>
                   <select aria-label="新協作者權限" value={role} onChange={(event) => setRole(event.target.value)}>
                     <option value="viewer">檢視者</option>
@@ -6608,13 +6610,21 @@ function DriveSharingModal({
                   <button
                     className="primary-button"
                     type="button"
-                    onClick={() => runPermissionAction("invite", () => onInviteMember(email, role))}
+                    onClick={() => {
+                      if (!inviteEmailRef.current?.validity.valid) {
+                        setInviteEmailInvalid(true);
+                        setInviteFeedback({ ok: false, message: "請輸入有效的 Email 地址。" });
+                        inviteEmailRef.current?.focus();
+                        return;
+                      }
+                      runPermissionAction("invite", () => onInviteMember(email.trim(), role));
+                    }}
                     disabled={Boolean(permissionAction) || !email.trim()}
                   >
                     {permissionAction === "invite" ? <><RefreshCw className="is-spinning" size={15} />邀請中…</> : <><Plus size={15} />邀請</>}
                   </button>
                 </div>
-                {inviteFeedback ? <div className={`status-banner ${inviteFeedback.ok ? "success" : "warning"}`} role={inviteFeedback.ok ? "status" : "alert"}>{inviteFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{inviteFeedback.message}</span></div> : null}
+                {inviteFeedback ? <div id="drive-invite-feedback" className={`status-banner ${inviteFeedback.ok ? "success" : "warning"}`} role={inviteFeedback.ok ? "status" : "alert"}>{inviteFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{inviteFeedback.message}</span></div> : null}
               </section>
             ) : null}
 

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.60",
+  "version": "0.56.61",
   "releasedAt": "2026-11-08",
-  "summary": "修正側欄寬度說明與重設完成提示。",
-  "notesUrl": "release-notes/v0.56.60.html",
+  "summary": "新增分享邀請 Email 格式檢查與就近錯誤提示。",
+  "notesUrl": "release-notes/v0.56.61.html",
   "url": "https://infinite.petfashion.tw/"
 }
