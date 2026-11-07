@@ -8640,6 +8640,10 @@ button.status-label:hover {
   background: rgb(var(--danger-rgb) / 0.07);
 }
 
+.cloud-collaboration-panel.is-picker-error {
+  border: 1px solid var(--border-strong);
+}
+
 .cloud-collaboration-panel a.primary-button,
 .cloud-collaboration-panel a.secondary-button {
   text-decoration: none;
@@ -9033,7 +9037,7 @@ button.status-label:hover {
 }
 
 .collaboration-preparation-state {
-  align-items: center;
+  align-items: flex-start;
   display: flex;
   gap: 10px;
   min-height: 58px;
@@ -9046,12 +9050,12 @@ button.status-label:hover {
 }
 
 .collaboration-preparation-state strong {
-  font-size: calc(11px + var(--ui-font-offset, 0px));
+  font-size: calc(14px + var(--ui-font-offset, 0px));
 }
 
 .collaboration-preparation-state small {
   color: var(--text-muted);
-  font-size: calc(12px + var(--ui-font-offset, 0px));
+  font-size: calc(13px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 

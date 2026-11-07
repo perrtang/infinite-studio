@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.57",
+  "version": "0.56.58",
   "releasedAt": "2026-11-08",
-  "summary": "改善共享視窗的操作回饋與進階設定布局。",
-  "notesUrl": "release-notes/v0.56.57.html",
+  "summary": "改善共享檔案選取授權失敗時的提示與重試。",
+  "notesUrl": "release-notes/v0.56.58.html",
   "url": "https://infinite.petfashion.tw/"
 }

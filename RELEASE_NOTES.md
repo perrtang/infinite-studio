@@ -4,6 +4,7 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.58](./public/release-notes/v0.56.58.html) — clarify shared-file authorization errors and retry.
 - [v0.56.57](./public/release-notes/v0.56.57.html) — streamline sharing controls and place feedback beside the relevant action.
 - [v0.56.56](./public/release-notes/v0.56.56.html) — restore Drive grants before prompting and show invitation results.
 - [v0.56.55](./public/release-notes/v0.56.55.html) — clarify browser storage restrictions and shared-file authorization.

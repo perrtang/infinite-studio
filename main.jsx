@@ -6444,7 +6444,7 @@ function DriveSharingModal({
   useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setLinkFeedback(null); setAccessFeedback(null); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
-  const preparationIsError = ["error", "local-recovery-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
+  const preparationIsError = ["error", "local-recovery-error", "picker-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
   const accessUrl = googleDriveFileAccessUrl(sharing);
   const restrictedLink = sharing.permissionsVisible && !sharing.generalAccess.enabled;
   const publicCanEdit = sharing.permissionsVisible && sharing.generalAccess.enabled && sharing.generalAccess.role === "editor";
@@ -6452,6 +6452,7 @@ function DriveSharingModal({
     legacy: "舊版分享連結已停用",
     "authorization-required": "連結 Google Drive",
     "needs-picker-access": "授權並開啟共享檔案",
+    "picker-error": "無法完成共享檔案授權",
     "picker-authorizing": "正在開啟 Google 檔案選擇器…",
     "opening-shared-file": "正在讀取共享工作檔…",
     "picker-unconfigured": "網站尚未完成共享檔案設定",
@@ -6702,7 +6703,7 @@ function DriveSharingModal({
                 {sharing.status === "authorization-required" ? <button className="primary-button" type="button" onClick={onConnectDrive} disabled={busy}><Cloud size={15} />連結 Google Drive</button> : null}
                 {sharing.status === "shared-file-denied" && accessUrl ? <a className="primary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查或申請權限</a> : null}
                 {sharing.status === "shared-file-denied" ? <button className="secondary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新開啟分享檔案</button> : null}
-                {["needs-picker-access", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />授權這份共享檔案</button> : null}
+                {["needs-picker-access", "picker-error", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />{sharing.status === "picker-error" ? "重新授權這份共享檔案" : "授權這份共享檔案"}</button> : null}
                 {!busy && sharing.status !== "shared-file-denied" && accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查存取權</a> : null}
                 {sharing.status === "needs-drive" ? <button className="primary-button" type="button" onClick={onSaveToDrive} disabled={busy}><CloudUpload size={15} />儲存並準備分享</button> : null}
                 {["error", "local-recovery-error"].includes(sharing.status) ? <button className="primary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新嘗試</button> : null}
@@ -11608,7 +11609,7 @@ function App({ initialProtectedShare = null }) {
       const status = error?.code === "drive/picker-unconfigured"
         ? "picker-unconfigured"
         : String(error?.code || "").startsWith("drive/picker-")
-          ? "needs-picker-access"
+          ? "picker-error"
           : "error";
       const message = driveErrorMessage(error);
       setDriveSharing((current) => ({
@@ -11618,10 +11619,9 @@ function App({ initialProtectedShare = null }) {
         resourceKey: incoming.resourceKey,
         message,
       }));
-      announce(message, status === "needs-picker-access" ? "warning" : "error");
       return false;
     }
-  }, [announce, currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing]);
+  }, [currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing]);
 
   const saveCurrentBoardForSharing = useCallback(async () => {
     setDriveSharing((current) => ({ ...current, status: "saving", message: "正在先建立本機版本，再儲存到 Google Drive…" }));
@@ -15677,7 +15677,7 @@ function DriveSharingPreview({ initialMode }) {
   const pickerError = mode === "picker-error";
   const sharing = {
     ...EMPTY_DRIVE_SHARING,
-    status: denied ? "shared-file-denied" : pickerError ? "needs-picker-access" : "ready",
+    status: denied ? "shared-file-denied" : pickerError ? "picker-error" : "ready",
     fileId,
     fileName: "團隊研究工作檔（模擬資料）",
     shareUrl: createGoogleDriveMoodboardUrl({ fileId }),

@@ -25,7 +25,7 @@ test("failed or cancelled shared-file opening never adopts a blank board", () =>
   assert.match(source, /status: "shared-file-denied"/);
   assert.match(source, /目前畫布沒有被當成該檔案/);
   assert.match(source, /if \(!opened\) return false/);
-  assert.match(source, /startsWith\("drive\/picker-"\)[\s\S]*?\? "needs-picker-access"/);
+  assert.match(source, /startsWith\("drive\/picker-"\)[\s\S]*?\? "picker-error"/);
 });
 
 test("a viewer requesting editing is prompted even if that file is already open", () => {
@@ -46,7 +46,7 @@ test("successfully opened share is no longer the target of later board sharing a
 });
 
 test("a successfully opened Picker share also consumes only its own incoming link", () => {
-  const picker = source.match(/const authorizeIncomingDriveFile = useCallback\(async \(\) => \{[\s\S]*?\}, \[announce, currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing\]\);/)?.[0] || "";
+  const picker = source.match(/const authorizeIncomingDriveFile = useCallback\(async \(\) => \{[\s\S]*?\}, \[currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing\]\);/)?.[0] || "";
   assert.match(picker, /if \(!opened\) return false;[\s\S]*initialDriveShareRef\.current === incoming\) initialDriveShareRef\.current = null/);
 });
 
