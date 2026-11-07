@@ -589,6 +589,7 @@ const RULERS_VISIBLE_STORAGE_KEY = "infinite-moodboard-rulers-visible-v1";
 const GUIDES_VISIBLE_STORAGE_KEY = "infinite-moodboard-guides-visible-v1";
 const RULER_UNIT_STORAGE_KEY = "infinite-moodboard-ruler-unit-v1";
 const CANVAS_TOOLBAR_POSITION_STORAGE_KEY = "infinite-moodboard-canvas-toolbar-position-v1";
+const TAB_BOARD_STORAGE_KEY = "infinite-studio-tab-board-v1";
 const RULER_SIZE = 22;
 
 function currentSystemInterfaceMode() {
@@ -7879,6 +7880,7 @@ function App({ initialProtectedShare = null }) {
   const driveSharingRequestRef = useRef(0);
   const saveTimerRef = useRef(null);
   const localSavePromiseRef = useRef(Promise.resolve());
+  const localRecoveryFailedRef = useRef(false);
   const localFileSavePromiseRef = useRef(Promise.resolve());
   const localFilePromptDismissedRef = useRef(new Set());
   const localPersistenceGenerationRef = useRef(0);
@@ -8585,7 +8587,11 @@ function App({ initialProtectedShare = null }) {
           throw retryError;
         }
       }
+      if (boardRef.current.id === snapshot.id) localRecoveryFailedRef.current = false;
       return snapshot;
+    });
+    write.catch((error) => {
+      if (error?.name !== "AbortError" && boardRef.current.id === snapshot.id) localRecoveryFailedRef.current = true;
     });
     localSavePromiseRef.current = write.catch(() => undefined);
     return write;
@@ -9761,11 +9767,13 @@ function App({ initialProtectedShare = null }) {
     let cancelled = false;
     const hydrateWorkspace = async () => {
       try {
-        const saved = await loadCurrentBoard();
+        const tabBoardId = readSessionValue(TAB_BOARD_STORAGE_KEY);
+        const saved = await loadCurrentBoard(tabBoardId);
         if (cancelled) return;
         if (saved) {
           const normalized = ensureBoard(saved);
           boardRef.current = normalized;
+          writeSessionValue(TAB_BOARD_STORAGE_KEY, normalized.id);
           setBoard(normalized);
           setView(normalized.view || { x: 0, y: 0, zoom: 1 });
           if (!storageTargetForBoard(initialStoragePreferencesRef.current, normalized.id) && initialStoragePreferencesRef.current.targets[normalized.id] !== "pending") {
@@ -9773,7 +9781,11 @@ function App({ initialProtectedShare = null }) {
           }
           setSaveState("已從本機恢復");
         } else {
-          setSaveState("本機自動儲存");
+          setSaveState(tabBoardId ? "找不到此分頁的本機工作檔；請從「我的工作檔」重新開啟。" : "本機自動儲存");
+          if (tabBoardId) {
+            setSwitchFailure("找不到此分頁原本的本機工作檔。請從清單重新開啟，或開啟先前下載的 .studio 備份。");
+            setShowDriveLibrary(true);
+          }
           setBoardPrimaryStorage(boardRef.current.id, "pending");
         }
       } catch {
@@ -9788,6 +9800,10 @@ function App({ initialProtectedShare = null }) {
     hydrateWorkspace();
     return () => { cancelled = true; };
   }, [refreshLocalLibrarySummary, setBoardPrimaryStorage]);
+
+  useEffect(() => {
+    if (hydrated) writeSessionValue(TAB_BOARD_STORAGE_KEY, board.id);
+  }, [hydrated, board.id]);
 
   useEffect(() => {
     const markInteraction = () => { startupUserInteractedRef.current = true; };
@@ -9868,7 +9884,7 @@ function App({ initialProtectedShare = null }) {
       persistBoardLocally({ ...boardRef.current, view: viewRef.current }).catch(() => undefined);
     };
     const warnBeforeUnload = (event) => {
-      if (!dirty || storagePreferences.autoSave) return;
+      if (!localRecoveryFailedRef.current && (!dirty || storagePreferences.autoSave)) return;
       flushRecoveryCopy();
       event.preventDefault();
       event.returnValue = "";
@@ -10444,6 +10460,7 @@ function App({ initialProtectedShare = null }) {
       if (!shouldCommit()) return null;
       pushUndo(boardRef.current);
       boardRef.current = imported;
+      writeSessionValue(TAB_BOARD_STORAGE_KEY, imported.id);
       setBoard(imported);
       setDirty(false);
       if (!preserveView) setView(imported.view || { x: 0, y: 0, zoom: 1 });
@@ -10619,6 +10636,7 @@ function App({ initialProtectedShare = null }) {
       }
       initialBoardRef.current = next;
       boardRef.current = next;
+      writeSessionValue(TAB_BOARD_STORAGE_KEY, next.id);
       viewRef.current = next.view || { x: 0, y: 0, zoom: 1 };
       selectedIdsRef.current = [];
       fileHandleRef.current = null;

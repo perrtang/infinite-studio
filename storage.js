@@ -244,9 +244,14 @@ export async function upsertLocalBoard(board) {
   return record;
 }
 
-export async function loadCurrentBoard() {
+export async function loadCurrentBoard(preferredBoardId = "") {
   return withDatabase(async (database) => {
     const transaction = database.transaction([META_STORE, BOARD_STORE, STATE_STORE], "readonly");
+    // An explicit tab identity must never fall back to another tab's board.
+    if (preferredBoardId) {
+      const record = await requestToPromise(transaction.objectStore(BOARD_STORE).get(String(preferredBoardId)));
+      return record?.board || null;
+    }
     const meta = await requestToPromise(transaction.objectStore(META_STORE).get(ACTIVE_BOARD_KEY));
     if (meta?.value) {
       const record = await requestToPromise(transaction.objectStore(BOARD_STORE).get(meta.value));

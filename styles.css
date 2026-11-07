@@ -10713,7 +10713,8 @@ button.status-label:hover {
   }
 
   .canvas-empty {
-    width: 100%;
+    /* Keep the empty-state copy clear of the two mobile panel controls. */
+    width: calc(100% - 44px);
   }
 
   .canvas-empty h1 {

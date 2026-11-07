@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.51",
-  "releasedAt": "2026-11-06",
-  "summary": "集中畫布外的系統訊息；對話框操作訊息留在對話框內。",
-  "notesUrl": "release-notes/v0.56.51.html",
+  "version": "0.56.52",
+  "releasedAt": "2026-11-07",
+  "summary": "修正分頁重新整理的工作檔還原，改善窄螢幕介面。",
+  "notesUrl": "release-notes/v0.56.52.html",
   "url": "https://infinite.petfashion.tw/"
 }

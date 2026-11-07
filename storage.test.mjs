@@ -112,6 +112,16 @@ test("local library preserves several boards while the active board remains expl
   assert.equal((await loadCurrentBoard()).id, "two");
 });
 
+test("each tab restores its own board even when another tab saves last", async () => {
+  await deleteDatabase();
+  await saveCurrentBoard(board("tab-a", { name: "A" }));
+  await saveCurrentBoard(board("tab-b", { name: "B" }));
+  assert.equal((await loadCurrentBoard("tab-a")).name, "A");
+  assert.equal((await loadCurrentBoard("tab-b")).name, "B");
+  assert.equal((await loadCurrentBoard()).name, "B");
+  assert.equal(await loadCurrentBoard("missing"), null);
+});
+
 test("offline sync queue coalesces to the newest snapshot and keeps recoverable state", async () => {
   await deleteDatabase();
   await enqueueSync(board("queued", { revision: 1 }), { fileId: "drive-1", expectedVersion: "3" });
