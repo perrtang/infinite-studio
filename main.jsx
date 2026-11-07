@@ -6306,12 +6306,12 @@ function DriveLibraryModal({
 
         {!driveSession.connected ? (
           <section className="drive-permission-intro">
-            <div><ShieldCheck size={23} aria-hidden="true" /><span><strong>只存取你在 Infinite Studio 建立的檔案</strong><small>Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。</small></span></div>
+            <div><ShieldCheck size={23} aria-hidden="true" /><span><strong>只存取由 Infinite Studio 建立或你授權的檔案</strong><small>Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。</small></span></div>
             {DRIVE_GRANT_BACKEND_ENABLED ? <div><Lock size={23} aria-hidden="true" /><span><strong>自動恢復連線</strong><small>Infinite Studio 會在伺服器加密保存 Drive 授權，讓登入後的新分頁可恢復連線。</small></span></div> : null}
             <div><HardDrive size={23} aria-hidden="true" /><span><strong>優先更新本機安全副本</strong><small>若瀏覽器空間不足，Drive 仍會繼續同步並明確提示；也可隨時下載 `.studio` 備份。</small></span></div>
             <button className="primary-button" type="button" onClick={onConnect} disabled={!configured || busy}>
               {busy ? <RefreshCw size={17} className="is-spinning" /> : <Cloud size={17} />}
-              {configured ? (driveSettings.enabled ? "重新授權 Google Drive" : "連結 Google Drive") : "Google Drive 尚未設定"}
+              {configured ? (driveSettings.enabled ? "重新連結 Google Drive" : "連結 Google Drive") : "Google Drive 尚未設定"}
             </button>
           </section>
         ) : (

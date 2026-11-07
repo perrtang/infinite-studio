@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.58",
+  "version": "0.56.59",
   "releasedAt": "2026-11-08",
-  "summary": "改善共享檔案選取授權失敗時的提示與重試。",
-  "notesUrl": "release-notes/v0.56.58.html",
+  "summary": "釐清 Google Drive 可存取的檔案與重新連結說明。",
+  "notesUrl": "release-notes/v0.56.59.html",
   "url": "https://infinite.petfashion.tw/"
 }

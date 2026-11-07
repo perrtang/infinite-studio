@@ -1144,6 +1144,8 @@ const EN_EXACT = Object.freeze({
   "已連結 Drive": "Linked to Drive",
   "尚未建立雲端檔案": "No cloud file yet",
   "只存取你在 Infinite Studio 建立的檔案": "Access only files created with Infinite Studio",
+  "只存取由 Infinite Studio 建立或你授權的檔案": "Access only files created by Infinite Studio or authorized by you",
+  "重新連結 Google Drive": "Reconnect Google Drive",
   "Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。": "Drive authorization is separate from PETFASHION sign-in. The app cannot read your entire Drive, and sign-in never uploads a project automatically.",
   "優先更新本機安全副本": "Update the local safety copy first",
   "若瀏覽器空間不足，Drive 仍會繼續同步並明確提示；也可隨時下載 `.studio` 備份。": "If browser storage is unavailable, Drive sync still continues with a clear warning. You can also download a `.studio` backup at any time.",
