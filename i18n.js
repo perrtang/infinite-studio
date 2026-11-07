@@ -65,6 +65,9 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新連結後檢查，再決定是否重試。": "Google Drive accepted the permission change, but the current permissions could not be confirmed. Reconnect and check before trying again.",
+  "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新整理權限後檢查，再決定是否重試。": "Google Drive accepted the permission change, but the current permissions could not be confirmed. Refresh permissions and check before trying again.",
+  "邀請已送至 Google Drive，但無法確認最新權限；請先重新整理權限。": "The invitation was sent to Google Drive, but the current permissions could not be confirmed. Refresh permissions first.",
   "側欄寬度": "Sidebar width",
   "拖曳側欄邊緣的雙線把手調整寬度；雙擊把手可恢復單側寬度。": "Drag the two-line handle at the edge of a sidebar to resize it; double-click it to restore that sidebar's default width.",
   "恢復預設寬度": "Restore default widths",

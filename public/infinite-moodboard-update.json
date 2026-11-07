@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.61",
+  "version": "0.56.62",
   "releasedAt": "2026-11-08",
-  "summary": "新增分享邀請 Email 格式檢查與就近錯誤提示。",
-  "notesUrl": "release-notes/v0.56.61.html",
+  "summary": "釐清分享權限變更後無法重新確認時的狀態與恢復方式。",
+  "notesUrl": "release-notes/v0.56.62.html",
   "url": "https://infinite.petfashion.tw/"
 }

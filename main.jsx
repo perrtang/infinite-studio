@@ -441,6 +441,7 @@ const MARKER_COLOR_LABELS = {
 };
 
 const DEFAULT_FILTERS = { symbols: [], colors: [], mode: "any" };
+const DRIVE_PERMISSION_REFRESH_MESSAGE = "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新整理權限後檢查，再決定是否重試。";
 const EMPTY_DRIVE_SHARING = Object.freeze({
   status: "idle",
   message: "",
@@ -11414,7 +11415,7 @@ function App({ initialProtectedShare = null }) {
     return () => { cancelled = true; window.clearInterval(timer); window.removeEventListener("focus", onVisible); document.removeEventListener("visibilitychange", onVisible); };
   }, [announce, board.id, board.revision, board.updatedAt, currentDriveAccessToken, dirty, driveSession.connected, driveSettings, hydrated, online, openGoogleDriveFile]);
 
-  const refreshDriveSharing = useCallback(async (target = null, { onRole = null } = {}) => {
+  const refreshDriveSharing = useCallback(async (target = null, { onRole = null, permissionChanged = false } = {}) => {
     const requestId = driveSharingRequestRef.current + 1;
     driveSharingRequestRef.current = requestId;
     const activeBoardId = boardRef.current.id;
@@ -11443,7 +11444,7 @@ function App({ initialProtectedShare = null }) {
         status: "authorization-required",
         fileId,
         resourceKey,
-        message: "請連結 Google Drive，才能讀取這份檔案與它目前的分享權限。",
+        message: permissionChanged ? "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新連結後檢查，再決定是否重試。" : "請連結 Google Drive，才能讀取這份檔案與它目前的分享權限。",
       });
       return false;
     }
@@ -11516,7 +11517,7 @@ function App({ initialProtectedShare = null }) {
         ...current,
         ...(accessRevoked ? { role: "viewer", canEdit: false, canShare: false } : {}),
         status: authorizationRequired ? "authorization-required" : "error",
-        message: driveErrorMessage(error),
+        message: permissionChanged ? (authorizationRequired ? "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新連結後檢查，再決定是否重試。" : DRIVE_PERMISSION_REFRESH_MESSAGE) : driveErrorMessage(error),
       }));
       return false;
     }
@@ -11665,8 +11666,7 @@ function App({ initialProtectedShare = null }) {
     try {
       const { setGoogleDriveGeneralAccess } = await loadDriveRuntime();
       await setGoogleDriveGeneralAccess(accessToken, driveSharing.fileId, enabled, { resourceKey: driveSharing.resourceKey });
-      await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
-      return true;
+      return await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
     } catch (error) {
       return false;
     }
@@ -11684,8 +11684,8 @@ function App({ initialProtectedShare = null }) {
         resourceKey: driveSharing.resourceKey,
         sendNotificationEmail: true,
       });
-      await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
-      return true;
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      return verified ? true : { message: "邀請已送至 Google Drive，但無法確認最新權限；請先重新整理權限。" };
     } catch (error) {
       return { message: driveErrorMessage(error) };
     }
@@ -11703,7 +11703,8 @@ function App({ initialProtectedShare = null }) {
         role === "editor" ? "writer" : "reader",
         { resourceKey: driveSharing.resourceKey },
       );
-      await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      if (!verified) return false;
       announce(role === "editor" ? "已允許這位成員編輯。" : "已將這位成員改為僅檢視。", "success");
       return true;
     } catch (error) {
@@ -11719,7 +11720,8 @@ function App({ initialProtectedShare = null }) {
     try {
       const { deleteGoogleDrivePermission } = await loadDriveRuntime();
       await deleteGoogleDrivePermission(accessToken, driveSharing.fileId, member.id, { resourceKey: driveSharing.resourceKey });
-      await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
+      const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true });
+      if (!verified) return false;
       announce(`已移除 ${member.name} 的 Drive 存取權。`, "success");
       return true;
     } catch (error) {
@@ -15685,9 +15687,10 @@ function DriveSharingPreview({ initialMode }) {
   const editor = mode === "editor";
   const denied = mode === "denied";
   const pickerError = mode === "picker-error";
+  const refreshError = mode === "permission-refresh-error";
   const sharing = {
     ...EMPTY_DRIVE_SHARING,
-    status: denied ? "shared-file-denied" : pickerError ? "picker-error" : "ready",
+    status: denied ? "shared-file-denied" : pickerError ? "picker-error" : refreshError ? "error" : "ready",
     fileId,
     fileName: "團隊研究工作檔（模擬資料）",
     shareUrl: createGoogleDriveMoodboardUrl({ fileId }),
@@ -15699,7 +15702,7 @@ function DriveSharingPreview({ initialMode }) {
     generalAccess: { enabled: mode === "owner-link" || mode === "owner-editor-link" || linkEnabled, role: mode === "owner-editor-link" ? "editor" : "viewer" },
     members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }] : [],
     message: denied ? "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權。"
-      : pickerError ? "Google 檔案選擇器等待逾時；沒有開啟任何內容。" : "介面預覽：未讀取或修改任何真實檔案。",
+      : pickerError ? "Google 檔案選擇器等待逾時；沒有開啟任何內容。" : refreshError ? DRIVE_PERMISSION_REFRESH_MESSAGE : "介面預覽：未讀取或修改任何真實檔案。",
   };
   const previewAction = () => { setFeedback("這是介面預覽，沒有連結 Google Drive、寄出邀請或修改權限。"); return false; };
   return (
@@ -15729,6 +15732,7 @@ function DriveSharingPreview({ initialMode }) {
           <option value="edit-request">其他帳號：申請編輯</option>
           <option value="denied">其他帳號：無存取權</option>
           <option value="picker-error">Google 選檔錯誤</option>
+          <option value="permission-refresh-error">權限變更後無法確認</option>
         </select></label>
         <p role="status">{feedback || "僅本機介面預覽：使用模擬資料，不連結 Drive，也不變更任何帳號權限。"}</p>
         {closed ? <button className="secondary-button" onClick={() => setClosed(false)}>重新開啟預覽</button> : null}

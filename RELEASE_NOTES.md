@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.62](./public/release-notes/v0.56.62.html) — distinguish accepted permission changes from an unsuccessful permission refresh.
+
 - [v0.56.61](./public/release-notes/v0.56.61.html) — validate collaborator email before submitting a Drive invitation.
 
 - [v0.56.60](./public/release-notes/v0.56.60.html) — clarify sidebar resizing and show reset feedback beside the control.
