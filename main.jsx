@@ -1990,6 +1990,7 @@ function AccountAvatar({ user, size = 28 }) {
 }
 
 function FileMenu({
+  onCreateLocal,
   onOpenLibrary,
   onOpenFile,
   recentFiles = [],
@@ -2019,6 +2020,7 @@ function FileMenu({
   const [recentBusy, setRecentBusy] = useState("");
   const [copyState, setCopyState] = useState("");
   const [copyName, setCopyName] = useState("");
+  const [createState, setCreateState] = useState("");
   const [menuPosition, setMenuPosition] = useState({ top: 56, right: 8 });
   const [recentPosition, setRecentPosition] = useState({ left: 8, top: 60, width: 300 });
   const recentTriggerRef = useRef(null);
@@ -2088,7 +2090,7 @@ function FileMenu({
     return () => { window.removeEventListener("resize", positionRecentMenu); menuRef.current?.removeEventListener("scroll", positionRecentMenu); };
   }, [open, recentExpanded]);
 
-  useEffect(() => { if (!open) { setRecentExpanded(false); setRecentError(""); } }, [open]);
+  useEffect(() => { if (!open) { setRecentExpanded(false); setRecentError(""); setCreateState(""); } }, [open]);
 
   const activate = (callback) => {
     setOpen(false);
@@ -2146,6 +2148,15 @@ function FileMenu({
         >
           <div className="file-menu-section" aria-label="檔案操作">
             <span className="file-menu-section-label">檔案</span>
+            <button type="button" role="menuitem" disabled={createState === "creating"} onClick={async () => {
+              setCreateState("creating");
+              try {
+                if (await onCreateLocal()) { setOpen(false); triggerRef.current?.focus({ preventScroll: true }); }
+                else setCreateState("error");
+              } catch { setCreateState("error"); }
+            }}>
+              <Plus size={17} /><span aria-live="polite"><strong>{createState === "creating" ? "正在建立工作檔…" : "新增工作檔"}</strong><small>{createState === "error" ? "無法建立；目前畫面未受影響，請確認儲存狀態後重試。" : "建立空白工作檔"}</small></span>
+            </button>
             <button type="button" role="menuitem" onClick={() => activate(onOpenLibrary)}>
               <FolderOpen size={17} /><span><strong>我的工作檔…</strong><small>本機與 Google Drive 檔案</small></span>
             </button>
@@ -10739,7 +10750,7 @@ function App({ initialProtectedShare = null }) {
 
   const createLocalMoodboard = useCallback(() => {
     const next = createBoard({ name: localizedDefaultBoardName(interfaceLocale) });
-    activateLocalMoodboard(next, "已建立新的工作檔；原本的工作檔已安全保留。", { newBoard: true });
+    return activateLocalMoodboard(next, "已建立新的工作檔；原本的工作檔已安全保留。", { newBoard: true });
   }, [activateLocalMoodboard, interfaceLocale]);
 
   const currentDriveContentBytes = useMemo(
@@ -14787,6 +14798,7 @@ function App({ initialProtectedShare = null }) {
           <AccountMenu user={authSession.user} signedIn={authReady} onCloseSettings={closeAccountSettings} onOpenSection={(section) => { setSettingsInitialSection(section); setShowSettings(true); }} />
           <div className="file-actions">
             <FileMenu
+              onCreateLocal={createLocalMoodboard}
               onOpenLibrary={openGoogleDriveLibrary}
               onOpenFile={openBoardFile}
               recentFiles={recentFiles}
