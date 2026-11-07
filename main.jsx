@@ -2090,6 +2090,8 @@ function FileMenu({
 
   const activate = (callback) => {
     setOpen(false);
+    // Keep a stable return target when the selected menu item is unmounted.
+    triggerRef.current?.focus({ preventScroll: true });
     callback();
   };
 
@@ -5437,10 +5439,47 @@ function SourceInspector({ source, visibleInstanceCount = 0, readOnly = false, b
   );
 }
 
+function hasBlockingModal() {
+  return Boolean(document.querySelector('[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]'));
+}
+
+function useModalFocus() {
+  const dialogRef = useRef(null);
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    const previous = document.activeElement;
+    const focusable = () => [...dialog.querySelectorAll('a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')]
+      .filter((element) => element.getClientRects().length && !element.closest('[inert], [aria-hidden="true"]'));
+    const frame = requestAnimationFrame(() => {
+      if (!dialog.isConnected || dialog.contains(document.activeElement)) return;
+      (dialog.querySelector('[data-modal-initial-focus]') || focusable()[0] || dialog).focus({ preventScroll: true });
+    });
+    const containTab = (event) => {
+      if (event.key !== "Tab") return;
+      const dialogs = [...document.querySelectorAll('[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]')];
+      if (dialogs.at(-1) !== dialog) return;
+      const controls = focusable();
+      if (!controls.length) { event.preventDefault(); dialog.focus(); return; }
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", containTab, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", containTab, true);
+      if (previous?.isConnected && previous !== document.body) previous.focus({ preventScroll: true });
+    };
+  }, []);
+  return dialogRef;
+}
+
 function Modal({ title, description, onClose, children, wide = false, dialogRole = "dialog", busy = false, className = "" }) {
+  const dialogRef = useModalFocus();
   return (
-    <div className="modal-backdrop" role="presentation" onPointerDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className={`modal ${wide ? "is-wide" : ""} ${className}`} role={dialogRole} aria-modal="true" aria-label={title}>
+    <div className="modal-backdrop" role="presentation" onPointerDown={(event) => !busy && event.target === event.currentTarget && onClose()}>
+      <section ref={dialogRef} tabIndex={-1} className={`modal ${wide ? "is-wide" : ""} ${className}`} role={dialogRole} aria-modal="true" aria-label={title}>
         <header>
           <div><h2>{title}</h2>{description ? <p>{description}</p> : null}</div>
           <IconButton label="關閉" onClick={onClose} disabled={busy}><X size={19} /></IconButton>
@@ -5600,6 +5639,7 @@ function AuthGate({
   onRetry,
   onClose,
 }) {
+  const dialogRef = useModalFocus();
   const isDriveOnboarding = feature === "drive-onboarding";
   const [accepted, setAccepted] = useState(isDriveOnboarding);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -5675,7 +5715,7 @@ function AuthGate({
 
   return (
     <div className="auth-gate" role="presentation" onPointerDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="auth-gate-panel" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title" aria-describedby="auth-gate-description">
+      <section ref={dialogRef} tabIndex={-1} className="auth-gate-panel" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title" aria-describedby="auth-gate-description">
         <IconButton className="auth-gate-close" label="先繼續訪客模式" onClick={onClose}><X size={18} /></IconButton>
         <div className="auth-gate-locale" role="group" aria-label="介面語言">
           {INTERFACE_LOCALES.map((option) => (
@@ -5962,7 +6002,7 @@ function VersionModal({
       {preview ? <p className="drive-inline-message" role="status">這是模擬資料，不會讀取或刪除實際版本。</p> : null}
       {loadRecovery ? <div className="version-cloud-state"><History size={19} /><span><strong>載入雲端前的畫面</strong><small>還原後暫停自動上傳，確認後再更新雲端。</small></span><button className="secondary-button" type="button" disabled={isBusy} onClick={onRestoreLoad}>復原載入前內容</button></div> : null}
       {pendingTabUpdate ? <div className="version-cloud-state"><Info size={19} /><span><strong>另一個分頁有更新</strong><small>目前畫布沒有被取代；可將另一分頁的內容開成獨立副本。</small></span><button className="secondary-button" type="button" onClick={onOpenTabUpdate} disabled={isBusy}>開成新副本</button></div> : null}
-      <form className="version-create" onSubmit={(event) => { event.preventDefault(); onCreate(); }}>
+      <form className="version-create" onSubmit={(event) => { event.preventDefault(); onCreate(event.currentTarget.closest('[role="dialog"]')); }}>
         <label><span>版本備註</span><input value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} placeholder="例如：完成第一輪素材篩選" /></label>
         <button className="primary-button" type="submit" disabled={isBusy}><History size={16} /> 建立版本</button>
       </form>
@@ -6162,28 +6202,11 @@ function LocalFileAutosaveModal({ binding, supported, onChoose, onDownload, onCl
 }
 
 function DriveSaveConfirmation({ target, busy, status, onConfirm, onResolve, onClose }) {
-  const bodyRef = useRef(null);
   const feedback = target.feedback;
   const needsResolution = feedback && feedback.action !== "retry";
   const settlingFailure = busy && !["checking", "syncing"].includes(status);
-  useEffect(() => {
-    const dialog = bodyRef.current.closest('[role="dialog"]');
-    const previous = document.activeElement;
-    bodyRef.current.querySelector("button")?.focus();
-    const trapFocus = (event) => {
-      if (event.key !== "Tab") return;
-      const controls = [...dialog.querySelectorAll("button:not(:disabled), a[href], [tabindex='0']")];
-      if (!controls.length) { event.preventDefault(); return; }
-      const first = controls[0];
-      const last = controls.at(-1);
-      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
-    };
-    dialog.addEventListener("keydown", trapFocus);
-    return () => { dialog.removeEventListener("keydown", trapFocus); if (previous?.isConnected) previous.focus(); };
-  }, []);
   return <Modal title="以目前內容更新雲端？" description="Google Drive 上的內容與目前畫布不同。" onClose={busy ? () => {} : onClose} busy={busy}>
-    <div className="drive-save-confirmation" ref={bodyRef}>
+    <div className="drive-save-confirmation">
       <strong data-l10n-ignore>{target.name}</strong>
       <p>將目前畫布儲存到同一份 Drive 檔案，分享連結不變。舊版會先保留，可從「版本紀錄」復原。</p>
       {busy ? <div className="drive-save-feedback" role="status" aria-live="polite">
@@ -6194,7 +6217,7 @@ function DriveSaveConfirmation({ target, busy, status, onConfirm, onResolve, onC
         <div><strong>{feedback.title}</strong><p>{feedback.message}</p>{feedback.warning ? <p>{feedback.warning}</p> : <p>目前編輯畫面仍保留，不會載入雲端內容。</p>}</div>
       </div> : null}
       <div className="drive-save-confirmation-actions">
-        <button className="secondary-button" type="button" disabled={busy} onClick={onClose}>取消</button>
+        <button className="secondary-button" type="button" data-modal-initial-focus disabled={busy} onClick={onClose}>取消</button>
         <button className="primary-button" type="button" disabled={busy} onClick={needsResolution ? onResolve : onConfirm}>{busy ? <RefreshCw size={16} className="is-spinning" /> : <CloudUpload size={16} />}{busy ? "更新中…" : needsResolution ? (feedback.action === "backup" ? "前往下載本機備份" : feedback.action === "reconnect" ? "前往重新連結" : "檢查雲端狀態") : feedback ? "再次以目前內容更新" : "以目前內容更新"}</button>
       </div>
     </div>
@@ -6373,7 +6396,7 @@ function DriveLibraryModal({
                   <span className="drive-file-icon" aria-hidden="true">{item.local ? <HardDrive size={19} /> : <FileArchive size={19} />}</span>
                   <div>{renameKey === item.key ? <form className="drive-rename-form" onSubmit={async (event) => { event.preventDefault(); const name = renameValue.trim(); if (!name) { setRenameError("請輸入名稱。"); return; } setRenameBusy(true); setRenameError(""); try { const result = await onRename(item, name); if (result) setRenameKey(""); else setRenameError("名稱尚未完成儲存；請查看同步狀態並重試。"); } catch (error) { setRenameError(error?.message || "無法更新名稱，請重試。"); } finally { setRenameBusy(false); } }}><input aria-label="工作檔名稱" value={renameValue} onChange={(event) => setRenameValue(event.target.value)} autoFocus disabled={renameBusy} /><button type="submit" className="quiet-button" disabled={renameBusy}>{renameBusy ? "儲存中…" : "儲存"}</button><button type="button" className="quiet-button" disabled={renameBusy} onClick={() => setRenameKey("")}>取消</button>{renameError ? <small role="alert">{renameError}</small> : null}</form> : <strong data-l10n-ignore title={item.name}>{item.name}</strong>}<small>{detail}</small></div>
                   <span className={`drive-file-badge is-${itemStatus.tone}`}>{itemStatus.tone === "success" ? <Check size={13} /> : itemStatus.tone === "error" ? <AlertTriangle size={13} /> : item.remote ? <Cloud size={13} /> : <HardDrive size={13} />}{isCurrent ? "目前檔案" : itemStatus.label}</span>
-                  <button className="icon-button" type="button" title="重新命名" aria-label={`重新命名 ${item.name}`} disabled={busy || renameBusy} onClick={() => { setRenameValue(item.name); setRenameError(""); setRenameKey(item.key); }}><Pencil size={15} /></button>
+                  <button className="icon-button drive-file-rename" type="button" title="重新命名" aria-label={`重新命名 ${item.name}`} disabled={busy || renameBusy} onClick={() => { setRenameValue(item.name); setRenameError(""); setRenameKey(item.key); }}><Pencil size={15} /></button>
                   {!isCurrent ? <button className="quiet-button" type="button" onClick={() => item.local ? onOpenLocal(item.local) : onOpenFile(item.remote)} disabled={busy || backupBusy}>{item.local && item.remote ? "開啟本機" : "開啟"}</button> : null}
                   {item.remote?.webViewLink ? <a className="icon-button" href={item.remote.webViewLink} target="_blank" rel="noreferrer" aria-label="在 Google Drive 查看" title="在 Google Drive 查看"><ExternalLink size={15} /></a> : null}
                   {(pendingDriveOpen?.id && item.remote?.id === pendingDriveOpen.id) || (pendingLocalOpen?.id && item.boardId === pendingLocalOpen.id) ? <div className="drive-open-recovery" role="alert"><AlertTriangle size={18} aria-hidden="true" /><span><strong>目前畫面尚未建立復原副本</strong><br />先將目前畫面存成備份，確認寫入後再開啟選取的工作檔。</span><button className="secondary-button" type="button" disabled={backupBusy || busy} onClick={onBackupAndOpen}>{backupBusy ? "正在儲存備份…" : "儲存備份並開啟"}</button>{backupError ? <span role="alert">{backupError}</span> : null}</div> : null}
@@ -7035,7 +7058,7 @@ function SettingsModal({
                 <b>{storagePreferences.autoSave ? "啟用" : "停用"}</b>
               </button>
               <button className="settings-toggle-row" type="button" aria-pressed={storagePreferences.showSaveStatus} onClick={() => onSetShowSaveStatus(!storagePreferences.showSaveStatus)}>
-                <span><Check size={18} /><span><strong>顯示儲存完成狀態</strong><small>在檔名下方安靜顯示位置與完成時間，不會中斷編輯。</small></span></span>
+                <span><Check size={18} /><span><strong>顯示儲存完成狀態</strong><small>在頂部儲存按鈕旁顯示位置與完成時間，不會中斷編輯。</small></span></span>
                 <b>{storagePreferences.showSaveStatus ? "啟用" : "停用"}</b>
               </button>
               <div className="settings-drive-quota">
@@ -7538,7 +7561,7 @@ function ExportDownloadModal({ downloads, canPickDirectory, isExporting, onExpor
       title="匯出檔案已準備"
       description={canPickDirectory
         ? "可直接選擇資料夾批次匯出，也可以逐一下載。圖片、文字與形狀會保留尺寸與旋轉，影片則匯出原檔。"
-        : "這個內嵌瀏覽器請逐一下載；在桌面 Chrome 開啟同一網址即可直接選擇匯出資料夾。"}
+        : "這個瀏覽器請逐一下載；支援選擇資料夾的桌面瀏覽器可批次匯出。"}
       onClose={onClose}
     >
       {canPickDirectory ? (
@@ -8404,8 +8427,8 @@ function App({ initialProtectedShare = null }) {
     preparedDownloadsRef.current.forEach((item) => URL.revokeObjectURL(item.url));
   }, []);
 
-  const announce = useCallback((message, tone = "info") => {
-    const dialogOrigin = document.activeElement?.closest?.('[role="dialog"], [role="alertdialog"]') || null;
+  const announce = useCallback((message, tone = "info", origin = null) => {
+    const dialogOrigin = origin || document.activeElement?.closest?.('[role="dialog"], [role="alertdialog"]') || null;
     setToast({ message, tone, dialogOrigin });
   }, []);
 
@@ -13894,17 +13917,17 @@ function App({ initialProtectedShare = null }) {
 
   useEffect(() => {
     const copy = (event) => {
-      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources") return;
+      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources" || hasBlockingModal()) return;
       if (!event.clipboardData) return;
       if (copySelectedObjects(event.clipboardData)) event.preventDefault();
     };
     const cut = (event) => {
-      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources") return;
+      if (isEditableShortcutEvent(event, document.activeElement) || leftTab === "sources" || hasBlockingModal()) return;
       if (cloudReadOnly) return;
       if (cutSelectedObjects(event.clipboardData)) event.preventDefault();
     };
     const paste = (event) => {
-      if (isEditableShortcutEvent(event, document.activeElement)) return;
+      if (isEditableShortcutEvent(event, document.activeElement) || hasBlockingModal()) return;
       const text = event.clipboardData?.getData("text/plain") || "";
       const objects = parseObjectClipboard(text, ensureBoard);
       if (objects && leftTab !== "sources") {
@@ -14063,10 +14086,25 @@ function App({ initialProtectedShare = null }) {
         setShowShortcuts(false);
         return;
       }
+      if (event.key === "Escape" && (preparedDownloads.length || showEditPermissionRequest || agentRequest || showAgent || showVersions || showCollaboration)) {
+        event.preventDefault();
+        if (preparedDownloads.length) closePreparedDownloads();
+        else if (showEditPermissionRequest) setShowEditPermissionRequest(false);
+        else if (agentRequest) finishAgentRequest(false);
+        else if (showAgent) closeAgent();
+        else if (showVersions) setShowVersions(false);
+        else closeDriveSharing();
+        return;
+      }
       if (leftTab === "sources" && event.key === "Escape") return;
       if (typing) return;
       const modifier = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
+      if (event.key !== "Escape" && hasBlockingModal()) {
+        if (modifier && !event.altKey && key === "f" && (showShortcuts || showVersions)) { event.preventDefault(); openCurrentListSearch(); }
+        else if ((modifier && ["s", "o", "a", "z"].includes(key)) || ["Backspace", "Delete"].includes(event.key)) event.preventDefault();
+        return;
+      }
       const shiftOnly = event.shiftKey && !modifier && !event.altKey;
       const nudge = objectNudgeDelta(event, rulerUnit);
       if (nudge && leftTab !== "sources" && !cloudReadOnly && !document.querySelector('[role="dialog"][aria-modal="true"]')) {
@@ -14137,11 +14175,6 @@ function App({ initialProtectedShare = null }) {
         event.preventDefault();
         if (shapeMenuOpen) setShapeMenuOpen(false);
         else if (dragActive) setDragActive(false);
-        else if (preparedDownloads.length) closePreparedDownloads();
-        else if (agentRequest) finishAgentRequest(false);
-        else if (showAgent) closeAgent();
-        else if (showVersions) setShowVersions(false);
-        else if (showCollaboration) closeDriveSharing();
         else if (mobilePanel) setMobilePanel(null);
         else if (filters.symbols.length || filters.colors.length) setFilters(DEFAULT_FILTERS);
         else if (tool === "zoom-window") finishZoomWindowTool();
@@ -14193,7 +14226,7 @@ function App({ initialProtectedShare = null }) {
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [agentRequest, applyBoard, cloudReadOnly, rulerUnit, finishAgentRequest, showAgent, closeAgent, announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
+  }, [agentRequest, applyBoard, cloudReadOnly, rulerUnit, finishAgentRequest, showAgent, closeAgent, announce, cancelPendingObjectDeletion, closeAdvancedFeatureGate, closeDriveLibrary, closeDriveSharing, closeInterfaceThemes, closePreparedDownloads, copySelectedObjects, cutSelectedObjects, deleteSelected, dismissLocalFileLocation, dragActive, driveSaveConfirmation, duplicateSelected, escapeCancellationRequest, filters.colors.length, filters.symbols.length, finishZoomWindowTool, focusMode, isClearingLocalData, keepEscapeAdjustment, leftPanelVisible, leftTab, loadedTextFlow, localSwitchConfirmation, mobilePanel, openBoardFile, openListSearch, pasteCopiedObjects, pendingAdvancedFeature, pendingObjectDeletion, preparedDownloads.length, redo, requestActivePointerCancellation, requestAdvancedFeature, restoreWorkspaceChrome, rightPanelVisible, savePreferredBoard, shapeMenuOpen, showAnnotationBuilder, showBothPanels, showCollaboration, showDeleteLocalData, showDriveLibrary, showEditPermissionRequest, showGridBuilder, showInterfaceThemes, showLocalFileLocation, showSettings, showShortcuts, showStorageLocation, showVersions, toggleBothPanels, toggleCanvasBackground, toggleFocusMode, toggleGuides, toggleLeftPanel, toggleRightPanel, toggleRulers, toggleSelectionGroup, tool, undo]);
 
   const exportObjects = useCallback(async (scopeOverride) => {
     const scope = typeof scopeOverride === "string" ? scopeOverride : exportScope;
@@ -14289,14 +14322,14 @@ function App({ initialProtectedShare = null }) {
     return () => { active = false; };
   }, [board.id, hydrated, storagePreferences.loadRecoveries]);
 
-  const createManualVersion = useCallback(async () => {
+  const createManualVersion = useCallback(async (origin = null) => {
     setVersionBusy(true);
     try {
       await saveVersion(boardSnapshot(), versionLabel || translateInterfaceText(`手動版本 ${formatTime(new Date())}`), "manual");
       setVersions(await listVersions(boardRef.current.id));
       setVersionLabel("");
-      announce("版本已建立", "success");
-    } catch { announce("版本建立失敗。", "error"); }
+      announce("版本已建立", "success", origin);
+    } catch { announce("版本建立失敗。", "error", origin); }
     finally { setVersionBusy(false); }
   }, [announce, boardSnapshot, versionLabel]);
 
@@ -14650,7 +14683,7 @@ function App({ initialProtectedShare = null }) {
     const origin = toast?.dialogOrigin;
     setToastDialogTarget(origin?.isConnected ? (origin.querySelector('.modal-body') || origin) : null);
   }, [hasBlockingDialog, toast, showSettings, showDriveLibrary, showVersions, showCollaboration]);
-  const toastContent = toast ? <div className={`toast toast-${toast.tone} ${toastDialogTarget ? "is-in-dialog" : "is-in-header"}`} role="status" tabIndex={0} title={toast.message} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span>{toast.recoveryBoardId === board.id && driveLoadRecovery?.loadedBoardId === board.id ? <button className="quiet-button" type="button" onClick={() => { setToast(null); void openVersionModal(); }}>版本紀錄</button> : null}<button className="toast-dismiss" type="button" aria-label="關閉提示" onClick={() => setToast(null)}><X size={16} /></button></div> : null;
+  const toastContent = toast && (!toast.dialogOrigin || toastDialogTarget) ? <div className={`toast toast-${toast.tone} ${toastDialogTarget ? "is-in-dialog" : "is-in-header"}`} role="status" tabIndex={0} title={toast.message} {...toastPause}>{toast.tone === "success" ? <Check size={16} /> : toast.tone === "error" ? <AlertTriangle size={16} /> : null}<span>{toast.message}</span>{toast.recoveryBoardId === board.id && driveLoadRecovery?.loadedBoardId === board.id ? <button className="quiet-button" type="button" onClick={() => { setToast(null); void openVersionModal(); }}>版本紀錄</button> : null}<button className="toast-dismiss" type="button" aria-label="關閉提示" onClick={() => setToast(null)}><X size={16} /></button></div> : null;
 
   return (
     <main

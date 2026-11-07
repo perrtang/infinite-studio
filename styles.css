@@ -798,6 +798,10 @@ button:disabled {
 @media (max-width: 620px) {
   .app-topbar .brand-name, .app-topbar .topbar-cloud-status { display: none; }
   .app-topbar .topbar-save-status { max-width: 32vw; }
+  /* Give the update message and action controls the full second row on small screens. */
+  .app-topbar:has(.app-update-trigger) .topbar-primary { visibility: hidden; }
+  .app-topbar .topbar-secondary:has(.app-update-trigger) { grid-column: 1 / -1; width: 100%; justify-content: flex-end; }
+  .app-topbar .topbar-secondary:has(.app-update-trigger) .topbar-save-status { flex: 0 1 auto; }
 }
 
 @media (max-width: 360px) {
@@ -6278,9 +6282,13 @@ html[lang="en"] .sidebar-tabs button svg {
   align-items: center;
   border-bottom: 1px solid var(--border);
   display: flex;
+  gap: 12px;
   justify-content: space-between;
   padding: 17px 18px;
 }
+
+.modal > header > div { flex: 1 1 auto; min-width: 0; }
+.modal > header > .icon-button { flex: none; }
 
 .modal > header h2 {
   font-size: calc(18px + var(--ui-font-offset, 0px));
@@ -6289,7 +6297,7 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .modal > header p {
   color: var(--text-muted);
-  font-size: calc(11px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
   margin: 5px 0 0;
 }
@@ -6326,7 +6334,7 @@ html[lang="en"] .sidebar-tabs button svg {
 .annotation-dialog-layout label > span,
 .annotation-position-field legend {
   color: var(--text-soft);
-  font-size: calc(10px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   font-weight: 700;
 }
 
@@ -6378,13 +6386,13 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .grid-dialog-preview > span {
   color: var(--text-muted);
-  font-size: calc(10px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   text-align: center;
 }
 
 .feature-dialog-note {
   color: var(--text-muted);
-  font-size: calc(10px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.55;
   margin: 15px 0 0;
 }
@@ -6476,6 +6484,10 @@ html[lang="en"] .sidebar-tabs button svg {
   .grid-dialog-preview {
     min-height: 120px;
   }
+
+  .annotation-position-picker { grid-template-columns: repeat(3, 44px); }
+  .annotation-position-picker button,
+  .annotation-position-picker > span { width: 44px; height: 44px; }
 }
 
 .theme-library {
@@ -7160,13 +7172,20 @@ html[lang="en"] .sidebar-tabs button svg {
 .settings-toggle-row > span {
   align-items: center;
   display: flex;
+  flex: 1 1 auto;
   gap: 10px;
+  min-width: 0;
   text-align: left;
 }
 
+.settings-toggle-row > span > svg { flex: none; }
+
 .settings-toggle-row > b {
   color: var(--text-muted);
-  font-size: calc(10px + var(--ui-font-offset, 0px));
+  flex: none;
+  font-size: calc(12px + var(--ui-font-offset, 0px));
+  margin-left: 12px;
+  white-space: nowrap;
 }
 
 .settings-toggle-row[aria-pressed="true"] > b {
@@ -7718,7 +7737,7 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .version-current small {
   color: var(--text-muted);
-  font-size: calc(10px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   margin-left: auto;
 }
 
@@ -7757,7 +7776,7 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .version-list article small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   margin-top: 4px;
 }
 
@@ -7784,7 +7803,7 @@ html[lang="en"] .sidebar-tabs button svg {
 .version-section-heading small,
 .version-cloud-state small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 
@@ -7884,7 +7903,7 @@ html[lang="en"] .sidebar-tabs button svg {
 .storage-location-note,
 .library-primary-location small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 
@@ -7939,7 +7958,7 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .storage-drive-consent small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.55;
 }
 
@@ -7985,7 +8004,7 @@ html[lang="en"] .sidebar-tabs button svg {
 
 .local-file-location-summary small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 
@@ -8052,7 +8071,7 @@ html[lang="en"] .sidebar-tabs button svg {
 .settings-drive-status strong,
 .settings-drive-quota strong,
 .settings-drive-connect strong {
-  font-size: calc(11px + var(--ui-font-offset, 0px));
+  font-size: calc(13px + var(--ui-font-offset, 0px));
 }
 
 .drive-status-panel small,
@@ -8064,7 +8083,7 @@ html[lang="en"] .sidebar-tabs button svg {
 .settings-drive-quota small,
 .settings-drive-connect small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 
@@ -8286,7 +8305,8 @@ html[lang="en"] .sidebar-tabs button svg {
 .drive-save-confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .drive-save-confirmation-actions button { min-height: 44px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
 .agent-pairing-field { display: grid; gap: 8px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
-.agent-pairing-field input { width: 100%; min-width: 0; }
+.agent-pairing-field input { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); font: inherit; }
+.agent-pairing-field input:focus-visible { outline: 2px solid var(--accent-ui); outline-offset: 2px; }
 .agent-auto-edit { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .agent-request-preview { max-height: 260px; overflow: auto; margin: 0; padding: 12px; background: var(--surface-strong); border-radius: 6px; font-size: calc(13px + var(--ui-font-offset, 0px)); }
 .agent-request-preview > div { display: grid; grid-template-columns: minmax(76px, 0.3fr) minmax(0, 1fr); gap: 12px; padding: 4px 0; }
@@ -8696,7 +8716,7 @@ button.status-label:hover {
 .collaboration-share-summary small,
 .collaboration-share-note {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.45;
 }
 
@@ -8807,7 +8827,7 @@ button.status-label:hover {
 .collaboration-request-action small,
 .collaboration-member-list small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.45;
 }
 
@@ -9020,7 +9040,7 @@ button.status-label:hover {
 
 .collaboration-preparation-state small {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   line-height: 1.5;
 }
 
@@ -9154,7 +9174,7 @@ button.status-label:hover {
 
 .collaboration-invite-field > span {
   color: var(--text-muted);
-  font-size: calc(9px + var(--ui-font-offset, 0px));
+  font-size: calc(12px + var(--ui-font-offset, 0px));
   font-weight: 650;
 }
 
@@ -10905,6 +10925,9 @@ button.status-label:hover {
     align-items: start;
     grid-template-columns: 32px minmax(0, 1fr);
   }
+
+  .drive-file-list article { grid-template-columns: 32px minmax(0, 1fr) 44px; }
+  .drive-file-list article > .drive-file-rename { grid-column: 3; grid-row: 1; justify-self: end; min-width: 44px; }
 
   .drive-status-panel > button,
   .drive-local-draft .drive-file-badge,

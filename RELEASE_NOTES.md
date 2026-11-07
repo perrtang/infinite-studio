@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.53](./public/release-notes/v0.56.53.html) — improve dialog keyboard isolation, mobile layout, and action feedback; see [UX review](./UX_REVIEW_v0.56.53.md).
+
 - [v0.56.52](./public/release-notes/v0.56.52.html) — retain each tab’s workspace on refresh and improve mobile empty-state spacing.
 
 - [v0.56.51](./public/release-notes/v0.56.51.html) — consolidate workspace messages beside save and keep dialog feedback in its dialog.

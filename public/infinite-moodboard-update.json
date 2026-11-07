@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.52",
+  "version": "0.56.53",
   "releasedAt": "2026-11-07",
-  "summary": "修正分頁重新整理的工作檔還原，改善窄螢幕介面。",
-  "notesUrl": "release-notes/v0.56.52.html",
+  "summary": "改善對話框鍵盤操作、手機版顯示與狀態提示。",
+  "notesUrl": "release-notes/v0.56.53.html",
   "url": "https://infinite.petfashion.tw/"
 }
