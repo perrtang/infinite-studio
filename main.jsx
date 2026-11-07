@@ -14514,7 +14514,7 @@ function App({ initialProtectedShare = null }) {
     ? selectionActionAnchorInViewport(selectionActionBounds, view, canvasViewportSize)
     : null;
   const selectionActionStyle = selectionActionAnchor ? {
-    left: `clamp(8px, ${selectionActionAnchor.x}px, calc(100% - 252px))`,
+    left: `clamp(8px, ${selectionActionAnchor.x}px, calc(100% - var(--selection-action-reserve)))`,
     top: `clamp(84px, ${selectionActionAnchor.y}px, calc(100% - 28px))`,
   } : undefined;
   const showSelectionActions = Boolean(

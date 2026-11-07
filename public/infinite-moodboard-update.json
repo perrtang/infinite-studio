@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.63",
+  "version": "0.56.64",
   "releasedAt": "2026-11-08",
-  "summary": "確認分享權限變更已反映在 Google Drive 後再顯示成功。",
-  "notesUrl": "release-notes/v0.56.63.html",
+  "summary": "修正手機畫面中選取物件操作列超出視窗。",
+  "notesUrl": "release-notes/v0.56.64.html",
   "url": "https://infinite.petfashion.tw/"
 }

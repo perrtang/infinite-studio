@@ -4210,6 +4210,7 @@ html[lang="en"] .sidebar-tabs button svg {
 }
 
 .selection-action-bar {
+  --selection-action-reserve: 252px;
   align-items: center;
   backdrop-filter: blur(12px);
   background: var(--floating-bg);
@@ -4217,6 +4218,8 @@ html[lang="en"] .sidebar-tabs button svg {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 0 1px rgb(var(--accent-rgb) / 0.12);
   display: flex;
   gap: 2px;
+  max-width: calc(100% - 16px);
+  overflow-x: auto;
   padding: 3px;
   position: absolute;
   transform: translateY(-50%);
@@ -10431,6 +10434,10 @@ button.status-label:hover {
   .layer-actions .icon-button {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  .selection-action-bar {
+    --selection-action-reserve: 296px;
   }
 
   .selection-action-bar .icon-button {
