@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.60](./public/release-notes/v0.56.60.html) — clarify sidebar resizing and show reset feedback beside the control.
+
 - [v0.56.59](./public/release-notes/v0.56.59.html) — clarify Drive file access and reconnection.
 - [v0.56.58](./public/release-notes/v0.56.58.html) — clarify shared-file authorization errors and retry.
 - [v0.56.57](./public/release-notes/v0.56.57.html) — streamline sharing controls and place feedback beside the relevant action.

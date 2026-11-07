@@ -6905,6 +6905,7 @@ function SettingsModal({
   onClose,
 }) {
   const [section, setSection] = useState(initialSection);
+  const [panelWidthReset, setPanelWidthReset] = useState(false);
   const panelRef = useRef(null);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => panelRef.current?.querySelector('.settings-nav .is-active')?.focus());
@@ -7271,7 +7272,7 @@ function SettingsModal({
               <div className="settings-section-heading">
                 <div><h3 id="settings-workspace-title">工作區</h3><p>調整畫布輔助背景，以及桌面工作區預設顯示的面板。</p></div>
               </div>
-              <div className="settings-row"><div><strong>側欄寬度</strong><small>可拖曳側欄圓點把手調整；雙擊把手可恢復單側寬度。</small></div><button className="secondary-button" type="button" onClick={onResetPanelWidths}>恢復預設寬度</button></div>
+              <div className="settings-row"><div><strong>側欄寬度</strong><small>拖曳側欄邊緣的雙線把手調整寬度；雙擊把手可恢復單側寬度。</small>{panelWidthReset ? <small role="status">已恢復左右側欄的預設寬度。</small> : null}</div><button className="secondary-button" type="button" onClick={() => { onResetPanelWidths(); setPanelWidthReset(true); }}>恢復預設</button></div>
               <div className="settings-subsection-heading settings-canvas-heading">
                 <LayoutGrid size={17} />
                 <div><strong>畫布背景</strong><small>只影響這台裝置的工作區，不會寫入工作檔或輸出成品。</small></div>
@@ -8465,8 +8466,7 @@ function App({ initialProtectedShare = null }) {
     setRightPanelWidth(right);
     localStorage.setItem("moodboard-left-panel-width", String(left));
     localStorage.setItem("studio-right-panel-width", String(right));
-    announce("已恢復左右側欄的預設寬度。", "success");
-  }, [announce]);
+  }, []);
 
   const resetCanvasToolbarPosition = useCallback(() => {
     setCanvasToolbarPosition(null);

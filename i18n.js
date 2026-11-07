@@ -65,6 +65,10 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "側欄寬度": "Sidebar width",
+  "拖曳側欄邊緣的雙線把手調整寬度；雙擊把手可恢復單側寬度。": "Drag the two-line handle at the edge of a sidebar to resize it; double-click it to restore that sidebar's default width.",
+  "恢復預設寬度": "Restore default widths",
+  "已恢復左右側欄的預設寬度。": "Both sidebars have been restored to their default widths.",
   "外框線": "Border",
   "外框樣式": "Border style",
   "無外框": "No border",

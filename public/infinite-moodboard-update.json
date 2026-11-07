@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.59",
+  "version": "0.56.60",
   "releasedAt": "2026-11-08",
-  "summary": "釐清 Google Drive 可存取的檔案與重新連結說明。",
-  "notesUrl": "release-notes/v0.56.59.html",
+  "summary": "修正側欄寬度說明與重設完成提示。",
+  "notesUrl": "release-notes/v0.56.60.html",
   "url": "https://infinite.petfashion.tw/"
 }
