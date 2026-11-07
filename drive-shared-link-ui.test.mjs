@@ -7,7 +7,7 @@ const source = await readFile(new URL("./main.jsx", import.meta.url), "utf8");
 test("a shared Drive link retains an exact-file Picker fallback", () => {
   assert.match(source, /const loadDrivePickerRuntime = \(\) => import\("\.\/drive-picker\.js"\)/);
   assert.match(source, /status: "needs-picker-access"/);
-  assert.match(source, /選取這份共享檔案/);
+  assert.match(source, /授權這份共享檔案/);
   assert.match(source, /openGoogleDriveMoodboardPicker\(\{[\s\S]*?expectedFileId: incoming\.fileId,[\s\S]*?expectedResourceKey: incoming\.resourceKey/);
   assert.match(source, /openGoogleDriveFile\(selection\.file, \{ sharedLink: true \}\)/);
 });
@@ -43,6 +43,11 @@ test("closing the sharing dialog preserves the incoming file and resource key", 
 test("successfully opened share is no longer the target of later board sharing actions", () => {
   const open = source.match(/const openIncomingDirectly = useCallback\(async \(\) => \{[\s\S]*?\}, \[currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing\]\);/)?.[0] || "";
   assert.match(open, /if \(!opened\) return false;[\s\S]*initialDriveShareRef\.current === incoming\) initialDriveShareRef\.current = null/);
+});
+
+test("a successfully opened Picker share also consumes only its own incoming link", () => {
+  const picker = source.match(/const authorizeIncomingDriveFile = useCallback\(async \(\) => \{[\s\S]*?\}, \[announce, currentDriveAccessToken, openGoogleDriveFile, promptForPendingSharedEdit, refreshDriveSharing\]\);/)?.[0] || "";
+  assert.match(picker, /if \(!opened\) return false;[\s\S]*initialDriveShareRef\.current === incoming\) initialDriveShareRef\.current = null/);
 });
 
 test("the public viewer observes an existing session before labeling its editor action", () => {

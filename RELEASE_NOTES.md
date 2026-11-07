@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.55](./public/release-notes/v0.56.55.html) — clarify browser storage restrictions and shared-file authorization.
+
 - [v0.56.54](./public/release-notes/v0.56.54.html) — correct Drive editor labels and retain read-only protection after access changes.
 
 - [v0.56.53](./public/release-notes/v0.56.53.html) — improve dialog keyboard isolation, mobile layout, and action feedback; see [UX review](./UX_REVIEW_v0.56.53.md).

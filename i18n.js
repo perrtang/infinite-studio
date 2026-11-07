@@ -1152,6 +1152,7 @@ const EN_EXACT = Object.freeze({
   "本機安全副本寫入失敗。": "The local safety copy could not be written.",
   "本機復原副本寫入逾時。": "The local recovery copy timed out while saving.",
   "這個瀏覽器的本機儲存空間不足。": "This browser does not have enough local storage.",
+  "瀏覽器的本機儲存空間不足或受到限制。請檢查裝置空間，以及瀏覽器是否允許保留此網站的資料。": "Browser storage is full or restricted. Check your device space and whether your browser allows this site's data to be kept.",
   "目前內容含有瀏覽器無法寫入本機復原副本的資料。": "The current work contains data the browser cannot write to the local recovery copy.",
   "本機資料庫暫時無法寫入，可能有其他 Infinite Studio 分頁正在使用。": "The local database is temporarily unavailable, possibly because another Infinite Studio tab is using it.",
   "這個瀏覽器的本機復原副本未能更新。": "This browser could not update the local recovery copy.",

@@ -84,7 +84,7 @@ export function describeLocalPersistenceError(error) {
   const message = String(error?.message || error?.details?.message || "");
   const quotaExceededMessage = /\b(?:quotaexceedederror|(?:storage\s+)?quota\s+(?:has\s+been\s+|was\s+)?(?:exceeded|reached)|(?:exceeded|reached)\s+(?:the\s+)?(?:storage\s+)?quota|no\s+space\s+left(?:\s+on\s+device)?|not\s+enough\s+(?:remaining\s+)?(?:storage|disk)\s+space|insufficient\s+(?:storage|disk)\s+space|out\s+of\s+(?:storage|disk)\s+space)\b/i;
   if (name === "QuotaExceededError" || quotaExceededMessage.test(message)) {
-    return "這個瀏覽器的本機儲存空間不足。";
+    return "瀏覽器的本機儲存空間不足或受到限制。請檢查裝置空間，以及瀏覽器是否允許保留此網站的資料。";
   }
   if (name === "DataCloneError" || /clone/i.test(message)) {
     return "目前內容含有瀏覽器無法寫入本機復原副本的資料。";

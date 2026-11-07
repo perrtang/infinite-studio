@@ -6679,7 +6679,7 @@ function DriveSharingModal({
                 {sharing.status === "authorization-required" ? <button className="primary-button" type="button" onClick={onConnectDrive} disabled={busy}><Cloud size={15} />連結 Google Drive</button> : null}
                 {sharing.status === "shared-file-denied" && accessUrl ? <a className="primary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查或申請權限</a> : null}
                 {sharing.status === "shared-file-denied" ? <button className="secondary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新開啟分享檔案</button> : null}
-                {["needs-picker-access", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />選取這份共享檔案</button> : null}
+                {["needs-picker-access", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />授權這份共享檔案</button> : null}
                 {!busy && sharing.status !== "shared-file-denied" && accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查存取權</a> : null}
                 {sharing.status === "needs-drive" ? <button className="primary-button" type="button" onClick={onSaveToDrive} disabled={busy}><CloudUpload size={15} />儲存並準備分享</button> : null}
                 {["error", "local-recovery-error"].includes(sharing.status) ? <button className="primary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新嘗試</button> : null}
@@ -11548,7 +11548,7 @@ function App({ initialProtectedShare = null }) {
       status: "picker-authorizing",
       fileId: incoming.fileId,
       resourceKey: incoming.resourceKey,
-      message: "請在 Google 視窗中選取此連結指定的同一份 `.studio` 檔案。",
+      message: "請在 Google 視窗中確認這份分享連結指定的工作檔；授權後會自動開啟。",
     }));
     try {
       const { openGoogleDriveMoodboardPicker } = await loadDrivePickerRuntime();
@@ -11576,6 +11576,9 @@ function App({ initialProtectedShare = null }) {
         fileId: opened.metadata.id,
         resourceKey: opened.metadata.resourceKey || selection.file.resourceKey || incoming.resourceKey,
       });
+      // A successful Picker open consumes the incoming link just as a direct
+      // open does; later sharing actions must refer to the active board.
+      if (initialDriveShareRef.current === incoming) initialDriveShareRef.current = null;
       promptForPendingSharedEdit(driveFileRole(opened.metadata));
       return refreshed;
     } catch (error) {

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.54",
-  "releasedAt": "2026-11-07",
-  "summary": "修正共享工作檔的權限顯示與權限移除後的唯讀保護。",
-  "notesUrl": "release-notes/v0.56.54.html",
+  "version": "0.56.55",
+  "releasedAt": "2026-11-08",
+  "summary": "改善瀏覽器儲存受限提示與共享檔案授權流程。",
+  "notesUrl": "release-notes/v0.56.55.html",
   "url": "https://infinite.petfashion.tw/"
 }
