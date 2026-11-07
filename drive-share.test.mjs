@@ -77,6 +77,10 @@ test("Drive permissions map to owner, editor, viewer, and link access", () => {
   ];
   assert.equal(drivePermissionRole(permissions[0]), "owner");
   assert.equal(drivePermissionRole(permissions[1]), "editor");
+  assert.equal(drivePermissionRoleLabel("editor"), "可編輯");
+  assert.equal(drivePermissionRoleLabel("writer"), "可編輯");
+  assert.equal(drivePermissionRoleLabel("owner"), "擁有者");
+  assert.equal(drivePermissionRoleLabel("viewer"), "僅檢視");
   assert.equal(drivePermissionRoleLabel(permissions[2]), "僅檢視");
   assert.equal(driveFileRole({ ownedByMe: true, capabilities: {} }), "owner");
   assert.equal(driveFileRole({ capabilities: { canEdit: true } }), "editor");

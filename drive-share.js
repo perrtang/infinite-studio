@@ -77,7 +77,7 @@ export function normalizeGoogleDrivePermission(permission = {}) {
 export function drivePermissionRole(value) {
   const role = typeof value === "string" ? value : value?.role;
   if (["owner", "organizer", "fileOrganizer"].includes(role)) return "owner";
-  if (role === "writer") return "editor";
+  if (role === "writer" || role === "editor") return "editor";
   return "viewer";
 }
 

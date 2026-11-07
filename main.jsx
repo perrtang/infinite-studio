@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { workspaceReadIsCurrent, remoteContentChanged } from "./workspace-read-guard.js";
 import { createProtectedShareLink, unlockProtectedShare } from "./protected-share.js";
-import { isCloudBoardReadOnly } from "./drive-access.js";
+import { isCloudBoardReadOnly, updateDriveLinkAccess } from "./drive-access.js";
 import {
   AlignCenter,
   AlignCenterHorizontal,
@@ -11438,6 +11438,13 @@ function App({ initialProtectedShare = null }) {
       if (!requestIsCurrent()) return false;
       const resolvedResourceKey = metadata.resourceKey || resourceKey;
       const role = driveFileRole(metadata);
+      setDriveSettings((state) => {
+        const next = updateDriveLinkAccess(state, activeBoardId, metadata.id, {
+          canEdit: role !== "viewer", canShare: metadata.capabilities.canShare, ownedByMe: metadata.ownedByMe,
+        });
+        try { saveDriveState(localStorage, next); } catch { /* Keep access state in memory if local storage is unavailable. */ }
+        return next;
+      });
       setDriveSharing({
         status: "ready",
         message: permissionMessage || "已讀取 Google Drive 的最新分享權限。",
@@ -11462,9 +11469,18 @@ function App({ initialProtectedShare = null }) {
     } catch (error) {
       if (!requestIsCurrent()) return false;
       const authorizationRequired = isGoogleDriveAuthorizationError(error);
+      const accessRevoked = isSharedDriveFileAccessError(error) && linked?.fileId === fileId && !linked.ownedByMe;
+      if (accessRevoked) {
+        setDriveSettings((state) => {
+          const next = updateDriveLinkAccess(state, activeBoardId, fileId, { canEdit: false, canShare: false });
+          try { saveDriveState(localStorage, next); } catch { /* The current tab still remains read-only. */ }
+          return next;
+        });
+      }
       if (authorizationRequired) driveTokenRef.current = null;
       setDriveSharing((current) => ({
         ...current,
+        ...(accessRevoked ? { role: "viewer", canEdit: false, canShare: false } : {}),
         status: authorizationRequired ? "authorization-required" : "error",
         message: driveErrorMessage(error),
       }));
@@ -15645,6 +15661,7 @@ function DriveSharingPreview({ initialMode }) {
   const [feedback, setFeedback] = useState("");
   const fileId = "preview_shared_file_123456";
   const owner = mode.startsWith("owner");
+  const editor = mode === "editor";
   const denied = mode === "denied";
   const pickerError = mode === "picker-error";
   const sharing = {
@@ -15654,8 +15671,8 @@ function DriveSharingPreview({ initialMode }) {
     fileName: "團隊研究工作檔（模擬資料）",
     shareUrl: createGoogleDriveMoodboardUrl({ fileId }),
     webViewLink: googleDriveFileAccessUrl({ fileId }),
-    role: owner ? "owner" : "viewer",
-    canEdit: owner,
+    role: owner ? "owner" : editor ? "editor" : "viewer",
+    canEdit: owner || editor,
     canShare: owner,
     permissionsVisible: owner,
     generalAccess: { enabled: mode === "owner-link" || mode === "owner-editor-link" || linkEnabled, role: mode === "owner-editor-link" ? "editor" : "viewer" },
@@ -15687,6 +15704,7 @@ function DriveSharingPreview({ initialMode }) {
           <option value="owner-link">擁有者：連結可檢視</option>
           <option value="owner-editor-link">擁有者：連結可編輯</option>
           <option value="viewer">其他帳號：僅檢視</option>
+          <option value="editor">其他帳號：可編輯</option>
           <option value="edit-request">其他帳號：申請編輯</option>
           <option value="denied">其他帳號：無存取權</option>
           <option value="picker-error">Google 選檔錯誤</option>
