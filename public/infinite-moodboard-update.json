@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.55",
+  "version": "0.56.56",
   "releasedAt": "2026-11-08",
-  "summary": "改善瀏覽器儲存受限提示與共享檔案授權流程。",
-  "notesUrl": "release-notes/v0.56.55.html",
+  "summary": "改善 Google Drive 重新連線與協作者邀請提示。",
+  "notesUrl": "release-notes/v0.56.56.html",
   "url": "https://infinite.petfashion.tw/"
 }

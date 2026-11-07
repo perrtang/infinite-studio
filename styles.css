@@ -8645,7 +8645,8 @@ button.status-label:hover {
   text-decoration: none;
 }
 
-.status-banner.warning {
+.status-banner.warning,
+.status-banner.success {
   align-items: flex-start;
   background: rgb(var(--warning-rgb, 214 153 55) / 0.1);
   border: 1px solid rgb(var(--warning-rgb, 214 153 55) / 0.3);
@@ -8656,6 +8657,16 @@ button.status-label:hover {
   gap: 8px;
   line-height: 1.5;
   padding: 10px 11px;
+}
+
+.status-banner.success {
+  background: rgb(54 155 100 / 0.1);
+  border-color: rgb(54 155 100 / 0.35);
+}
+
+.status-banner.success svg {
+  color: var(--success);
+  flex: none;
 }
 
 .status-banner.warning svg {

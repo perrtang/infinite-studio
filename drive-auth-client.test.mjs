@@ -1,6 +1,30 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { connectDriveGrant, restoreDriveGrant } from "./drive-auth-client.js";
+import { connectDriveGrant, restoreDriveGrant, restoreOrConnectDriveGrant } from "./drive-auth-client.js";
+
+test("reconnect restores an existing grant without requesting consent", async () => {
+  const f = fixture(); let requested = false;
+  const token = await restoreOrConnectDriveGrant({ popup: f.popup, restore: async () => ({ accessToken: "existing" }), connect: async () => { requested = true; } });
+  assert.equal(token.accessToken, "existing");
+  assert.equal(requested, false);
+  assert.equal(f.popup.closed, true);
+});
+
+test("reconnect requests consent only when authorization is required", async () => {
+  const f = fixture(); let requested = false;
+  const token = await restoreOrConnectDriveGrant({ popup: f.popup, restore: async () => { throw Object.assign(new Error(), { code: "authorization_required" }); }, connect: async () => { requested = true; return { accessToken: "new" }; } });
+  assert.equal(token.accessToken, "new");
+  assert.equal(requested, true);
+});
+
+test("reconnect stops on service failure or account changes without requesting consent", async () => {
+  for (const code of ["unavailable", "account_changed"]) {
+    const f = fixture(); let requested = false;
+    await assert.rejects(restoreOrConnectDriveGrant({ popup: f.popup, restore: async () => { throw Object.assign(new Error(code), { code }); }, connect: async () => { requested = true; } }), { code });
+    assert.equal(requested, false);
+    assert.equal(f.popup.closed, true);
+  }
+});
 
 function fixture() {
   const listeners = new Set(); const requests = [];

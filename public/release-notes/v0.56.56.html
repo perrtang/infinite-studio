@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Infinite Studio v0.56.56 更新說明</title>
+<style>
+  :root { color-scheme:light dark; font-family:system-ui,-apple-system,sans-serif }
+  * { box-sizing:border-box } body { margin:0; background:#f4f4f2; color:#171717 }
+  main { max-width:760px; margin:auto; padding:64px 24px 96px }
+  header,section { border-bottom:1px solid #cfcfca; padding-bottom:28px } section { padding-top:28px }
+  h1 { font-size:clamp(32px,7vw,56px); line-height:1.1; letter-spacing:-.04em; margin:0 }
+  h2 { font-size:18px } p { font-size:16px; line-height:1.7 }
+  .meta { font-size:14px; color:#666 } footer { padding-top:28px } a { color:inherit }
+  @media(prefers-color-scheme:dark) { body { background:#0d0d0d; color:#f2f2ef } header,section { border-color:#363636 } .meta { color:#aaa } }
+</style>
+<main>
+  <header><h1>v0.56.56 更新說明</h1><p class="meta">Infinite Studio · 發布日期：2026-11-08</p></header>
+  <section><h2>更新內容</h2><p>改善 Google Drive 重新連線與共享邀請的操作回饋。</p></section>
+  <section><h2>修正：重新連線</h2><p>優先恢復同一帳號既有的 Drive 授權，授權已失效或不存在時才重新請求授權。</p></section>
+  <section><h2>協作者邀請</h2><p>邀請處顯示進度與權限設定結果，失敗時保留輸入內容供重試。</p></section>
+  <section><h2>注意事項</h2><p>Google 可能在授權過期、撤銷或帳號變更時再次要求登入或授權。首次共享檔案仍可能需要選取該檔案。</p></section>
+  <section><h2>回復與備份</h2><p>更新前請確認工作內容已儲存；需要時可下載 .studio 備份。</p></section>
+  <footer><a href="../">回到 Infinite Studio</a></footer>
+</main>
+</html>

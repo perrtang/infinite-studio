@@ -28,6 +28,19 @@ export async function restoreDriveGrant(firebaseToken, fetchImpl = fetch) {
   return { accessToken: response.accessToken, expiresAt: response.expiresAt - 60_000 };
 }
 
+// Only request consent again when the saved grant is actually absent or revoked.
+export async function restoreOrConnectDriveGrant({ restore, connect, popup }) {
+  try {
+    const token = await restore();
+    if (popup && !popup.closed) popup.close();
+    return token;
+  } catch (error) {
+    if (error?.code === "authorization_required") return connect();
+    if (popup && !popup.closed) popup.close();
+    throw error;
+  }
+}
+
 export async function removeDriveGrant(firebaseToken, fetchImpl = fetch) {
   const result = await post("/api/drive/revoke", firebaseToken, fetchImpl);
   if (result?.removed !== true) throw failure("unavailable");

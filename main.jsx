@@ -6432,13 +6432,14 @@ function DriveSharingModal({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("viewer");
   const [permissionAction, setPermissionAction] = useState("");
+  const [inviteFeedback, setInviteFeedback] = useState(null);
   const [linkPassword, setLinkPassword] = useState("");
   const [confirmLinkPassword, setConfirmLinkPassword] = useState("");
   const [protectedLink, setProtectedLink] = useState("");
   const [protectedLinkMessage, setProtectedLinkMessage] = useState("");
   const [protectedLinkBusy, setProtectedLinkBusy] = useState(false);
   const protectedLinkGeneration = useRef(0);
-  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); }, [sharing.fileId]);
+  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
   const preparationIsError = ["error", "local-recovery-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
@@ -6461,9 +6462,17 @@ function DriveSharingModal({
   const runPermissionAction = async (key, action) => {
     if (permissionAction) return;
     setPermissionAction(key);
+    if (key === "invite") setInviteFeedback(null);
     try {
       const succeeded = await action();
-      if (succeeded && key === "invite") setEmail("");
+      if (key === "invite") {
+        if (succeeded === true) {
+          setInviteFeedback({ ok: true, message: `已授予 ${email.trim()}${role === "editor" ? "編輯" : "檢視"}權限。` });
+          setEmail("");
+        } else {
+          setInviteFeedback({ ok: false, message: succeeded?.message || "未能完成邀請，請確認 Drive 連線後重試。" });
+        }
+      }
     } finally {
       setPermissionAction("");
     }
@@ -6576,7 +6585,7 @@ function DriveSharingModal({
                 <div className="drive-member-invite-row">
                   <label>
                     <span className="sr-only">協作者 Email</span>
-                    <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@example.com" autoComplete="email" />
+                    <input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setInviteFeedback(null); }} placeholder="name@example.com" autoComplete="email" />
                   </label>
                   <select aria-label="新協作者權限" value={role} onChange={(event) => setRole(event.target.value)}>
                     <option value="viewer">檢視者</option>
@@ -6588,9 +6597,10 @@ function DriveSharingModal({
                     onClick={() => runPermissionAction("invite", () => onInviteMember(email, role))}
                     disabled={Boolean(permissionAction) || !email.trim()}
                   >
-                    {permissionAction === "invite" ? <RefreshCw className="is-spinning" size={15} /> : <Plus size={15} />}邀請
+                    {permissionAction === "invite" ? <><RefreshCw className="is-spinning" size={15} />邀請中…</> : <><Plus size={15} />邀請</>}
                   </button>
                 </div>
+                {inviteFeedback ? <div className={`status-banner ${inviteFeedback.ok ? "success" : "warning"}`} role={inviteFeedback.ok ? "status" : "alert"}>{inviteFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{inviteFeedback.message}</span></div> : null}
               </section>
             ) : null}
 
@@ -8749,16 +8759,16 @@ function App({ initialProtectedShare = null }) {
       && driveSettings.connectionOwnerUid !== connectionOwnerUid
     );
     const authPopup = DRIVE_GRANT_BACKEND_ENABLED ? window.open("about:blank", "_blank", "popup,width=560,height=720") : null;
-    setDriveSession((current) => ({ ...current, status: "connecting", busy: true, message: "Google 會另外詢問 Drive 檔案權限。" }));
+    setDriveSession((current) => ({ ...current, status: "connecting", busy: true, message: "正在恢復 Google Drive 連線…" }));
     try {
       let token;
       if (DRIVE_GRANT_BACKEND_ENABLED) {
-        const { connectDriveGrant } = await loadDriveGrantRuntime();
-        token = await connectDriveGrant({ popup: authPopup, getCredential: async () => {
+        const { connectDriveGrant, restoreOrConnectDriveGrant } = await loadDriveGrantRuntime();
+        token = await restoreOrConnectDriveGrant({ popup: authPopup, restore: () => restoreDriveBackendToken(connectionOwnerUid), connect: () => connectDriveGrant({ popup: authPopup, getCredential: async () => {
           const credential = await getFirebaseDriveCredential();
           if (credential.uid !== connectionOwnerUid) throw Object.assign(new Error("account_changed"), { code: "account_changed" });
           return credential;
-        } });
+        } }) });
       } else {
         const { requestGoogleDriveToken } = await loadDriveRuntime();
         token = await requestGoogleDriveToken({ loginHint: resolvedConnectionUser?.email || "" });
@@ -11654,7 +11664,7 @@ function App({ initialProtectedShare = null }) {
 
   const inviteDriveSharingMember = useCallback(async (email, role) => {
     const accessToken = currentDriveAccessToken();
-    if (!accessToken || !driveSharing.fileId) return false;
+    if (!accessToken || !driveSharing.fileId) return { message: "請先連結 Google Drive，再重新邀請。" };
     try {
       const { createGoogleDrivePermission } = await loadDriveRuntime();
       await createGoogleDrivePermission(accessToken, driveSharing.fileId, {
@@ -11665,13 +11675,11 @@ function App({ initialProtectedShare = null }) {
         sendNotificationEmail: true,
       });
       await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey });
-      announce(`已透過 Google Drive 邀請 ${email.trim()}。`, "success");
       return true;
     } catch (error) {
-      announce(driveErrorMessage(error), "error");
-      return false;
+      return { message: driveErrorMessage(error) };
     }
-  }, [announce, currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
+  }, [currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
 
   const setDriveSharingMemberRole = useCallback(async (permissionId, role) => {
     const accessToken = currentDriveAccessToken();
