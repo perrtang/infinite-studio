@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.68",
+  "version": "0.56.69",
   "releasedAt": "2026-11-08",
-  "summary": "改善分享視窗中的成員權限變更回饋。",
-  "notesUrl": "release-notes/v0.56.68.html",
+  "summary": "釐清 Drive 斷線與本機備份狀態提示。",
+  "notesUrl": "release-notes/v0.56.69.html",
   "url": "https://infinite.petfashion.tw/"
 }

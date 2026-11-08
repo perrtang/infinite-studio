@@ -6343,7 +6343,7 @@ function DriveLibraryModal({
             ) : null}
 
             {quotaAssessment?.level === "insufficient" ? (
-              <p className="drive-inline-message is-error" role="alert"><AlertTriangle size={16} />空間不足以安全儲存目前約 {formatStorageSize(currentContentBytes)} 的檔案；畫布仍保存在這台裝置。</p>
+              <p className="drive-inline-message is-error" role="alert"><AlertTriangle size={16} />Google Drive 空間不足，無法儲存目前約 {formatStorageSize(currentContentBytes)} 的檔案；目前畫面仍在，請確認本機備份狀態。</p>
             ) : quotaAssessment?.level === "low" ? (
               <p className="drive-inline-message is-warning" role="status"><AlertTriangle size={16} />Drive 剩餘空間偏低；建議先清理空間或下載離線備份。</p>
             ) : null}
@@ -7160,7 +7160,7 @@ function SettingsModal({
                 </>
               ) : (
                 <div className="settings-drive-connect">
-                  <div><Cloud size={22} /><span><strong>連結後才會開始雲端保存</strong><small>目前畫布仍持續自動儲存在這台裝置。{DRIVE_GRANT_BACKEND_ENABLED ? " 為了自動恢復連線，伺服器會加密保存 Drive 授權。" : ""}</small></span></div>
+                  <div><Cloud size={22} /><span><strong>連結後才會開始雲端保存</strong><small>系統會嘗試自動儲存本機副本，請留意備份狀態。{DRIVE_GRANT_BACKEND_ENABLED ? " 為了自動恢復連線，伺服器會加密保存 Drive 授權。" : ""}</small></span></div>
                   <button className="primary-button" type="button" onClick={onConnectDrive} disabled={driveSession.status === "connecting"}><Cloud size={16} />連結 Google Drive</button>
                 </div>
               )}
@@ -8743,7 +8743,7 @@ function App({ initialProtectedShare = null }) {
     const accessToken = providedToken || currentDriveAccessToken();
     const resolvedConnectionUser = connectionUser || authSession.user;
     if (!accessToken) {
-      setDriveSession((current) => ({ ...current, status: "authorization-required", connected: false, busy: false, message: "請重新連結 Google Drive；本機變更仍安全保留。" }));
+      setDriveSession((current) => ({ ...current, status: "authorization-required", connected: false, busy: false, message: "請重新連結 Google Drive；目前畫面仍在，請確認本機備份狀態。" }));
       return null;
     }
     setDriveSession((current) => ({ ...current, status: "checking", connected: true, busy: true, message: "正在確認 Drive 檔案與可用空間…" }));
@@ -9117,9 +9117,9 @@ function App({ initialProtectedShare = null }) {
           connectionUser: authSession.user,
           onboarding: true,
         });
-        if (!result) setAuthMessage("帳號已登入，但 Google Drive 尚未連結。請重試；本機內容仍安全保留。");
+        if (!result) setAuthMessage("帳號已登入，但 Google Drive 尚未連結。請重試，並確認本機備份狀態。");
       } else {
-        announce("帳號授權完成；工作檔仍保存在這台裝置。", "success");
+        announce("帳號授權完成；請確認工作檔的儲存狀態。", "success");
       }
     } catch (error) {
       setAuthMessage(error.message || "無法保存帳號授權，請再試一次。");
@@ -9176,7 +9176,7 @@ function App({ initialProtectedShare = null }) {
             onboarding: true,
           });
         }
-        if (!driveResult) setAuthMessage("Google 帳號已登入，但 Drive 尚未連結。請重試；本機內容仍安全保留。");
+        if (!driveResult) setAuthMessage("Google 帳號已登入，但 Drive 尚未連結。請重試，並確認本機備份狀態。");
       } else {
         announce("已使用 PETFASHION 帳號登入；本機作品保持不變。", "success");
       }
@@ -10932,7 +10932,7 @@ function App({ initialProtectedShare = null }) {
         driveRenewPromiseRef.current = renewal;
         return renewal;
       }
-      setDriveSession((current) => ({ ...current, status: "authorization-required", connected: false, busy: false, message: "請重新連結 Google Drive；本機變更仍安全保留。" }));
+      setDriveSession((current) => ({ ...current, status: "authorization-required", connected: false, busy: false, message: "請重新連結 Google Drive；目前畫面仍在，請確認本機備份狀態。" }));
       if (forceOverwrite) showConfirmationFailure(new DriveApiError("需要重新授權。", { code: "drive/authorization" }));
       else if (!silent) setShowDriveLibrary(true);
       return Promise.resolve(false);
@@ -11676,7 +11676,7 @@ function App({ initialProtectedShare = null }) {
       setDriveSharing((current) => ({
         ...current,
         status: accessToken ? "error" : "authorization-required",
-        message: accessToken ? "尚未完成 Google Drive 儲存；目前本機內容仍安全保留。" : "請先連結 Google Drive。",
+        message: accessToken ? "尚未完成 Google Drive 儲存；目前畫面仍在，請確認本機備份狀態。" : "請先連結 Google Drive。",
       }));
       return false;
     }

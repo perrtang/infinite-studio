@@ -67,7 +67,7 @@ export function driveReconnectFailure(error) {
     connected: false,
     busy: false,
     message: authorizationRequired
-      ? "無法在背景恢復 Google Drive；點一下重新連結，本機變更仍安全保留。"
+      ? "無法在背景恢復 Google Drive；請重新連結，並確認本機備份狀態。"
       : driveErrorMessage(error),
   };
 }

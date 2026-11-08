@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.69](./public/release-notes/v0.56.69.html) — clarify Drive disconnection and local backup status.
+
 - [v0.56.68](./public/release-notes/v0.56.68.html) — show member permission results beside the control.
 
 - [v0.56.67](./public/release-notes/v0.56.67.html) — check newly granted edit access directly in the permission dialog.

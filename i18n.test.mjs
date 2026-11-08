@@ -27,7 +27,7 @@ test("current English Drive and workspace wording uses the Infinite Studio name"
   const messages = [
     "Drive 授權和 PETFASHION 登入分開；不會讀取整個雲端硬碟，也不會因登入而自動上傳。",
     "目前本機畫布",
-    "目前畫布仍持續自動儲存在這台裝置。",
+    "系統會嘗試自動儲存本機副本，請留意備份狀態。",
     "Google Drive 已連結；尚未主動儲存前不會上傳畫布。",
     "Google Drive 空間不足；畫布仍安全保存在這台裝置。",
   ];

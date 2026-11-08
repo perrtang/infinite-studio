@@ -19,7 +19,7 @@ test("refresh restores an enabled Drive connection silently for the same signed-
   assert.match(main, /driveRenewPromiseRef/);
   assert.match(main, /initialEpoch !== driveOperationEpochRef\.current \|\| boardRef\.current\.id !== initialBoardId/);
   assert.match(main, /\.\.\.driveReconnectFailure\(error\)/);
-  assert.match(driveState, /無法在背景恢復 Google Drive；點一下重新連結，本機變更仍安全保留/);
+  assert.match(driveState, /無法在背景恢復 Google Drive；請重新連結，並確認本機備份狀態/);
 });
 
 test("current Drive requests always clear busy state even when a request aborts", () => {
