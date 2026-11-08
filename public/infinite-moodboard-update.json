@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.84",
+  "version": "0.56.85",
   "releasedAt": "2026-11-08",
-  "summary": "釐清版本紀錄的儲存狀態說明。",
-  "notesUrl": "release-notes/v0.56.84.html",
+  "summary": "改善本機版本紀錄的讀取失敗與重試提示。",
+  "notesUrl": "release-notes/v0.56.85.html",
   "url": "https://infinite.petfashion.tw/"
 }

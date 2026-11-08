@@ -5974,6 +5974,8 @@ function DeleteLocalDataModal({ onCancel, onConfirm, isBusy }) {
 
 function VersionModal({
   versions,
+  localVersionStatus,
+  onRefreshLocal,
   loadRecovery,
   onRestoreLoad,
   pendingTabUpdate,
@@ -6026,7 +6028,11 @@ function VersionModal({
       {totalVersions ? <div className="modal-list-toolbar"><strong>版本清單</strong><ListSearchToggle search={search} resultCount={totalListedVersions} totalCount={totalVersions} label="搜尋版本紀錄" /></div> : null}
       <ListSearchField search={search} placeholder="搜尋版本備註或日期" />
       <div className="version-section-heading"><strong>本機版本</strong><small>可檢視並逐一刪除不需要的版本；受保護的復原點不會被刪除。</small></div>
-      {listedVersions.length ? (
+      {localVersionStatus === "loading" ? (
+        <div className="version-cloud-state" role="status"><RefreshCw size={19} className="is-spinning" /><span><strong>正在讀取本機版本…</strong></span></div>
+      ) : localVersionStatus === "error" ? (
+        <div className="version-cloud-state is-error" role="alert"><AlertTriangle size={19} /><span><strong>無法讀取本機版本</strong><small>目前無法確認是否有可用的本機版本；畫布內容不受影響。</small></span><button className="secondary-button" type="button" onClick={onRefreshLocal}>重新讀取</button></div>
+      ) : listedVersions.length ? (
         <div className="version-list">
           {listedVersions.map((version) => (
             <article key={version.id}>
@@ -7890,6 +7896,8 @@ function App({ initialProtectedShare = null }) {
   const [updateAction, setUpdateAction] = useState({ status: "idle", message: "" });
   const [updateNoticeDismissed, setUpdateNoticeDismissed] = useState(false);
   const [versions, setVersions] = useState([]);
+  const [localVersionStatus, setLocalVersionStatus] = useState("idle");
+  const localVersionRequestRef = useRef(0);
   const [versionLabel, setVersionLabel] = useState("");
   const [versionBusy, setVersionBusy] = useState(false);
   const [driveVersions, setDriveVersions] = useState({ status: "idle", items: [], fileId: "", headRevisionId: "", message: "" });
@@ -14390,13 +14398,26 @@ function App({ initialProtectedShare = null }) {
     }
   }, [announce, compositionFormat, compositionScale]);
 
+  const refreshLocalVersions = useCallback(async () => {
+    const boardId = boardRef.current.id;
+    const requestId = ++localVersionRequestRef.current;
+    setVersions([]);
+    setLocalVersionStatus("loading");
+    try {
+      const items = await listVersions(boardId);
+      if (requestId === localVersionRequestRef.current && boardRef.current.id === boardId) {
+        setVersions(items);
+        setLocalVersionStatus("ready");
+      }
+    } catch {
+      if (requestId === localVersionRequestRef.current && boardRef.current.id === boardId) setLocalVersionStatus("error");
+    }
+  }, []);
+
   const openVersionModal = useCallback(async () => {
     setShowVersions(true);
-    const localRequest = listVersions(boardRef.current.id)
-      .then(setVersions)
-      .catch(() => announce("無法讀取本機版本紀錄。", "error"));
-    await Promise.all([localRequest, refreshDriveVersions()]);
-  }, [announce, refreshDriveVersions]);
+    await Promise.all([refreshLocalVersions(), refreshDriveVersions()]);
+  }, [refreshLocalVersions, refreshDriveVersions]);
 
   useEffect(() => {
     if (!hydrated) return undefined;
@@ -15508,6 +15529,8 @@ function App({ initialProtectedShare = null }) {
       {showVersions ? (
         <VersionModal
           versions={versions}
+          localVersionStatus={localVersionStatus}
+          onRefreshLocal={refreshLocalVersions}
           loadRecovery={driveLoadRecovery?.loadedBoardId === board.id ? driveLoadRecovery : null}
           onRestoreLoad={restoreBeforeDriveLoad}
           pendingTabUpdate={pendingTabUpdate?.boardId === board.id ? pendingTabUpdate : null}

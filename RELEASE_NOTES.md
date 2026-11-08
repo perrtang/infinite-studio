@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.85](./public/release-notes/v0.56.85.html) — distinguish local version loading errors and offer retry.
+
 - [v0.56.84](./public/release-notes/v0.56.84.html) — clarify version history and save status.
 
 - [v0.56.83](./public/release-notes/v0.56.83.html) — expose the selected grouping filter mode to assistive technology.
