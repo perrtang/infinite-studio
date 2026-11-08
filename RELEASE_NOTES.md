@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.84](./public/release-notes/v0.56.84.html) — clarify version history and save status.
+
 - [v0.56.83](./public/release-notes/v0.56.83.html) — expose the selected grouping filter mode to assistive technology.
 
 - [v0.56.82](./public/release-notes/v0.56.82.html) — identify the current settings section and restore keyboard focus.

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.83",
+  "version": "0.56.84",
   "releasedAt": "2026-11-08",
-  "summary": "改善分群篩選方式的輔助工具識別。",
-  "notesUrl": "release-notes/v0.56.83.html",
+  "summary": "釐清版本紀錄的儲存狀態說明。",
+  "notesUrl": "release-notes/v0.56.84.html",
   "url": "https://infinite.petfashion.tw/"
 }

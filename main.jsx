@@ -6014,7 +6014,7 @@ function VersionModal({
   const totalVersions = versions.length + (driveVersions.items?.length || 0);
   const totalListedVersions = listedVersions.length + listedDriveVersions.length;
   return (
-    <Modal title="版本紀錄" description="本機保留近期版本與固定的復原點；更新雲端前也會保留 Drive 版本。" onClose={onClose} wide>
+    <Modal title="版本紀錄" description="在這裡查看本機版本、復原點與可用的 Google Drive 版本。" onClose={onClose} wide>
       {preview ? <p className="drive-inline-message" role="status">這是模擬資料，不會讀取或刪除實際版本。</p> : null}
       {loadRecovery ? <div className="version-cloud-state"><History size={19} /><span><strong>載入雲端前的畫面</strong><small>還原後暫停自動上傳，確認後再更新雲端。</small></span><button className="secondary-button" type="button" disabled={recoveryBusy} onClick={onRestoreLoad}>復原載入前內容</button></div> : null}
       {pendingTabUpdate ? <div className="version-cloud-state"><Info size={19} /><span><strong>另一個分頁有更新</strong><small>目前畫布沒有被取代；可將另一分頁的內容開成獨立副本。</small></span><button className="secondary-button" type="button" onClick={onOpenTabUpdate} disabled={isBusy}>開成新副本</button></div> : null}
@@ -6047,14 +6047,14 @@ function VersionModal({
       ) : versions.length ? (
         <div className="modal-empty"><Search size={24} /><strong>找不到符合的版本</strong><p>搜尋條件會保留，可以調整或清除。</p><button className="text-button" type="button" onClick={() => search.setQuery("")}>清除搜尋</button></div>
       ) : (
-        <div className="modal-empty"><History size={24} /><strong>尚未建立版本</strong><p>目前畫布仍會自動存到這台裝置；手動版本適合重要節點。</p></div>
+        <div className="modal-empty"><History size={24} /><strong>尚未建立版本</strong><p>手動建立版本以保留重要節點；目前儲存狀態請查看畫面上方。</p></div>
       )}
       <div className="version-section-heading is-drive">
         <div><strong>Google Drive 版本</strong><small>復原時會開成新的本機工作檔，不會覆蓋目前工作。</small></div>
         {driveLinked ? <button className="quiet-button" type="button" onClick={onRefreshDrive} disabled={driveVersions.status === "loading" || isBusy}><RefreshCw size={15} className={driveVersions.status === "loading" ? "is-spinning" : ""} />重新整理</button> : null}
       </div>
       {!driveLinked ? (
-        <div className="version-cloud-state"><CloudOff size={19} /><span><strong>尚未連結 Drive 檔案</strong><small>先把目前工作檔儲存到 Drive，之後同步會自動保留舊版本。</small></span></div>
+        <div className="version-cloud-state"><CloudOff size={19} /><span><strong>尚未連結 Drive 檔案</strong><small>將工作檔儲存到 Drive 後，可在此查看可用的雲端版本。</small></span></div>
       ) : driveVersions.status === "loading" ? (
         <div className="version-cloud-state"><RefreshCw size={19} className="is-spinning" /><span><strong>正在讀取 Drive 版本…</strong><small>目前工作檔不會受影響。</small></span></div>
       ) : driveVersions.status === "error" || driveVersions.status === "authorization-required" ? (
