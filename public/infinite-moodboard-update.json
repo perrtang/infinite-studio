@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.65",
+  "version": "0.56.66",
   "releasedAt": "2026-11-08",
-  "summary": "在主選單直接新增空白工作檔。",
-  "notesUrl": "release-notes/v0.56.65.html",
+  "summary": "延長 Google Drive 單檔授權的選檔時間。",
+  "notesUrl": "release-notes/v0.56.66.html",
   "url": "https://infinite.petfashion.tw/"
 }

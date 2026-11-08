@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.66](./public/release-notes/v0.56.66.html) — allow more time for shared-file authorization.
+
 - [v0.56.65](./public/release-notes/v0.56.65.html) — add a direct new-project action to the main menu.
 
 - [v0.56.64](./public/release-notes/v0.56.64.html) — keep selection actions visible at narrow viewport widths.

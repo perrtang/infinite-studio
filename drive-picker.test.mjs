@@ -140,6 +140,24 @@ test("Picker cancellation never returns a file", async (t) => {
   assert.deepEqual(result, { status: "cancelled" });
 });
 
+test("the default Picker remains available after a minute for the user to choose", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const state = installPickerMock(t, () => ({ action: "loaded" }));
+  let settled = false;
+  const selection = openGoogleDriveMoodboardPicker({
+    accessToken: "token", expectedFileId: "drive-file-123", clientId: "client",
+    apiKey: "AIza12345678901234567890123456789012345",
+    projectNumber: "1068479226042", origin: "https://infinite.petfashion.tw",
+  }).finally(() => { settled = true; });
+  await Promise.resolve();
+  await Promise.resolve();
+  t.mock.timers.tick(61_000);
+  await Promise.resolve();
+  assert.equal(settled, false);
+  state.callback({ action: "picked", docs: [{ id: "drive-file-123" }] });
+  assert.equal((await selection).file.id, "drive-file-123");
+});
+
 test("a stalled Picker is disposed so its blank overlay cannot hide the retry error", async (t) => {
   const state = installPickerMock(t, () => ({ action: "loaded" }));
   await assert.rejects(openGoogleDriveMoodboardPicker({

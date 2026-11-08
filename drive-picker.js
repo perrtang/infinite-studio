@@ -7,6 +7,8 @@ import {
 const runtimeEnv = import.meta.env || {};
 const GOOGLE_PICKER_SCRIPT = "https://apis.google.com/js/api.js";
 const GOOGLE_PICKER_LOAD_TIMEOUT_MS = 15_000;
+// Selection is a human decision and may take longer than loading the picker.
+const GOOGLE_PICKER_SELECTION_TIMEOUT_MS = 5 * 60_000;
 const GOOGLE_API_KEY_PATTERN = /^AIza[0-9A-Za-z_-]{35}$/;
 const GOOGLE_PROJECT_NUMBER_PATTERN = /^\d{6,20}$/;
 
@@ -192,7 +194,7 @@ export async function openGoogleDriveMoodboardPicker({
   apiKey,
   projectNumber,
   origin,
-  timeoutMs = 60_000,
+  timeoutMs = GOOGLE_PICKER_SELECTION_TIMEOUT_MS,
 } = {}) {
   const configuration = getGoogleDrivePickerConfiguration({ clientId, apiKey, projectNumber, origin });
   if (!configuration.configured) {
@@ -235,7 +237,7 @@ export async function openGoogleDriveMoodboardPicker({
     const timeoutId = globalThis.setTimeout(() => finish(reject, new DriveApiError(
       "Google 檔案選擇器等待逾時；沒有開啟任何內容。",
       { code: "drive/picker-timeout", reason: "pickerSelectionTimeout" },
-    )), Math.max(1_000, Number(timeoutMs) || 60_000));
+    )), Math.max(1_000, Number(timeoutMs) || GOOGLE_PICKER_SELECTION_TIMEOUT_MS));
 
     try {
       const view = new pickerNamespace.DocsView(pickerNamespace.ViewId.DOCS)
