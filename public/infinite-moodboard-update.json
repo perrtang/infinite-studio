@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.82",
+  "version": "0.56.83",
   "releasedAt": "2026-11-08",
-  "summary": "改善設定分類的輔助工具識別與關閉後的鍵盤焦點。",
-  "notesUrl": "release-notes/v0.56.82.html",
+  "summary": "改善分群篩選方式的輔助工具識別。",
+  "notesUrl": "release-notes/v0.56.83.html",
   "url": "https://infinite.petfashion.tw/"
 }

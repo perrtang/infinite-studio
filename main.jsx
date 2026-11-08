@@ -3446,10 +3446,10 @@ function FiltersPanel({ board, filters, setFilters, matchCount }) {
       <fieldset>
         <legend>符合方式</legend>
         <div className="segmented-control">
-          <button type="button" className={filters.mode === "any" ? "is-active" : ""} onClick={() => setFilters((current) => ({ ...current, mode: "any" }))}>
+          <button type="button" aria-pressed={filters.mode === "any"} className={filters.mode === "any" ? "is-active" : ""} onClick={() => setFilters((current) => ({ ...current, mode: "any" }))}>
             任一標記
           </button>
-          <button type="button" className={filters.mode === "all" ? "is-active" : ""} onClick={() => setFilters((current) => ({ ...current, mode: "all" }))}>
+          <button type="button" aria-pressed={filters.mode === "all"} className={filters.mode === "all" ? "is-active" : ""} onClick={() => setFilters((current) => ({ ...current, mode: "all" }))}>
             全部符合
           </button>
         </div>
