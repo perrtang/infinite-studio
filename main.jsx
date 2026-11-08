@@ -11659,6 +11659,7 @@ function App({ initialProtectedShare = null }) {
       // A successful Picker open consumes the incoming link just as a direct
       // open does; later sharing actions must refer to the active board.
       if (initialDriveShareRef.current === incoming) initialDriveShareRef.current = null;
+      setShowCollaboration(false);
       promptForPendingSharedEdit(driveFileRole(opened.metadata));
       return refreshed;
     } catch (error) {
