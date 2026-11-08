@@ -2082,7 +2082,9 @@ function FileMenu({
       if (!parent || !trigger) return;
       const compact = parent.left < 208;
       const width = compact ? Math.min(parent.width, window.innerWidth - 16) : Math.min(300, parent.left - 12);
-      setRecentPosition({ left: compact ? Math.max(8, parent.left) : parent.left - width - 4, top: compact ? parent.top : Math.max(8, Math.min(trigger.top, window.innerHeight - 120)), width, compact });
+      const menuHeight = Math.min(recentMenuRef.current?.scrollHeight || 120, window.innerHeight - 16);
+      const top = compact ? parent.top : Math.max(8, Math.min(trigger.top, window.innerHeight - menuHeight - 8));
+      setRecentPosition({ left: compact ? Math.max(8, parent.left) : parent.left - width - 4, top, width, compact });
     };
     positionRecentMenu();
     window.addEventListener("resize", positionRecentMenu);
@@ -2242,7 +2244,7 @@ function FileMenu({
         const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : event.key === "ArrowDown" ? (index + 1 + items.length) % items.length : (index - 1 + items.length) % items.length;
         items[next].focus();
       }}>
-        {recentPosition.compact ? <button type="button" className="file-menu-recent-back" onClick={() => { setRecentExpanded(false); recentTriggerRef.current?.focus(); }}>返回主選單</button> : null}
+        {recentPosition.compact ? <button type="button" role="menuitem" className="file-menu-recent-back" onClick={() => { setRecentExpanded(false); recentTriggerRef.current?.focus(); }}>返回主選單</button> : null}
               {recentFiles.length ? recentFiles.slice(0, 8).map((item) => <button type="button" role="menuitem" key={`${item.kind}:${item.id}`} aria-disabled={Boolean(recentBusy)} onClick={async () => {
                 if (recentBusy) return;
                 setRecentBusy(item.id); setRecentError("");

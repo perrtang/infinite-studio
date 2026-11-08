@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.69",
+  "version": "0.56.70",
   "releasedAt": "2026-11-08",
-  "summary": "釐清 Drive 斷線與本機備份狀態提示。",
-  "notesUrl": "release-notes/v0.56.69.html",
+  "summary": "改善最近開啟選單在小視窗與鍵盤操作的體驗。",
+  "notesUrl": "release-notes/v0.56.70.html",
   "url": "https://infinite.petfashion.tw/"
 }
