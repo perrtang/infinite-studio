@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.79](./public/release-notes/v0.56.79.html) — make truncated mobile status messages readable on focus.
+
 - [v0.56.78](./public/release-notes/v0.56.78.html) — close sharing after a shared file is opened via the picker.
 
 - [v0.56.77](./public/release-notes/v0.56.77.html) — avoid unverified local autosave claims when backup download fails.

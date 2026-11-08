@@ -9431,7 +9431,27 @@ button.status-label:hover {
 .toast.is-in-header { position: static; transform: none; flex: 0 1 auto; min-width: min(180px, 26vw); max-width: min(420px, 28vw); min-height: 32px; padding: 3px 6px; box-shadow: none; }
 .toast.is-in-header > span { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25; }
 .toast.is-in-dialog { position: sticky; transform: none; left: auto; bottom: 0; max-width: 100%; margin-top: 12px; z-index: 3; }
-@media (max-width: 620px) { .toast.is-in-header { min-width: min(150px, 36vw); max-width: 36vw; } }
+@media (max-width: 620px) {
+  .toast.is-in-header { position: relative; bottom: auto; left: auto; min-width: min(150px, 36vw); max-width: 36vw; }
+  .toast.is-in-header:focus::after {
+    content: attr(title);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(240px, calc(100vw - 96px));
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--modal-bg);
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+  }
+}
 
 .toast-success svg {
   color: var(--success);
