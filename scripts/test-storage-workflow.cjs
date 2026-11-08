@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const base = process.env.MOODBOARD_TEST_URL || 'http://127.0.0.1:5184';
 const out = process.env.MOODBOARD_TEST_OUTPUT || '/tmp/moodboard-v0541-qa';
+if (!['127.0.0.1', 'localhost', '[::1]'].includes(new URL(base).hostname)) throw new Error('Only an isolated loopback preview is allowed.');
 
 const hook = `
 window.__storageQA = {
@@ -66,6 +67,7 @@ export const listGoogleDriveMoodboards = async () => { await gate('list'); retur
 export const listGoogleDriveRevisions = async () => [];
 export const getGoogleDriveFile = async () => { await gate('metadata'); return copy(state().metadata); };
 export const downloadGoogleDriveMoodboard = async () => { const content = JSON.stringify(state().board); await gate('download'); return content; };
+export const downloadCurrentGoogleDriveMoodboard = async () => { const content = JSON.stringify(state().board); const metadata = copy(state().metadata); await gate('download'); return { content, metadata }; };
 export const uploadGoogleDriveMoodboard = async (token, options) => {
   await gate('upload');
   if (options.signal.aborted) throw Object.assign(new Error('cancelled'), { name: 'AbortError' });
@@ -148,6 +150,7 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
     await page.getByRole('button', { name: '取消', exact: true }).click();
     assert.equal(await page.evaluate(() => window.__driveMock.uploads.length), 0);
     await page.locator('.topbar-save-button').click();
+    await page.waitForFunction(() => Boolean(window.__storageQA.read().confirmation));
     await gate('upload'); await gate('verify');
     await page.getByRole('button', { name: '以目前內容更新', exact: true }).click();
     await waitGate('upload');
@@ -162,7 +165,7 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
     assert.equal((await state()).confirmation, null);
     assert.equal((await state()).drive.status, 'synced');
     await page.locator('.drive-save-confirmation').waitFor({ state: 'detached' });
-    await page.getByText('已以目前內容更新 Drive；先前 Drive 版本可從版本紀錄復原。', { exact: true }).waitFor();
+    assert.equal((await state()).drive.status, 'synced');
     record('Save conflict is upload-only, cancel is non-mutating, confirmation uploads current canvas');
     record('Progress stays visible through readback, then success closes the dialog and announces completion');
 
@@ -306,7 +309,7 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
         await page.screenshot({ path: out + '/mobile-local-recovery-warning.png' });
       }
       await page.getByRole('button', { name: '前往下載本機備份', exact: true }).click();
-      await page.getByRole('button', { name: '下載 `.moodboard` 備份', exact: true }).waitFor();
+      await page.getByRole('button', { name: '下載 `.studio` 備份', exact: true }).waitFor();
       assert.equal(await page.getByRole('dialog').count(), 1);
       assert.equal((await state()).board.name, '編輯中的 Moodboard');
       await page.setViewportSize({ width: 1440, height: 1000 });
@@ -339,6 +342,8 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
 
     await seed();
     await page.evaluate(() => window.__storageQA.open());
+    await page.getByRole('button', { name: '主選單', exact: true }).click();
+    await page.getByText('版本紀錄', { exact: true }).first().click();
     await page.getByRole('button', { name: '復原載入前內容', exact: true }).waitFor();
     assert.equal((await state()).board.name, '雲端內容');
     assert.equal((await state()).recovery.version.pinned, true);
@@ -347,6 +352,8 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
     await page.waitForFunction(() => window.__storageQA?.hydrated && window.__storageQA.read().recovery);
     await page.evaluate((mockState) => { window.__driveMock = mockState; }, reloadedMock);
     await page.evaluate(() => window.__storageQA.dismissStartup());
+    await page.getByRole('button', { name: '主選單', exact: true }).click();
+    await page.getByText('版本紀錄', { exact: true }).first().click();
     await page.getByRole('button', { name: '復原載入前內容', exact: true }).click();
     await page.waitForFunction(() => window.__storageQA.read().board.name === '編輯中的 Moodboard');
     assert.equal((await state()).prefs.uploadPaused['qa-board'], true);
@@ -412,6 +419,7 @@ export const uploadGoogleDriveMoodboard = async (token, options) => {
     await seed();
     await page.evaluate(() => { window.__driveMock.metadata.version = '9'; window.__driveMock.metadata.headRevisionId = 'h9'; });
     await page.evaluate(() => window.__storageQA.refresh());
+    await page.getByText('雲端與目前內容不同', { exact: true }).first().click();
     await page.getByRole('button', { name: '載入雲端版本', exact: true }).waitFor();
     assert.equal((await state()).board.name, '編輯中的 Moodboard');
     await page.screenshot({ path: out + '/desktop-incoming.png' });

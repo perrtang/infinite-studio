@@ -24,3 +24,9 @@
 - 新增 `scripts/sharing-ux-smoke.cjs`，以隔離 Chrome、模擬資料及封鎖非本機連線測試分享操作。320、390、1440px 各驗證成員移除的成功／取消／失敗與檢視者重新檢查權限；包含手機錯誤訊息未被裁切、成功後焦點，以及請求連結保留檔案識別。
 - 執行：`NODE_PATH=<已安裝 Playwright 的 node_modules> INFINITE_STUDIO_TEST_URL=http://127.0.0.1:5272/ node scripts/sharing-ux-smoke.cjs`。測試需啟動本機開發伺服器與 Chrome；不會修改 Google Drive 權限。
 - 真實 Google Drive 的測試檔中，第二帳號具編輯權且可讀取；但本次 Chrome 控制連線逾時，未重新實測應用程式內的首次單檔授權。這些模擬結果不代表整個介面或所有實際帳號流程已完成驗收。
+
+## 後續補充：v0.56.76
+
+- 修正 Drive 中繼資料讀取期間本機復原按鈕被停用及按鈕文字擠成直排；實際上傳期間仍禁止復原。
+- `scripts/recovery-busy-smoke.cjs` 在 320、390、1440px 暗色模式下以模擬 Drive 驗證：延遲讀取期間可復原、復原不觸發上傳、遲來的回應不覆寫畫布，且上傳期間復原仍停用；另以相同流程驗證明色模式。執行方式：`NODE_PATH=<已安裝 Playwright 的 node_modules> MOODBOARD_TEST_URL=http://127.0.0.1:5272 node scripts/recovery-busy-smoke.cjs`。
+- 修訂 `scripts/test-storage-workflow.cjs` 以符合現行讀檔介面、備份按鈕及復原入口；隔離測試 23 個情境通過。所有 Drive 呼叫均為模擬，不代表真實帳號或跨裝置已驗收。

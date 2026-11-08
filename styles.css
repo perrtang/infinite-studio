@@ -7827,6 +7827,13 @@ html[lang="en"] .sidebar-tabs button svg {
   min-width: 0;
 }
 
+.version-cloud-state > button {
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
+  min-height: 44px;
+}
+
 .version-cloud-state > svg {
   color: var(--accent);
   margin-top: 1px;

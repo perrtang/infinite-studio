@@ -5993,6 +5993,7 @@ function VersionModal({
   onRecoverDrive,
   onClose,
   isBusy,
+  recoveryBusy = isBusy,
 }) {
   const search = useListSearch("versions");
   const [deleteCandidate, setDeleteCandidate] = useState(null);
@@ -6015,7 +6016,7 @@ function VersionModal({
   return (
     <Modal title="版本紀錄" description="本機保留近期版本與固定的復原點；更新雲端前也會保留 Drive 版本。" onClose={onClose} wide>
       {preview ? <p className="drive-inline-message" role="status">這是模擬資料，不會讀取或刪除實際版本。</p> : null}
-      {loadRecovery ? <div className="version-cloud-state"><History size={19} /><span><strong>載入雲端前的畫面</strong><small>還原後暫停自動上傳，確認後再更新雲端。</small></span><button className="secondary-button" type="button" disabled={isBusy} onClick={onRestoreLoad}>復原載入前內容</button></div> : null}
+      {loadRecovery ? <div className="version-cloud-state"><History size={19} /><span><strong>載入雲端前的畫面</strong><small>還原後暫停自動上傳，確認後再更新雲端。</small></span><button className="secondary-button" type="button" disabled={recoveryBusy} onClick={onRestoreLoad}>復原載入前內容</button></div> : null}
       {pendingTabUpdate ? <div className="version-cloud-state"><Info size={19} /><span><strong>另一個分頁有更新</strong><small>目前畫布沒有被取代；可將另一分頁的內容開成獨立副本。</small></span><button className="secondary-button" type="button" onClick={onOpenTabUpdate} disabled={isBusy}>開成新副本</button></div> : null}
       <form className="version-create" onSubmit={(event) => { event.preventDefault(); onCreate(event.currentTarget.closest('[role="dialog"]')); }}>
         <label><span>版本備註</span><input value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} placeholder="例如：完成第一輪素材篩選" /></label>
@@ -15518,6 +15519,7 @@ function App({ initialProtectedShare = null }) {
           onRecoverDrive={(revision) => recoverGoogleDriveVersionAsCopy({ id: currentDriveLink?.fileId, name: currentDriveLink?.name }, revision)}
           onClose={() => setShowVersions(false)}
           isBusy={versionBusy || driveSession.busy}
+          recoveryBusy={versionBusy || Boolean(driveSavePromiseRef.current)}
         />
       ) : null}
       {showShortcuts ? <ShortcutReferenceModal onClose={() => setShowShortcuts(false)} /> : null}

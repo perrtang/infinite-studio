@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.75",
+  "version": "0.56.76",
   "releasedAt": "2026-11-08",
-  "summary": "補充分享權限介面的自動驗證。",
-  "notesUrl": "release-notes/v0.56.75.html",
+  "summary": "修正 Drive 狀態讀取時無法使用本機復原的問題。",
+  "notesUrl": "release-notes/v0.56.76.html",
   "url": "https://infinite.petfashion.tw/"
 }
