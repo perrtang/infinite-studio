@@ -241,15 +241,15 @@ export function driveErrorMessage(error) {
   if (["drive/picker-timeout", "drive/picker-unavailable", "drive/picker-error"].includes(error?.code)) return error?.message || "Google 檔案選擇器暫時無法使用；沒有開啟任何內容。";
   if (error?.code === "drive/conflict") return "這台裝置與 Drive 的內容不同；同步已暫停，兩份內容都已保留。";
   if (error?.code === "drive/revision") return error?.message || "無法安全建立或讀取 Google Drive 版本；目前工作檔未受影響。";
-  if (reason === "storageQuotaExceeded" || error?.code === "drive/quota") return "Google Drive 空間不足；畫布仍安全保存在這台裝置。";
+  if (reason === "storageQuotaExceeded" || error?.code === "drive/quota") return "Google Drive 空間不足；請釋放雲端空間後再試。";
   if (["authError", "invalidCredentials"].includes(reason) || error?.status === 401) return "Google Drive 授權已失效；請重新連結後再同步。";
-  if (["rateLimitExceeded", "userRateLimitExceeded"].includes(reason) || error?.status === 429) return "Google Drive 暫時忙碌；本機版本已保留，稍後會再同步。";
+  if (["rateLimitExceeded", "userRateLimitExceeded"].includes(reason) || error?.status === 429) return "Google Drive 暫時忙碌；請稍後再試。";
   if (reason === "appNotAuthorizedToFile") return "Infinite Studio 尚未獲得這份檔案的存取授權；請重新選取該檔案。";
   if (["insufficientFilePermissions", "notFound"].includes(reason) || error?.status === 404) return "目前帳號沒有這份 Google Drive 檔案的存取權，或檔案已不存在。";
   if (reason === "domainPolicy") return "目前 Google Workspace 組織政策不允許這個 App 存取 Drive。";
   if (["insufficientPermissions", "forbidden"].includes(reason) || error?.status === 403) return "Google Drive 拒絕了這次操作；請檢查檔案權限或稍後再試。";
-  if (error?.code === "drive/timeout") return "Google Drive 回應逾時；本機版本已保留，請稍後再試。";
-  if (error?.code === "drive/offline") return "目前離線；變更已保存在這台裝置，連線後可再同步。";
+  if (error?.code === "drive/timeout") return "Google Drive 回應逾時；請檢查雲端狀態後再試。";
+  if (error?.code === "drive/offline") return "目前離線；請連線後再試。";
   if (error?.name === "AbortError" || error?.code === "drive/cancelled") return "Google Drive 操作已取消；本機版本未受影響。";
   return error?.message || "Google Drive 暫時無法使用；請稍後再試。";
 }

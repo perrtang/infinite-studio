@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.73",
+  "version": "0.56.74",
   "releasedAt": "2026-11-08",
-  "summary": "改善分享成員移除的結果提示。",
-  "notesUrl": "release-notes/v0.56.73.html",
+  "summary": "修正雲端錯誤訊息對本機備份狀態的誤導。",
+  "notesUrl": "release-notes/v0.56.74.html",
   "url": "https://infinite.petfashion.tw/"
 }

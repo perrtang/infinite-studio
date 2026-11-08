@@ -11061,7 +11061,7 @@ function App({ initialProtectedShare = null }) {
         assertCurrentOperation();
         const quotaAssessment = evaluateDriveQuota(about.quota, uploadBytes);
         if (!quotaAssessment.allowed) {
-          throw new DriveApiError("Google Drive 空間不足；畫布仍安全保存在這台裝置。", { code: "drive/quota", reason: "storageQuotaExceeded" });
+          throw new DriveApiError("Google Drive 空間不足；請釋放雲端空間後再試。", { code: "drive/quota", reason: "storageQuotaExceeded" });
         }
         const folderId = await ensureGoogleDriveFolder(accessToken, driveSettings.folderId);
         assertCurrentOperation();

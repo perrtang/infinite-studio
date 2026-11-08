@@ -262,7 +262,7 @@ test("Drive requests time out instead of leaving synchronization pending forever
 
   await assert.rejects(
     getGoogleDriveAbout("token", { timeoutMs: 10 }),
-    (error) => error.code === "drive/timeout" && /本機版本已保留/.test(error.message),
+    (error) => error.code === "drive/timeout" && /檢查雲端狀態/.test(error.message),
   );
   assert.equal(aborted, true);
 });
@@ -288,7 +288,7 @@ test("Drive response body parsing shares the request timeout", async (t) => {
 
   await assert.rejects(
     getGoogleDriveAbout("token", { timeoutMs: 10 }),
-    (error) => error.code === "drive/timeout" && /本機版本已保留/.test(error.message),
+    (error) => error.code === "drive/timeout" && /檢查雲端狀態/.test(error.message),
   );
   assert.equal(aborted, true);
 });

@@ -65,6 +65,10 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "Google Drive 空間不足；請釋放雲端空間後再試。": "Google Drive is out of space. Free up cloud storage and try again.",
+  "Google Drive 暫時忙碌；請稍後再試。": "Google Drive is temporarily busy. Try again later.",
+  "Google Drive 回應逾時；請檢查雲端狀態後再試。": "Google Drive timed out. Check the cloud status before trying again.",
+  "目前離線；請連線後再試。": "You are offline. Reconnect and try again.",
   "已移除成員的存取權。": "Member access removed.",
   "無法移除成員；請確認 Google Drive 連線後再試。": "Could not remove the member. Check your Google Drive connection and try again.",
   "請先重新連結 Google Drive，再移除成員。": "Reconnect Google Drive before removing the member.",
