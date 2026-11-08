@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.86](./public/release-notes/v0.56.86.html) — avoid duplicate shared-file authorization guidance.
+
 - [v0.56.85](./public/release-notes/v0.56.85.html) — distinguish local version loading errors and offer retry.
 
 - [v0.56.84](./public/release-notes/v0.56.84.html) — clarify version history and save status.

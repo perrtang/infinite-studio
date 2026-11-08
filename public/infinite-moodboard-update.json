@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.85",
+  "version": "0.56.86",
   "releasedAt": "2026-11-08",
-  "summary": "改善本機版本紀錄的讀取失敗與重試提示。",
-  "notesUrl": "release-notes/v0.56.85.html",
+  "summary": "改善共享檔案授權失敗時的訊息呈現。",
+  "notesUrl": "release-notes/v0.56.86.html",
   "url": "https://infinite.petfashion.tw/"
 }

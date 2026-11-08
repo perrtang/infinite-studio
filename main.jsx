@@ -11402,7 +11402,6 @@ function App({ initialProtectedShare = null }) {
           busy: false,
           message: "共享檔案尚未開啟；目前畫布沒有被當成該檔案。",
         }));
-        announce(message, "error");
         return null;
       }
       if (sharedLink) {
