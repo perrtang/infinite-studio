@@ -11108,6 +11108,9 @@ button.status-label:hover {
     flex-direction: column;
   }
 
+  .collaboration-member-list article { flex-wrap: nowrap; }
+  .collaboration-member-feedback { flex-basis: auto; min-width: 0; }
+
   .collaboration-request-action button,
   .collaboration-request-list article button,
   .collaboration-member-list article button {

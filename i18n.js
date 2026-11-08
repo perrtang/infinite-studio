@@ -65,6 +65,10 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "已移除成員的存取權。": "Member access removed.",
+  "無法移除成員；請確認 Google Drive 連線後再試。": "Could not remove the member. Check your Google Drive connection and try again.",
+  "請先重新連結 Google Drive，再移除成員。": "Reconnect Google Drive before removing the member.",
+  "Google Drive 已收到移除要求，但尚未確認最新權限；請重新整理權限。": "Google Drive received the removal request, but the current permissions could not be confirmed. Refresh permissions.",
   "目前 Google Drive 工作檔的分享連結": "Share link for the current Google Drive project",
   "進階：建立密碼連結": "Advanced: Create password-protected link",
   "需要編輯權限": "Edit access required",

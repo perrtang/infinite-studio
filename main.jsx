@@ -6453,13 +6453,16 @@ function DriveSharingModal({
   const [linkFeedback, setLinkFeedback] = useState(null);
   const [accessFeedback, setAccessFeedback] = useState(null);
   const [memberFeedback, setMemberFeedback] = useState(null);
+  const [memberRemovalNotice, setMemberRemovalNotice] = useState("");
+  const memberRemovalNoticeRef = useRef(null);
   const [linkPassword, setLinkPassword] = useState("");
   const [confirmLinkPassword, setConfirmLinkPassword] = useState("");
   const [protectedLink, setProtectedLink] = useState("");
   const [protectedLinkMessage, setProtectedLinkMessage] = useState("");
   const [protectedLinkBusy, setProtectedLinkBusy] = useState(false);
   const protectedLinkGeneration = useRef(0);
-  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setInviteEmailInvalid(false); setLinkFeedback(null); setAccessFeedback(null); setMemberFeedback(null); }, [sharing.fileId]);
+  useEffect(() => { if (memberRemovalNotice) memberRemovalNoticeRef.current?.focus(); }, [memberRemovalNotice]);
+  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setInviteEmailInvalid(false); setLinkFeedback(null); setAccessFeedback(null); setMemberFeedback(null); setMemberRemovalNotice(""); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
   const preparationIsError = ["error", "local-recovery-error", "picker-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
@@ -6485,6 +6488,7 @@ function DriveSharingModal({
     setPermissionAction(key);
     if (key === "invite") setInviteFeedback(null);
     if (key.startsWith("role:")) setMemberFeedback(null);
+    if (key.startsWith("remove:")) { setMemberFeedback(null); setMemberRemovalNotice(""); }
     if (key === "general" || key === "general-view") setAccessFeedback(null);
     try {
       const succeeded = await action();
@@ -6498,6 +6502,10 @@ function DriveSharingModal({
       }
       if (key === "general" || key === "general-view") setAccessFeedback(succeeded ? { ok: true, message: "存取權限已更新。" } : { ok: false, message: "無法更新存取權限，請確認 Drive 連線後重試。" });
       if (key.startsWith("role:")) setMemberFeedback({ id: key.slice(5), ok: succeeded === true, message: succeeded === true ? "權限已更新。" : succeeded?.message || "無法更新權限；請確認 Google Drive 連線後再試。" });
+      if (key.startsWith("remove:") && !succeeded?.cancelled) {
+        if (succeeded === true) setMemberRemovalNotice("已移除成員的存取權。");
+        else setMemberFeedback({ id: key.slice(7), ok: false, message: succeeded?.message || "無法移除成員；請確認 Google Drive 連線後再試。" });
+      }
     } finally {
       setPermissionAction("");
     }
@@ -6653,6 +6661,7 @@ function DriveSharingModal({
                   <small>{`${sharing.members.length} 位成員；權限直接寫入 Google Drive。`}</small>
                 </div>
               </div>
+              {memberRemovalNotice ? <div ref={memberRemovalNoticeRef} tabIndex={-1} className="status-banner success" role="status"><Check size={16} /><span>{memberRemovalNotice}</span></div> : null}
               <div className="collaboration-member-list">
                 {sharing.members.map((member) => {
                   const roleActionKey = `role:${member.id}`;
@@ -11747,21 +11756,19 @@ function App({ initialProtectedShare = null }) {
   }, [currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
 
   const removeDriveSharingMember = useCallback(async (member) => {
-    if (!window.confirm(`確定要移除「${member.name}」對這份 Google Drive 檔案的存取權嗎？`)) return false;
+    if (!window.confirm(`確定要移除「${member.name}」對這份 Google Drive 檔案的存取權嗎？`)) return { cancelled: true };
     const accessToken = currentDriveAccessToken();
-    if (!accessToken || !driveSharing.fileId) return false;
+    if (!accessToken || !driveSharing.fileId) return { message: "請先重新連結 Google Drive，再移除成員。" };
     try {
       const { deleteGoogleDrivePermission } = await loadDriveRuntime();
       await deleteGoogleDrivePermission(accessToken, driveSharing.fileId, member.id, { resourceKey: driveSharing.resourceKey });
       const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "removed", id: member.id } });
-      if (!verified) return false;
-      announce(`已移除 ${member.name} 的 Drive 存取權。`, "success");
+      if (!verified) return { message: "Google Drive 已收到移除要求，但尚未確認最新權限；請重新整理權限。" };
       return true;
     } catch (error) {
-      announce(driveErrorMessage(error), "error");
-      return false;
+      return { message: driveErrorMessage(error) };
     }
-  }, [announce, currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
+  }, [currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
 
   useEffect(() => {
     const incoming = initialDriveShareRef.current;
@@ -15718,6 +15725,7 @@ function DriveSharingPreview({ initialMode }) {
   useLayoutEffect(() => localizeInterfaceDom(previewRef.current, locale), [locale]);
   const [mode, setMode] = useState(initialMode);
   const [linkEnabled, setLinkEnabled] = useState(false);
+  const [previewMemberRemoved, setPreviewMemberRemoved] = useState(false);
   const [closed, setClosed] = useState(false);
   const [feedback, setFeedback] = useState("");
   const fileId = "preview_shared_file_123456";
@@ -15738,7 +15746,7 @@ function DriveSharingPreview({ initialMode }) {
     canShare: owner,
     permissionsVisible: owner,
     generalAccess: { enabled: mode === "owner-link" || mode === "owner-editor-link" || linkEnabled, role: mode === "owner-editor-link" ? "editor" : "viewer" },
-    members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }, ...(mode === "owner-role-failure" ? [{ id: "preview_member", name: "測試成員", emailAddress: "member@example.com", appRole: "viewer" }] : [])] : [],
+    members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }, ...((mode === "owner-role-failure" || mode.startsWith("owner-remove-")) && !previewMemberRemoved ? [{ id: "preview_member", name: "測試成員", emailAddress: "member@example.com", appRole: "viewer" }] : [])] : [],
     message: denied ? "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權。"
       : pickerError ? "Google 檔案選擇器等待逾時；沒有開啟任何內容。" : refreshError ? DRIVE_PERMISSION_REFRESH_MESSAGE : "介面預覽：未讀取或修改任何真實檔案。",
   };
@@ -15756,16 +15764,19 @@ function DriveSharingPreview({ initialMode }) {
         onCopyLink={previewAction}
         onInviteMember={previewAction}
         onSetMemberRole={async () => ({ message: "請先重新連結 Google Drive，再變更權限。" })}
-        onRemoveMember={previewAction}
+        onRemoveMember={async () => { if (mode === "owner-remove-cancel") return { cancelled: true }; if (mode === "owner-remove-success") { setPreviewMemberRemoved(true); return true; } return { message: "請先重新連結 Google Drive，再移除成員。" }; }}
         onSetGeneralAccess={async enabled => { setLinkEnabled(enabled); setMode(enabled ? "owner-link" : "owner-restricted"); setFeedback("預覽已切換；未修改 Google Drive 權限。"); return true; }}
         onClose={() => setClosed(true)}
       /> : null}
       <div className="sharing-preview-controls">
-        <label>預覽狀態<select aria-label="分享預覽狀態" value={mode} onChange={event => { setMode(event.target.value); setLinkEnabled(false); setClosed(false); setFeedback(""); }}>
+        <label>預覽狀態<select aria-label="分享預覽狀態" value={mode} onChange={event => { setMode(event.target.value); setLinkEnabled(false); setPreviewMemberRemoved(false); setClosed(false); setFeedback(""); }}>
           <option value="owner-restricted">擁有者：受限連結</option>
           <option value="owner-link">擁有者：連結可檢視</option>
           <option value="owner-editor-link">擁有者：連結可編輯</option>
           <option value="owner-role-failure">擁有者：成員權限更新失敗</option>
+          <option value="owner-remove-failure">擁有者：移除成員失敗</option>
+          <option value="owner-remove-cancel">擁有者：取消移除成員</option>
+          <option value="owner-remove-success">擁有者：移除成員成功</option>
           <option value="viewer">其他帳號：僅檢視</option>
           <option value="editor">其他帳號：可編輯</option>
           <option value="edit-request">其他帳號：申請編輯</option>

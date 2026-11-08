@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.73](./public/release-notes/v0.56.73.html) — keep member removal feedback inside sharing and visible on mobile.
+
 - [v0.56.72](./public/release-notes/v0.56.72.html) — clarify accessible labels for sharing links.
 
 - [v0.56.71](./public/release-notes/v0.56.71.html) — localize sharing permission requests and feedback.
