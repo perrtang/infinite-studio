@@ -11912,10 +11912,10 @@ function App({ initialProtectedShare = null }) {
   }, [activateLocalMoodboard, announce, currentDriveAccessToken, driveSettings.links]);
 
   const saveBoardFile = useCallback(async (forceDownload = false) => {
-    const snapshot = boardSnapshot();
-    const filename = `${safeFilename(snapshot.name, "studio")}.studio`;
-    const content = `${JSON.stringify(snapshot, null, 2)}\n`;
     try {
+      const snapshot = boardSnapshot();
+      const filename = `${safeFilename(snapshot.name, "studio")}.studio`;
+      const content = `${JSON.stringify(snapshot, null, 2)}\n`;
       if (!forceDownload && window.showSaveFilePicker) {
         let handle = fileHandleRef.current;
         if (!handle) {
@@ -11934,7 +11934,7 @@ function App({ initialProtectedShare = null }) {
       if (!forceDownload) setDirty(false);
       announce(forceDownload ? "離線備份已下載" : "Infinite Studio 檔案已儲存", "success");
     } catch (error) {
-      if (error.name !== "AbortError") announce("儲存失敗，畫布仍保留在本機自動儲存。", "error");
+      if (error.name !== "AbortError") announce(forceDownload ? "下載備份失敗；目前畫面仍開啟，請檢查下載設定後重試。" : "儲存失敗；目前畫面仍開啟，請檢查儲存位置後重試。", "error");
     }
   }, [announce, boardSnapshot]);
 

@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.76",
+  "version": "0.56.77",
   "releasedAt": "2026-11-08",
-  "summary": "修正 Drive 狀態讀取時無法使用本機復原的問題。",
-  "notesUrl": "release-notes/v0.56.76.html",
+  "summary": "修正下載備份失敗時的儲存狀態提示。",
+  "notesUrl": "release-notes/v0.56.77.html",
   "url": "https://infinite.petfashion.tw/"
 }

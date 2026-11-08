@@ -1910,6 +1910,8 @@ const EN_EXACT = Object.freeze({
   "選取此物件": "Select this object",
   "選取物件": "Select object",
   "儲存失敗，畫布仍保留在本機自動儲存。": "Save failed. The canvas remains in local autosave.",
+  "下載備份失敗；目前畫面仍開啟，請檢查下載設定後重試。": "Backup download failed. The current canvas remains open; check your download settings and try again.",
+  "儲存失敗；目前畫面仍開啟，請檢查儲存位置後重試。": "Save failed. The current canvas remains open; check the save location and try again.",
   "檢視方式": "View mode",
   "還原前自動備份": "Automatic backup before restore",
   "瀏覽器沒有回傳可用的本機字體。": "The browser did not return any usable local fonts.",
