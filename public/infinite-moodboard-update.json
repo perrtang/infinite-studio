@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.81",
+  "version": "0.56.82",
   "releasedAt": "2026-11-08",
-  "summary": "修正手機版最近開啟選單被側欄控制線遮住。",
-  "notesUrl": "release-notes/v0.56.81.html",
+  "summary": "改善設定分類的輔助工具識別與關閉後的鍵盤焦點。",
+  "notesUrl": "release-notes/v0.56.82.html",
   "url": "https://infinite.petfashion.tw/"
 }

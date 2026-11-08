@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.82](./public/release-notes/v0.56.82.html) — identify the current settings section and restore keyboard focus.
+
 - [v0.56.81](./public/release-notes/v0.56.81.html) — prevent mobile sidebar handles from covering file menus.
 
 - [v0.56.80](./public/release-notes/v0.56.80.html) — clarify first-time shared-file authorization and recovery.

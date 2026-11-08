@@ -6960,6 +6960,13 @@ function SettingsModal({
   const [section, setSection] = useState(initialSection);
   const [panelWidthReset, setPanelWidthReset] = useState(false);
   const panelRef = useRef(null);
+  const closeAndRestoreFocus = () => {
+    onClose();
+    window.requestAnimationFrame(() => {
+      const triggers = [document.querySelector('.account-menu-button'), document.querySelector('.mobile-topbar-more-button')];
+      triggers.find((element) => element?.getClientRects().length)?.focus({ preventScroll: true });
+    });
+  };
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => panelRef.current?.querySelector('.settings-nav .is-active')?.focus());
     const closeOutside = (event) => {
@@ -6969,8 +6976,7 @@ function SettingsModal({
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      onClose();
-      document.querySelector('.account-menu-button')?.focus();
+      closeAndRestoreFocus();
     };
     window.addEventListener('pointerdown', closeOutside, true);
     window.addEventListener('keydown', closeEscape, true);
@@ -7016,25 +7022,25 @@ function SettingsModal({
 
   return (
     <section ref={panelRef} id="account-settings-popover" className="modal is-wide settings-dialog settings-popover" role="dialog" aria-label="帳號與設定">
-      <header><div><h2>帳號與設定</h2><p>管理帳號、儲存與介面偏好。</p></div><IconButton label="關閉" onClick={onClose}><X size={19} /></IconButton></header>
+      <header><div><h2>帳號與設定</h2><p>管理帳號、儲存與介面偏好。</p></div><IconButton label="關閉" onClick={closeAndRestoreFocus}><X size={19} /></IconButton></header>
       <div className="modal-body"><div className="settings-layout">
         <nav className="settings-nav" aria-label="設定分類">
-          <button className={section === "account" ? "is-active" : ""} type="button" onClick={() => setSection("account")}>
+          <button className={section === "account" ? "is-active" : ""} aria-current={section === "account" ? "page" : undefined} type="button" onClick={() => setSection("account")}>
             <UserRound size={17} /><span>帳號與隱私</span>
           </button>
-          <button className={section === "storage" ? "is-active" : ""} type="button" onClick={() => setSection("storage")}>
+          <button className={section === "storage" ? "is-active" : ""} aria-current={section === "storage" ? "page" : undefined} type="button" onClick={() => setSection("storage")}>
             <Cloud size={17} /><span>儲存與同步</span>
           </button>
-          <button className={section === "general" ? "is-active" : ""} type="button" onClick={() => setSection("general")}>
+          <button className={section === "general" ? "is-active" : ""} aria-current={section === "general" ? "page" : undefined} type="button" onClick={() => setSection("general")}>
             <Languages size={17} /><span>一般設定</span>
           </button>
-          <button className={section === "appearance" ? "is-active" : ""} type="button" onClick={() => setSection("appearance")}>
+          <button className={section === "appearance" ? "is-active" : ""} aria-current={section === "appearance" ? "page" : undefined} type="button" onClick={() => setSection("appearance")}>
             <Palette size={17} /><span>外觀</span>
           </button>
-          <button className={section === "workspace" ? "is-active" : ""} type="button" onClick={() => setSection("workspace")}>
+          <button className={section === "workspace" ? "is-active" : ""} aria-current={section === "workspace" ? "page" : undefined} type="button" onClick={() => setSection("workspace")}>
             <LayoutGrid size={17} /><span>工作區</span>
           </button>
-          <button className={section === "about" ? "is-active" : ""} type="button" onClick={() => setSection("about")}>
+          <button className={section === "about" ? "is-active" : ""} aria-current={section === "about" ? "page" : undefined} type="button" onClick={() => setSection("about")}>
             <Info size={17} /><span>關於</span>
           </button>
         </nav>
