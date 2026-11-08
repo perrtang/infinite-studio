@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.74",
+  "version": "0.56.75",
   "releasedAt": "2026-11-08",
-  "summary": "修正雲端錯誤訊息對本機備份狀態的誤導。",
-  "notesUrl": "release-notes/v0.56.74.html",
+  "summary": "補充分享權限介面的自動驗證。",
+  "notesUrl": "release-notes/v0.56.75.html",
   "url": "https://infinite.petfashion.tw/"
 }
