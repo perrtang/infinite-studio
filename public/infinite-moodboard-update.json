@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.71",
+  "version": "0.56.72",
   "releasedAt": "2026-11-08",
-  "summary": "改善分享權限申請與檢查結果的多語顯示。",
-  "notesUrl": "release-notes/v0.56.71.html",
+  "summary": "改善分享連結欄位的無障礙辨識。",
+  "notesUrl": "release-notes/v0.56.72.html",
   "url": "https://infinite.petfashion.tw/"
 }

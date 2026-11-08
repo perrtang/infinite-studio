@@ -6542,13 +6542,12 @@ function DriveSharingModal({
                   <small>{!sharing.permissionsVisible ? "存取權由 Google Drive 管理；目前帳號只能確認自己的權限。" : publicCanEdit ? "目前知道連結的人可編輯；擁有者可改為僅檢視。" : sharing.generalAccess.enabled ? "知道連結的人可檢視；編輯仍需個別授權。" : "目前是受限連結；只有已獲 Drive 授權的帳號能開啟。"}</small>
                 </div>
               </div>
-              <label className="collaboration-invite-field">
+              <div className="collaboration-invite-field">
                 <span>直接開啟這份工作檔</span>
                 <div>
                   <input
                     value={sharing.shareUrl || ""}
                     readOnly
-                    data-l10n-ignore
                     aria-label="目前 Google Drive 工作檔的分享連結"
                     onFocus={(event) => event.currentTarget.select()}
                   />
@@ -6556,7 +6555,7 @@ function DriveSharingModal({
                     <Copy size={16} />{restrictedLink && sharing.canShare ? "開啟連結檢視並複製" : restrictedLink ? "複製受限連結" : publicCanEdit ? "複製可編輯連結" : sharing.permissionsVisible && sharing.generalAccess.enabled ? "複製檢視連結" : "複製連結"}
                   </button>
                 </div>
-              </label>
+              </div>
               {linkFeedback ? <div className={`status-banner ${linkFeedback.ok ? "success" : "warning"}`} role={linkFeedback.ok ? "status" : "alert"}>{linkFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{linkFeedback.message}</span></div> : null}
               <p className="collaboration-share-note"><ShieldCheck size={14} />{restrictedLink && sharing.canShare ? "點擊上方按鈕會開放知道連結的人檢視；連結可轉傳，也可改為僅邀請指定帳號。" : "實際存取權仍以 Google Drive 為準；複製連結不會變更權限。"}</p>
               {restrictedLink && sharing.canShare ? <button className="quiet-button" type="button" onClick={() => copyShareLink("restricted")} disabled={Boolean(permissionAction)}>只複製受限連結</button> : null}
@@ -6574,7 +6573,7 @@ function DriveSharingModal({
                   } catch (error) { if (generation === protectedLinkGeneration.current) setProtectedLinkMessage(error.message || "無法建立密碼連結。"); }
                   finally { setProtectedLinkBusy(false); }
                 }}>建立密碼連結</button>
-                {protectedLink ? <label className="collaboration-invite-field"><span>密碼連結</span><div><input readOnly value={protectedLink} data-l10n-ignore onFocus={(event) => event.currentTarget.select()} /><button className="secondary-button" type="button" onClick={async () => { try { await navigator.clipboard.writeText(protectedLink); setProtectedLinkMessage("已複製密碼連結。"); } catch { setProtectedLinkMessage("無法自動複製，請選取連結後複製。"); } }}>複製密碼連結</button></div></label> : null}
+                {protectedLink ? <div className="collaboration-invite-field"><span>密碼連結</span><div><input readOnly value={protectedLink} aria-label="密碼連結" onFocus={(event) => event.currentTarget.select()} /><button className="secondary-button" type="button" onClick={async () => { try { await navigator.clipboard.writeText(protectedLink); setProtectedLinkMessage("已複製密碼連結。"); } catch { setProtectedLinkMessage("無法自動複製，請選取連結後複製。"); } }}>複製密碼連結</button></div></div> : null}
                 {protectedLinkMessage ? <p role="status">{protectedLinkMessage}</p> : null}
               </div></details> : null}
             </section>

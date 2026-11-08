@@ -65,6 +65,8 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "目前 Google Drive 工作檔的分享連結": "Share link for the current Google Drive project",
+  "進階：建立密碼連結": "Advanced: Create password-protected link",
   "需要編輯權限": "Edit access required",
   "你目前可以檢視這份工作檔；編輯與儲存需要檔案擁有者授權。": "You can view this project. Editing and saving require permission from its owner.",
   "請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。": "Send your Google account and project link to the owner and ask them to grant edit access in Google Drive sharing. Once approved, return here and check your access.",
