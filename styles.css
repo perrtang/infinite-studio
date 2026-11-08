@@ -8880,6 +8880,9 @@ button.status-label:hover {
   min-height: 38px;
 }
 
+.collaboration-member-list article { flex-wrap: wrap; }
+.collaboration-member-feedback { flex-basis: 100%; }
+
 .collaboration-request-list article + article,
 .collaboration-member-list article + article {
   border-top: 1px solid var(--border);

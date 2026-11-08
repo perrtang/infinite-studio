@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.68](./public/release-notes/v0.56.68.html) — show member permission results beside the control.
+
 - [v0.56.67](./public/release-notes/v0.56.67.html) — check newly granted edit access directly in the permission dialog.
 
 - [v0.56.66](./public/release-notes/v0.56.66.html) — allow more time for shared-file authorization.

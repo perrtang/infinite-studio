@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.67",
+  "version": "0.56.68",
   "releasedAt": "2026-11-08",
-  "summary": "讓分享檔案的檢視者直接重新檢查編輯權限。",
-  "notesUrl": "release-notes/v0.56.67.html",
+  "summary": "改善分享視窗中的成員權限變更回饋。",
+  "notesUrl": "release-notes/v0.56.68.html",
   "url": "https://infinite.petfashion.tw/"
 }

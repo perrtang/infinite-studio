@@ -6450,13 +6450,14 @@ function DriveSharingModal({
   const inviteEmailRef = useRef(null);
   const [linkFeedback, setLinkFeedback] = useState(null);
   const [accessFeedback, setAccessFeedback] = useState(null);
+  const [memberFeedback, setMemberFeedback] = useState(null);
   const [linkPassword, setLinkPassword] = useState("");
   const [confirmLinkPassword, setConfirmLinkPassword] = useState("");
   const [protectedLink, setProtectedLink] = useState("");
   const [protectedLinkMessage, setProtectedLinkMessage] = useState("");
   const [protectedLinkBusy, setProtectedLinkBusy] = useState(false);
   const protectedLinkGeneration = useRef(0);
-  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setInviteEmailInvalid(false); setLinkFeedback(null); setAccessFeedback(null); }, [sharing.fileId]);
+  useEffect(() => { protectedLinkGeneration.current += 1; setLinkPassword(""); setConfirmLinkPassword(""); setProtectedLink(""); setProtectedLinkMessage(""); setInviteFeedback(null); setInviteEmailInvalid(false); setLinkFeedback(null); setAccessFeedback(null); setMemberFeedback(null); }, [sharing.fileId]);
   const ready = sharing.status === "ready" && Boolean(sharing.fileId);
   const busy = ["loading", "saving", "authorizing", "picker-authorizing", "opening-shared-file"].includes(sharing.status);
   const preparationIsError = ["error", "local-recovery-error", "picker-error", "picker-unconfigured", "shared-file-denied"].includes(sharing.status);
@@ -6481,6 +6482,7 @@ function DriveSharingModal({
     if (permissionAction) return;
     setPermissionAction(key);
     if (key === "invite") setInviteFeedback(null);
+    if (key.startsWith("role:")) setMemberFeedback(null);
     if (key === "general" || key === "general-view") setAccessFeedback(null);
     try {
       const succeeded = await action();
@@ -6493,6 +6495,7 @@ function DriveSharingModal({
         }
       }
       if (key === "general" || key === "general-view") setAccessFeedback(succeeded ? { ok: true, message: "存取權限已更新。" } : { ok: false, message: "無法更新存取權限，請確認 Drive 連線後重試。" });
+      if (key.startsWith("role:")) setMemberFeedback({ id: key.slice(5), ok: succeeded === true, message: succeeded === true ? "權限已更新。" : succeeded?.message || "無法更新權限；請確認 Google Drive 連線後再試。" });
     } finally {
       setPermissionAction("");
     }
@@ -6687,6 +6690,7 @@ function DriveSharingModal({
                           </button>
                         </span>
                       )}
+                      {memberFeedback?.id === member.id ? <div className={`collaboration-member-feedback status-banner ${memberFeedback.ok ? "success" : "warning"}`} role={memberFeedback.ok ? "status" : "alert"}>{memberFeedback.ok ? <Check size={16} /> : <AlertTriangle size={16} />}<span>{memberFeedback.message}</span></div> : null}
                     </article>
                   );
                 })}
@@ -11723,7 +11727,7 @@ function App({ initialProtectedShare = null }) {
 
   const setDriveSharingMemberRole = useCallback(async (permissionId, role) => {
     const accessToken = currentDriveAccessToken();
-    if (!accessToken || !driveSharing.fileId) return false;
+    if (!accessToken || !driveSharing.fileId) return { message: "請先重新連結 Google Drive，再變更權限。" };
     try {
       const { updateGoogleDrivePermission } = await loadDriveRuntime();
       await updateGoogleDrivePermission(
@@ -11734,14 +11738,12 @@ function App({ initialProtectedShare = null }) {
         { resourceKey: driveSharing.resourceKey },
       );
       const verified = await refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { permissionChanged: true, expectedPermission: { kind: "member", id: permissionId, role: role === "editor" ? "writer" : "reader" } });
-      if (!verified) return false;
-      announce(role === "editor" ? "已允許這位成員編輯。" : "已將這位成員改為僅檢視。", "success");
+      if (!verified) return { message: "Google Drive 已收到變更，但尚未確認最新權限；請重新整理權限。" };
       return true;
     } catch (error) {
-      announce(driveErrorMessage(error), "error");
-      return false;
+      return { message: driveErrorMessage(error) };
     }
-  }, [announce, currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
+  }, [currentDriveAccessToken, driveSharing.fileId, driveSharing.resourceKey, refreshDriveSharing]);
 
   const removeDriveSharingMember = useCallback(async (member) => {
     if (!window.confirm(`確定要移除「${member.name}」對這份 Google Drive 檔案的存取權嗎？`)) return false;
@@ -15731,7 +15733,7 @@ function DriveSharingPreview({ initialMode }) {
     canShare: owner,
     permissionsVisible: owner,
     generalAccess: { enabled: mode === "owner-link" || mode === "owner-editor-link" || linkEnabled, role: mode === "owner-editor-link" ? "editor" : "viewer" },
-    members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }] : [],
+    members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }, ...(mode === "owner-role-failure" ? [{ id: "preview_member", name: "測試成員", emailAddress: "member@example.com", appRole: "viewer" }] : [])] : [],
     message: denied ? "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權。"
       : pickerError ? "Google 檔案選擇器等待逾時；沒有開啟任何內容。" : refreshError ? DRIVE_PERMISSION_REFRESH_MESSAGE : "介面預覽：未讀取或修改任何真實檔案。",
   };
@@ -15748,7 +15750,7 @@ function DriveSharingPreview({ initialMode }) {
         onRefresh={previewAction}
         onCopyLink={previewAction}
         onInviteMember={previewAction}
-        onSetMemberRole={previewAction}
+        onSetMemberRole={async () => ({ message: "請先重新連結 Google Drive，再變更權限。" })}
         onRemoveMember={previewAction}
         onSetGeneralAccess={async enabled => { setLinkEnabled(enabled); setMode(enabled ? "owner-link" : "owner-restricted"); setFeedback("預覽已切換；未修改 Google Drive 權限。"); return true; }}
         onClose={() => setClosed(true)}
@@ -15758,6 +15760,7 @@ function DriveSharingPreview({ initialMode }) {
           <option value="owner-restricted">擁有者：受限連結</option>
           <option value="owner-link">擁有者：連結可檢視</option>
           <option value="owner-editor-link">擁有者：連結可編輯</option>
+          <option value="owner-role-failure">擁有者：成員權限更新失敗</option>
           <option value="viewer">其他帳號：僅檢視</option>
           <option value="editor">其他帳號：可編輯</option>
           <option value="edit-request">其他帳號：申請編輯</option>
