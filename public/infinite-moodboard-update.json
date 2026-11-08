@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.66",
+  "version": "0.56.67",
   "releasedAt": "2026-11-08",
-  "summary": "延長 Google Drive 單檔授權的選檔時間。",
-  "notesUrl": "release-notes/v0.56.66.html",
+  "summary": "讓分享檔案的檢視者直接重新檢查編輯權限。",
+  "notesUrl": "release-notes/v0.56.67.html",
   "url": "https://infinite.petfashion.tw/"
 }

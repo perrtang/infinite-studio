@@ -6761,11 +6761,26 @@ function DriveEditRequest({ sharing }) {
   </div>;
 }
 
-function DriveEditPermissionModal({ sharing, onClose }) {
+function DriveEditPermissionModal({ sharing, onClose, onRefresh }) {
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState("");
+  const checkPermission = async () => {
+    setChecking(true);
+    setResult("");
+    try {
+      let role = null;
+      const checked = await onRefresh((value) => { role = value; });
+      if (checked && role !== "viewer" && role !== null) onClose();
+      else setResult(checked ? "目前仍是檢視權限；請確認擁有者已授予編輯權限。" : "無法確認權限，請檢查 Google Drive 連線後再試。");
+    } catch {
+      setResult("無法確認權限，請檢查 Google Drive 連線後再試。");
+    } finally { setChecking(false); }
+  };
   return <Modal title="需要編輯權限" description="你目前可以檢視這份工作檔；編輯與儲存需要檔案擁有者授權。" onClose={onClose}>
     <div className="drive-save-confirmation">
       <DriveEditRequest sharing={sharing} />
-      <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={onClose}>關閉</button></div>
+      {result ? <p role="status">{result}</p> : null}
+      <div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={onClose}>關閉</button><button className="primary-button" type="button" disabled={checking} onClick={checkPermission}>{checking ? "正在確認權限…" : "重新檢查權限"}</button></div>
     </div>
   </Modal>;
 }
@@ -15614,7 +15629,7 @@ function App({ initialProtectedShare = null }) {
       {agentRequest ? <Modal title={agentRequest.action === "create" ? "AI 請求新增物件" : "AI 請求修改物件"} description="確認後會修改目前畫布，可以使用復原。" onClose={() => finishAgentRequest(false)}>
         <div className="drive-save-confirmation"><p>物件：<span data-l10n-ignore>{agentRequest.name}</span></p><dl className="agent-request-preview">{Object.entries(agentRequest.patch).map(([key, value]) => <div key={key}><dt>{AGENT_FIELD_LABELS[key] || key}</dt><dd data-l10n-ignore={key === "text" || key === "name" || undefined}>{["type", "shapeKind", "textAlign", "textVerticalAlign", "visible", "locked"].includes(key) ? AGENT_VALUE_LABELS[String(value)] || String(value) : String(value)}</dd></div>)}</dl><div className="drive-save-confirmation-actions"><button className="secondary-button" type="button" onClick={() => finishAgentRequest(false)}>拒絕</button><button className="primary-button" type="button" onClick={() => finishAgentRequest(true)}>套用修改</button></div></div>
       </Modal> : null}
-      {showEditPermissionRequest && cloudReadOnly ? <DriveEditPermissionModal sharing={driveSharing} onClose={() => setShowEditPermissionRequest(false)} /> : null}
+      {showEditPermissionRequest && cloudReadOnly ? <DriveEditPermissionModal sharing={driveSharing} onClose={() => setShowEditPermissionRequest(false)} onRefresh={(onRole) => refreshDriveSharing({ fileId: driveSharing.fileId, resourceKey: driveSharing.resourceKey }, { onRole })} /> : null}
       {preparedDownloads.length ? (
         <ExportDownloadModal
           downloads={preparedDownloads}
@@ -15724,7 +15739,7 @@ function DriveSharingPreview({ initialMode }) {
   return (
     <div className="sharing-preview">
       <style>{`.sharing-preview .modal-backdrop{bottom:76px}.sharing-preview .modal{max-height:calc(100dvh - 116px)}.sharing-preview-controls{position:fixed;inset:auto 0 0;z-index:101;min-height:76px;padding:8px 16px;background:var(--surface-strong);display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px}.sharing-preview-controls label{display:flex;gap:8px;align-items:center}.sharing-preview-controls select{min-height:44px;max-width:100%;font:inherit;color:var(--text);background:var(--control-bg)}.sharing-preview-controls p{margin:0;flex:1;min-width:160px}@media(max-width:600px){.sharing-preview .modal-backdrop{bottom:116px}.sharing-preview .modal{max-height:calc(100dvh - 156px)}.sharing-preview-controls{min-height:116px}}`}</style>
-      {!closed && mode === "edit-request" ? <DriveEditPermissionModal sharing={sharing} onClose={() => setClosed(true)} /> : !closed ? <DriveSharingModal
+      {!closed && mode === "edit-request" ? <DriveEditPermissionModal sharing={sharing} onClose={() => setClosed(true)} onRefresh={async (onRole) => { onRole("viewer"); return true; }} /> : !closed ? <DriveSharingModal
         boardName={sharing.fileName}
         sharing={sharing}
         onConnectDrive={previewAction}
