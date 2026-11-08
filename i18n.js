@@ -65,6 +65,26 @@ export function interfaceLocaleToIntl(locale = activeInterfaceLocale) {
 }
 
 const EN_EXACT = Object.freeze({
+  "需要編輯權限": "Edit access required",
+  "你目前可以檢視這份工作檔；編輯與儲存需要檔案擁有者授權。": "You can view this project. Editing and saving require permission from its owner.",
+  "請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。": "Send your Google account and project link to the owner and ask them to grant edit access in Google Drive sharing. Once approved, return here and check your access.",
+  "你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：": "Hello, please grant my Google account edit access to this Infinite Studio project:",
+  "我的 Google 帳號：": "My Google account:",
+  "給擁有者的訊息": "Message to the owner",
+  "複製請求訊息": "Copy request",
+  "已複製請求": "Request copied",
+  "已複製，請貼給擁有者並填上你的 Google 帳號。": "Copied. Add your Google account and send the message to the owner.",
+  "無法自動複製；請選取下方文字後複製。": "Could not copy automatically. Select and copy the message.",
+  "無法自動複製；請選取訊息內容後複製。": "Could not copy automatically. Select and copy the message.",
+  "請將工作檔連結與你的 Google 帳號直接傳給擁有者。": "Send the project link and your Google account directly to the owner.",
+  "重新檢查權限": "Check access again",
+  "正在確認權限…": "Checking access…",
+  "目前仍是檢視權限；請確認擁有者已授予編輯權限。": "You still have view access. Check that the owner has granted edit access.",
+  "無法確認權限，請檢查 Google Drive 連線後再試。": "Could not check access. Check your Google Drive connection and try again.",
+  "權限已更新。": "Access updated.",
+  "請先重新連結 Google Drive，再變更權限。": "Reconnect Google Drive before changing access.",
+  "Google Drive 已收到變更，但尚未確認最新權限；請重新整理權限。": "Google Drive received the change, but the latest access could not be confirmed. Refresh permissions.",
+  "無法更新權限；請確認 Google Drive 連線後再試。": "Could not update access. Check your Google Drive connection and try again.",
   "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新連結後檢查，再決定是否重試。": "Google Drive accepted the permission change, but the current permissions could not be confirmed. Reconnect and check before trying again.",
   "Google Drive 已接受權限變更，但目前無法確認最新權限；請重新整理權限後檢查，再決定是否重試。": "Google Drive accepted the permission change, but the current permissions could not be confirmed. Refresh permissions and check before trying again.",
   "邀請已送至 Google Drive，但無法確認最新權限；請先重新整理權限。": "The invitation was sent to Google Drive, but the current permissions could not be confirmed. Refresh permissions first.",
@@ -2319,6 +2339,13 @@ const EN_STUDIO_WORDING = Object.fromEntries(Object.entries(EN_EXACT)
     .replaceAll('Infinite Moodboard', 'Infinite Studio')
     .replaceAll('Moodboards', 'projects').replaceAll('Moodboard', 'project')]));
 
+const HANS_SHARING_EXACT = Object.freeze({
+  "請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。": "请将你的 Google 账号与工作文件链接发给所有者，请对方在 Google Drive 的“共享”中授予编辑权限。批准后回到此处重新检查权限。",
+  "你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：": "你好，请将我的 Google 账号设为这份 Infinite Studio 工作文件的编辑者：",
+  "給擁有者的訊息": "给所有者的消息",
+  "複製請求訊息": "复制请求消息",
+});
+
 function translateEnglishCore(value) {
   if (EN_EXACT[value]) return EN_EXACT[value];
   if (EN_STUDIO_WORDING[value]) return EN_STUDIO_WORDING[value];
@@ -2337,7 +2364,7 @@ export function translateInterfaceText(value, locale = activeInterfaceLocale) {
   const leading = match?.[1] || "";
   const core = match?.[2] || source;
   const trailing = match?.[3] || "";
-  const translated = normalizedLocale === "zh-Hans" ? toSimplified(core) : translateEnglishCore(core);
+  const translated = normalizedLocale === "zh-Hans" ? (HANS_SHARING_EXACT[core] || toSimplified(core)) : translateEnglishCore(core);
   return `${leading}${translated}${trailing}`;
 }
 

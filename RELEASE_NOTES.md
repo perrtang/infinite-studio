@@ -4,6 +4,8 @@ Every stable release from v0.51.0 onward must include a version-matched public r
 
 ## Releases
 
+- [v0.56.71](./public/release-notes/v0.56.71.html) — localize sharing permission requests and feedback.
+
 - [v0.56.70](./public/release-notes/v0.56.70.html) — improve recent-file menu placement and keyboard navigation.
 
 - [v0.56.69](./public/release-notes/v0.56.69.html) — clarify Drive disconnection and local backup status.

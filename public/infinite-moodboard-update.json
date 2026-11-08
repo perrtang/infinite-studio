@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.70",
+  "version": "0.56.71",
   "releasedAt": "2026-11-08",
-  "summary": "改善最近開啟選單在小視窗與鍵盤操作的體驗。",
-  "notesUrl": "release-notes/v0.56.70.html",
+  "summary": "改善分享權限申請與檢查結果的多語顯示。",
+  "notesUrl": "release-notes/v0.56.71.html",
   "url": "https://infinite.petfashion.tw/"
 }

@@ -2,6 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { detectInterfaceLocale, loadInterfaceLocalePreference, translateInterfaceText } from "./i18n.js";
 
+test("sharing permission requests and recovery have English and Simplified Chinese copy", () => {
+  const phrases = [
+    "需要編輯權限", "重新檢查權限", "正在確認權限…",
+    "目前仍是檢視權限；請確認擁有者已授予編輯權限。",
+    "無法確認權限，請檢查 Google Drive 連線後再試。",
+    "請先重新連結 Google Drive，再變更權限。", "權限已更新。",
+    "你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：", "我的 Google 帳號：",
+  ];
+  for (const phrase of phrases) {
+    assert.doesNotMatch(translateInterfaceText(phrase, "en"), /[\u3400-\u9fff]/u, phrase);
+    assert.notEqual(translateInterfaceText(phrase, "zh-Hans"), phrase, phrase);
+  }
+  assert.match(translateInterfaceText("請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。", "zh-Hans"), /文件链接/);
+});
+
 test("automatic Drive authorization explains storage and recovery in English", () => {
   assert.equal(translateInterfaceText("移除自動連線授權", "en"), "Remove automatic connection authorization");
   assert.match(translateInterfaceText("為了在新分頁恢復連線，Infinite Studio 會在伺服器加密保存 Drive 授權。", "en"), /encrypted/);

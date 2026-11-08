@@ -6755,11 +6755,11 @@ function DriveEditRequest({ sharing }) {
   let request = "";
   try {
     const link = createGoogleDriveMoodboardUrl({ fileId, resourceKey: sharing?.resourceKey }, `${window.location.origin}/`);
-    request = `你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：\n${link}\n我的 Google 帳號：`;
+    request = `${translateInterfaceText("你好，請將我的 Google 帳號設為這份 Infinite Studio 工作檔的編輯者：")}\n${link}\n${translateInterfaceText("我的 Google 帳號：")}`;
   } catch { /* No valid file ID: show the manual route. */ }
   const copyRequest = async () => {
     try { await navigator.clipboard.writeText(request); setFeedback("已複製，請貼給擁有者並填上你的 Google 帳號。"); }
-    catch { setFeedback("無法自動複製；請選取下方文字後複製。"); }
+    catch { setFeedback("無法自動複製；請選取訊息內容後複製。"); }
   };
   return <div className="drive-save-confirmation">
     <p>請將你的 Google 帳號與工作檔連結傳給擁有者，請對方在 Google Drive 的「共用」中授予編輯權限。核准後回到此處重新整理權限。</p>
@@ -15713,6 +15713,10 @@ function PublicSharedViewer({ incoming, preview = false, onProtectedEdit = null 
 }
 
 function DriveSharingPreview({ initialMode }) {
+  const { locale } = useInterfaceLocale();
+  const previewRef = useRef(null);
+  setActiveInterfaceLocale(locale);
+  useLayoutEffect(() => localizeInterfaceDom(previewRef.current, locale), [locale]);
   const [mode, setMode] = useState(initialMode);
   const [linkEnabled, setLinkEnabled] = useState(false);
   const [closed, setClosed] = useState(false);
@@ -15741,7 +15745,7 @@ function DriveSharingPreview({ initialMode }) {
   };
   const previewAction = () => { setFeedback("這是介面預覽，沒有連結 Google Drive、寄出邀請或修改權限。"); return false; };
   return (
-    <div className="sharing-preview">
+    <div className="sharing-preview" ref={previewRef}>
       <style>{`.sharing-preview .modal-backdrop{bottom:76px}.sharing-preview .modal{max-height:calc(100dvh - 116px)}.sharing-preview-controls{position:fixed;inset:auto 0 0;z-index:101;min-height:76px;padding:8px 16px;background:var(--surface-strong);display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px}.sharing-preview-controls label{display:flex;gap:8px;align-items:center}.sharing-preview-controls select{min-height:44px;max-width:100%;font:inherit;color:var(--text);background:var(--control-bg)}.sharing-preview-controls p{margin:0;flex:1;min-width:160px}@media(max-width:600px){.sharing-preview .modal-backdrop{bottom:116px}.sharing-preview .modal{max-height:calc(100dvh - 156px)}.sharing-preview-controls{min-height:116px}}`}</style>
       {!closed && mode === "edit-request" ? <DriveEditPermissionModal sharing={sharing} onClose={() => setClosed(true)} onRefresh={async (onRole) => { onRole("viewer"); return true; }} /> : !closed ? <DriveSharingModal
         boardName={sharing.fileName}
