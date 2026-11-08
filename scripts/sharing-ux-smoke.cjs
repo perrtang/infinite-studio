@@ -8,6 +8,23 @@ const { chromium } = require('playwright');
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname)) throw new Error('Only an isolated loopback preview is allowed.');
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
+    for (const width of [320, 390, 1440]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'zh-TW' });
+      await context.addInitScript(() => localStorage.setItem('infinite-moodboard-interface-locale-v1', 'zh-Hant'));
+      await context.route('**/*', route => new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort());
+      const page = await context.newPage();
+      base.search = '?sharingPreview=denied';
+      await page.goto(base.href);
+      const dialog = page.getByRole('dialog', { name: '分享 Google Drive 工作檔' });
+      const primary = dialog.getByRole('button', { name: '授權這份共享檔案' });
+      await primary.waitFor();
+      assert(await primary.evaluate(element => element.classList.contains('primary-button')));
+      assert(await dialog.getByText('請先選取這份檔案', { exact: false }).isVisible());
+      assert(await dialog.getByRole('link', { name: '在 Google Drive 檢查或申請權限' }).isVisible());
+      assert(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth + 1), 'sharing dialog must not overflow horizontally');
+      console.log(`${width}px shared-file authorization recovery: PASS`);
+      await context.close();
+    }
     for (const width of [320, 390, 1440]) for (const mode of ['failure', 'cancel', 'success']) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'zh-TW', reducedMotion: 'reduce' });
       await context.addInitScript(() => localStorage.setItem('infinite-moodboard-interface-locale-v1', 'zh-Hant'));

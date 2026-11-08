@@ -1,9 +1,9 @@
 {
   "product": "Infinite Studio",
   "channel": "stable",
-  "version": "0.56.79",
+  "version": "0.56.80",
   "releasedAt": "2026-11-08",
-  "summary": "改善手機上狀態訊息被截斷時的閱讀方式。",
-  "notesUrl": "release-notes/v0.56.79.html",
+  "summary": "改善首次開啟共享工作檔時的單檔授權提示。",
+  "notesUrl": "release-notes/v0.56.80.html",
   "url": "https://infinite.petfashion.tw/"
 }

@@ -6739,9 +6739,9 @@ function DriveSharingModal({
               <small>{sharing.message || "作品、版本與分享權限都會留在你自己的 Google Drive。"}</small>
               <div className="collaboration-preparation-actions">
                 {sharing.status === "authorization-required" ? <button className="primary-button" type="button" onClick={onConnectDrive} disabled={busy}><Cloud size={15} />連結 Google Drive</button> : null}
-                {sharing.status === "shared-file-denied" && accessUrl ? <a className="primary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查或申請權限</a> : null}
+                {["needs-picker-access", "picker-error", "shared-file-denied"].includes(sharing.status) ? <button className="primary-button" type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />{sharing.status === "picker-error" ? "重新授權這份共享檔案" : "授權這份共享檔案"}</button> : null}
+                {sharing.status === "shared-file-denied" && accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查或申請權限</a> : null}
                 {sharing.status === "shared-file-denied" ? <button className="secondary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新開啟分享檔案</button> : null}
-                {["needs-picker-access", "picker-error", "shared-file-denied"].includes(sharing.status) ? <button className={sharing.status === "shared-file-denied" ? "secondary-button" : "primary-button"} type="button" onClick={onAuthorizeIncomingDriveFile} disabled={busy}><FolderOpen size={15} />{sharing.status === "picker-error" ? "重新授權這份共享檔案" : "授權這份共享檔案"}</button> : null}
                 {!busy && sharing.status !== "shared-file-denied" && accessUrl ? <a className="secondary-button" href={accessUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} />在 Google Drive 檢查存取權</a> : null}
                 {sharing.status === "needs-drive" ? <button className="primary-button" type="button" onClick={onSaveToDrive} disabled={busy}><CloudUpload size={15} />儲存並準備分享</button> : null}
                 {["error", "local-recovery-error"].includes(sharing.status) ? <button className="primary-button" type="button" onClick={onRefresh} disabled={busy}><RefreshCw size={15} />重新嘗試</button> : null}
@@ -11373,7 +11373,7 @@ function App({ initialProtectedShare = null }) {
       const isConflict = error?.code === "drive/conflict";
       if (error?.code === "drive/local-recovery" && !automatic && !sharedLink) { setPendingDriveOpen(file); setBackupError(""); }
       if (sharedLink && isSharedDriveFileAccessError(error)) {
-        const message = "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權，再回來選取同一份檔案授權 App。";
+        const message = "請先選取這份檔案，讓 Infinite Studio 取得單檔存取權。若找不到檔案或仍無法開啟，請確認 Google 帳號並向擁有者申請存取權。";
         setDriveSharing((current) => ({
           ...current,
           status: "shared-file-denied",
@@ -15750,7 +15750,7 @@ function DriveSharingPreview({ initialMode }) {
     permissionsVisible: owner,
     generalAccess: { enabled: mode === "owner-link" || mode === "owner-editor-link" || linkEnabled, role: mode === "owner-editor-link" ? "editor" : "viewer" },
     members: owner ? [{ id: "preview_owner", name: "檔案擁有者", emailAddress: "owner@example.com", appRole: "owner" }, ...((mode === "owner-role-failure" || mode.startsWith("owner-remove-")) && !previewMemberRemoved ? [{ id: "preview_member", name: "測試成員", emailAddress: "member@example.com", appRole: "viewer" }] : [])] : [],
-    message: denied ? "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權。"
+    message: denied ? "請先選取這份檔案，讓 Infinite Studio 取得單檔存取權。若找不到檔案或仍無法開啟，請確認 Google 帳號並向擁有者申請存取權。"
       : pickerError ? "Google 檔案選擇器等待逾時；沒有開啟任何內容。" : refreshError ? DRIVE_PERMISSION_REFRESH_MESSAGE : "介面預覽：未讀取或修改任何真實檔案。",
   };
   const previewAction = () => { setFeedback("這是介面預覽，沒有連結 Google Drive、寄出邀請或修改權限。"); return false; };

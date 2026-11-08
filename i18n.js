@@ -1559,7 +1559,7 @@ const EN_EXACT = Object.freeze({
   "要讓其他帳號透過連結檢視，請在下方開啟「連結檢視」，或邀請指定帳號。": "To let other accounts view this link, enable link viewing below or invite specific accounts.",
   "實際存取權仍以 Google Drive 為準；複製連結不會變更權限。": "Google Drive controls access. Copying a link does not change permissions.",
   "分享的是同一份 Google Drive 檔案。擁有者決定誰能檢視或編輯；需要更多權限時，請透過 Google Drive 申請。": "This shares the same Google Drive file. The owner controls viewing and editing; request additional access through Google Drive.",
-  "無法讀取這份檔案。請先到 Google Drive 確認檔案與登入帳號；需要時向擁有者申請存取權，再回來選取同一份檔案授權 App。": "This file could not be read. Check the file and signed-in account in Google Drive, request access if needed, then return and select the same file to authorize the app.",
+  "請先選取這份檔案，讓 Infinite Studio 取得單檔存取權。若找不到檔案或仍無法開啟，請確認 Google 帳號並向擁有者申請存取權。": "First select this file to grant Infinite Studio access to it. If you cannot find or open it, check your Google account and request access from the owner.",
   "知道連結且已登入的人": "Anyone with the link who signs in",
   "連結權限固定為僅檢視；如需編輯，對方可提出申請，再由擁有者核准。": "Link access is always view-only. Recipients can request editing, which the owner must approve.",
   "分享連結自建立起 30 天內有效；已加入的成員可繼續使用。": "The share link is valid for 30 days after creation. Existing members keep access.",
